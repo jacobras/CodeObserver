@@ -1,0 +1,233 @@
+package nl.jacobras.codebaseobserver
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.js.Js
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.web.BuildConfig
+
+@Composable
+fun App() {
+    var records by remember { mutableStateOf<List<CountRecord>>(emptyList()) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var gitHashInput by remember { mutableStateOf("") }
+    var gitDateInput by remember { mutableStateOf("") }
+    var fileCountInput by remember { mutableStateOf("") }
+    var isEditing by remember { mutableStateOf(false) }
+    var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
+
+    val client = remember {
+        HttpClient(Js) {
+            defaultRequest {
+                url("/")
+            }
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+    }
+    val scope = rememberCoroutineScope()
+
+    fun resetForm() {
+        gitHashInput = ""
+        gitDateInput = ""
+        fileCountInput = ""
+        isEditing = false
+    }
+
+    suspend fun reloadRecords() {
+        records = client.get("/counts").body()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { client.close() }
+    }
+
+    LaunchedEffect(Unit) {
+        try {
+            reloadRecords()
+        } catch (ex: Throwable) {
+            error = ex.message ?: "Failed to load"
+        }
+    }
+
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(Color(0xFFF4F1EA), Color(0xFFE9F0F2))
+    )
+
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme.copy(
+            primary = Color(0xFF1F3D4D),
+            secondary = Color(0xFFCF8C4B),
+            background = Color(0xFFF4F1EA),
+            surface = Color(0xFFFFFFFF)
+        ),
+        typography = MaterialTheme.typography.copy(
+            headlineLarge = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.SemiBold)
+        )
+    ) {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().background(backgroundBrush)) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    TopNav(
+                        active = activeScreen,
+                        onSelect = { activeScreen = it }
+                    )
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        when (activeScreen) {
+                            Screen.Dashboard -> {
+                                DashboardScreen(
+                                    records = records,
+                                    error = error,
+                                    gitHashInput = gitHashInput,
+                                    gitDateInput = gitDateInput,
+                                    fileCountInput = fileCountInput,
+                                    isEditing = isEditing,
+                                    onGitHashChange = { gitHashInput = it },
+                                    onGitDateChange = { gitDateInput = it },
+                                    onFileCountChange = { fileCountInput = it },
+                                    onSubmit = {
+                                        scope.launch {
+                                            error = null
+                                            val trimmedHash = gitHashInput.trim()
+                                            val trimmedDate = gitDateInput.trim()
+                                            val countValue = fileCountInput.trim().toIntOrNull()
+                                            if (trimmedHash.isEmpty() || trimmedDate.isEmpty() || countValue == null) {
+                                                error = "Enter git hash, git date, and numeric file count"
+                                                return@launch
+                                            }
+                                            try {
+                                                if (isEditing) {
+                                                    client.put("/counts/$trimmedHash") {
+                                                        contentType(ContentType.Application.Json)
+                                                        setBody(UpdateCountRequest(trimmedDate, countValue))
+                                                    }
+                                                } else {
+                                                    client.post("/counts") {
+                                                        contentType(ContentType.Application.Json)
+                                                        setBody(
+                                                            CreateCountRequest(
+                                                                trimmedHash,
+                                                                trimmedDate,
+                                                                countValue
+                                                            )
+                                                        )
+                                                    }
+                                                }
+                                                reloadRecords()
+                                                resetForm()
+                                            } catch (ex: Throwable) {
+                                                error = ex.message ?: "Failed to submit"
+                                            }
+                                        }
+                                    },
+                                    onClear = { resetForm() },
+                                    onEdit = { record ->
+                                        gitHashInput = record.gitHash
+                                        gitDateInput = record.gitDate.toString()
+                                        fileCountInput = record.fileCount.toString()
+                                        isEditing = true
+                                    },
+                                    onDelete = { record ->
+                                        scope.launch {
+                                            error = null
+                                            try {
+                                                client.delete("/counts/${record.gitHash}")
+                                                reloadRecords()
+                                                if (isEditing && gitHashInput == record.gitHash) {
+                                                    resetForm()
+                                                }
+                                            } catch (ex: Throwable) {
+                                                error = ex.message ?: "Failed to delete"
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                            Screen.Settings -> {
+                                SettingsScreen()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private enum class Screen(val label: String) {
+    Dashboard("Dashboard"),
+    Settings("Settings")
+}
+
+@Composable
+private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
+    Surface(color = Color(0xFF1F3D4D)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "CodebaseObserver ${BuildConfig.VERSION}",
+                color = Color(0xFFF5F2EA),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Screen.entries.forEach { screen ->
+                    val selected = screen == active
+                    if (selected) {
+                        Button(onClick = { onSelect(screen) }) {
+                            Text(screen.label)
+                        }
+                    } else {
+                        TextButton(onClick = { onSelect(screen) }) {
+                            Text(screen.label, color = Color(0xFFF5F2EA))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
