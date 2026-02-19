@@ -29,8 +29,8 @@ class CountFilesCommand : CliktCommand(name = "count-files") {
     private val extensions by option("--extensions", help = "Comma-separated list of extensions to filter on.")
     private val exclude by option(
         "--exclude",
-        help = "Glob patterns to exclude files/folders (comma-separated). Defaults to '**/build/**'."
-    ).default("**/build/**")
+        help = "Glob patterns to exclude files/folders (comma-separated). Defaults to /build, /.git, /.gradle, /.kotlin and /.idea.'."
+    ).default("**/build/**,**/.git/**,/**/.gradle/**,**/.kotlin/**,**/.idea/**")
 
     override fun run() {
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
