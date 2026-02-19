@@ -40,6 +40,7 @@ object CountsTable : Table("counts") {
     val gitHash = text("gitHash")
     val gitDate = text("gitDate")
     val fileCount = integer("fileCount")
+    override val primaryKey = PrimaryKey(gitHash)
 }
 
 fun main() {
