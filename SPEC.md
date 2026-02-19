@@ -45,7 +45,7 @@
 - Display:
     - Line chart of `fileCount` vs `gitDate` (using ComposeCharts).
     - Axis labels: horizontal time, vertical file count.
-    - Time selection: last 7 days/last 30 days/last 12 months.
+    - Time selection: last 7 days/last 30 days/last 6 months.
 - Navigation:
     - Top nav bar with `Dashboard` (current screen) and `Settings`.
 - Add/update/delete counts:
