@@ -1,0 +1,11 @@
+services:
+  app:
+    image: jacobras/codebase-observer:latest
+    container_name: codebase-observer
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      - DB_PATH=/data/app.db
+    restart: unless-stopped

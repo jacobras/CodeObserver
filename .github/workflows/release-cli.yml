@@ -1,0 +1,21 @@
+name: Release CLI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/build-setup
+
+      - name: Build CLI shadowJar
+        run: ./gradlew :cli:shadowJar
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: cli-shadowjar
+          path: cli/build/libs/*-all.jar
