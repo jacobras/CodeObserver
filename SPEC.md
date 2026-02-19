@@ -30,8 +30,10 @@
             - `--path` (folder to scan, default `.`)
             - `--server` (server URL to upload results, optional)
             - `--extensions` optional file filter (comma-separated).
+            - `--exclude` glob patterns to exclude files or folders (comma-separated, optional).
         - Behavior:
             - Count regular files under the given `path` (recursive).
+            - Exclude files and folders matching the glob patterns specified in `--exclude`.
             - Send `POST /counts` to server with JSON payload.
             - Print summary.
 
