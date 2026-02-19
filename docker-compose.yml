@@ -1,6 +1,6 @@
 services:
   app:
-    image: jacobras/codebase-observer:latest
+    image: mrras/codebase-observer:latest
     container_name: codebase-observer
     ports:
       - "8080:8080"
