@@ -35,7 +35,7 @@ class CountFilesCommand : CliktCommand(name = "count-files") {
     override fun run() {
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
         val extFilter = extensions?.split(",")?.map { it.trim().lowercase() }?.filter { it.isNotEmpty() }
-        val excludePatterns = exclude?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
+        val excludePatterns = exclude.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
         val fileCount = countFiles(targetPath, extFilter, excludePatterns)
         println("Counted $fileCount files in $targetPath")
@@ -75,7 +75,8 @@ class CountFilesCommand : CliktCommand(name = "count-files") {
                     } else {
                         val name = path.fileName.toString().lowercase()
                         extensions.any { ext ->
-                            name.endsWith(ext.lowercase()) || name.endsWith(".${ext.lowercase()}")
+                            val normalizedExt = ext.removePrefix(".").lowercase()
+                            name.endsWith(".$normalizedExt")
                         }
                     }
                 }

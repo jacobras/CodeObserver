@@ -176,7 +176,7 @@ private fun Chart(records: List<CountRecord>, timeView: TimeView) {
 }
 
 @Composable
-fun RecordsTable(
+private fun RecordsTable(
     records: List<CountRecord>,
     onEdit: (CountRecord) -> Unit,
     onDelete: (CountRecord) -> Unit
