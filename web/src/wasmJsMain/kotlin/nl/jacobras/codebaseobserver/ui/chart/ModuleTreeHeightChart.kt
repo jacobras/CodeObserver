@@ -19,23 +19,23 @@ import ir.ehsannarmani.compose_charts.models.GridProperties
 import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
 import ir.ehsannarmani.compose_charts.models.LabelProperties
 import ir.ehsannarmani.compose_charts.models.Line
-import nl.jacobras.codebaseobserver.CountRecord
+import nl.jacobras.codebaseobserver.GradleRecord
 
 @Composable
-internal fun Chart(records: List<CountRecord>, timeView: TimeView) {
-    val chartData = buildChartData(records, timeView)
+internal fun ModuleTreeHeightChart(records: List<GradleRecord>, timeView: TimeView) {
+    val chartData = buildModuleTreeHeightChartData(records, timeView)
     val lineData = remember(records, timeView) {
         listOf(
             Line(
-                label = "Lines of code",
+                label = "Module tree height",
                 color = SolidColor(Color(0xFF264653)),
                 values = chartData.yValues.map { it.toDouble() },
-                firstGradientFillColor = Color(0xFF2A9D8F).copy(alpha = 0.35f),
+                firstGradientFillColor = Color(0xFF264653).copy(alpha = 0.35f),
                 secondGradientFillColor = Color.Transparent,
                 dotProperties = DotProperties(
                     enabled = true,
                     color = SolidColor(Color.White),
-                    strokeColor = SolidColor(Color(0xFF2A9D8F)),
+                    strokeColor = SolidColor(Color(0xFF264653)),
                     radius = 6.dp,
                     strokeWidth = 3.dp
                 )
@@ -76,3 +76,4 @@ internal fun Chart(records: List<CountRecord>, timeView: TimeView) {
         )
     }
 }
+

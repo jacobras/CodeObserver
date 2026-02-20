@@ -73,6 +73,7 @@
 - Display:
     - Line chart of `linesOfCode` vs `gitDate` (using ComposeCharts).
     - Line chart of `moduleCount` vs `gitDate` (using ComposeCharts).
+    - Line chart of `moduleTreeHeight` vs `gitDate` (using ComposeCharts).
     - Axis labels: horizontal time, vertical values (lines of code / module count).
     - Time selection: last 7 days/last 30 days/last 6 months/last 12 months.
 - Navigation:
