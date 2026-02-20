@@ -47,6 +47,7 @@ import nl.jacobras.codebaseobserver.web.BuildConfig
 @Composable
 fun App() {
     var records by remember { mutableStateOf<List<CountRecord>>(emptyList()) }
+    var gradleRecords by remember { mutableStateOf<List<GradleRecord>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
     var gitHashInput by remember { mutableStateOf("") }
     var gitDateInput by remember { mutableStateOf("") }
@@ -77,6 +78,10 @@ fun App() {
         records = client.get("/counts").body()
     }
 
+    suspend fun reloadGradleRecords() {
+        gradleRecords = client.get("/gradle").body()
+    }
+
     DisposableEffect(Unit) {
         onDispose { client.close() }
     }
@@ -84,6 +89,7 @@ fun App() {
     LaunchedEffect(Unit) {
         try {
             reloadRecords()
+            reloadGradleRecords()
         } catch (ex: Throwable) {
             error = ex.message ?: "Failed to load"
         }
@@ -119,6 +125,7 @@ fun App() {
                             Screen.Dashboard -> {
                                 DashboardScreen(
                                     records = records,
+                                    gradleRecords = gradleRecords,
                                     error = error,
                                     gitHashInput = gitHashInput,
                                     gitDateInput = gitDateInput,

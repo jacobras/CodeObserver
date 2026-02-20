@@ -22,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import nl.jacobras.codebaseobserver.ui.chart.Chart
+import nl.jacobras.codebaseobserver.ui.chart.GradleChart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
 @Composable
 internal fun DashboardScreen(
     records: List<CountRecord>,
+    gradleRecords: List<GradleRecord>,
     error: String?,
     gitHashInput: String,
     gitDateInput: String,
@@ -101,7 +103,19 @@ internal fun DashboardScreen(
                 }
             }
         }
-        Chart(records, timeView)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Chart(records, timeView)
+            }
+            if (gradleRecords.isNotEmpty()) {
+                Column(modifier = Modifier.weight(1f)) {
+                    GradleChart(gradleRecords, timeView)
+                }
+            }
+        }
         RecordsTable(
             records = records,
             onEdit = onEdit,

@@ -67,11 +67,12 @@
 ## Web
 
 - Compose Multiplatform WASM app.
-- Fetch from `GET /counts`.
+- Fetch from `GET /counts` and `GET /gradle`.
 - Web app is built and served by the same server host (same origin).
 - Display:
     - Line chart of `linesOfCode` vs `gitDate` (using ComposeCharts).
-    - Axis labels: horizontal time, vertical lines of code.
+    - Line chart of `moduleCount` vs `gitDate` (using ComposeCharts).
+    - Axis labels: horizontal time, vertical values (lines of code / module count).
     - Time selection: last 7 days/last 30 days/last 6 months/last 12 months.
 - Navigation:
     - Top nav bar with main screens:
@@ -81,3 +82,7 @@
     - Add: form for `gitHash`, `gitDate`, `linesOfCode` -> `POST /counts`.
     - Update: edit existing row by `gitHash` -> `PUT /counts/{gitHash}`.
     - Delete: remove row by `gitHash` -> `DELETE /counts/{gitHash}`.
+- Add/update/delete gradle metrics:
+    - Add: form for `gitHash`, `gitDate`, `moduleCount` -> `POST /gradle`.
+    - Update: edit existing row by `gitHash` -> `PUT /gradle/{gitHash}`.
+    - Delete: remove row by `gitHash` -> `DELETE /gradle/{gitHash}`.

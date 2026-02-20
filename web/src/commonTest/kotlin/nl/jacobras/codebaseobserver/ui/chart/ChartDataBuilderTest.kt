@@ -3,7 +3,6 @@ package nl.jacobras.codebaseobserver.ui.chart
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import nl.jacobras.codebaseobserver.CountRecord
-import nl.jacobras.codebaseobserver.TimeView
 import kotlin.test.Test
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
