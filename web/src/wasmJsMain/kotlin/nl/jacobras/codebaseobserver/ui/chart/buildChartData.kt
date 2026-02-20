@@ -16,6 +16,7 @@ internal fun buildChartData(
         TimeView.Last7Days -> 7 to 7.days
         TimeView.Last30Days -> 30 to 30.days
         TimeView.Last6Months -> 6 to 180.days
+        TimeView.Last12Months -> 12 to 365.days
     }
 
     val bucketSize = windowDuration / bucketCount
@@ -49,6 +50,14 @@ internal fun buildChartData(
         lastValue = value
         yValues += value
         xLabels += when (timeView) {
+            TimeView.Last12Months -> {
+                when {
+                    i == 0 -> "This month"
+                    i == 1 -> "1 month ago"
+                    i % 2 == 0 -> "$i months ago"
+                    else -> ""
+                }
+            }
             TimeView.Last6Months ->
                 when (i) {
                     0 -> "This month"

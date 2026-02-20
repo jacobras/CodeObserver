@@ -111,4 +111,45 @@ class ChartDataBuilderTest {
             listOf(0, 0, 0, 3, 3, 22)
         )
     }
+
+    @Test
+    fun last12Months() {
+        val records = listOf(
+            CountRecord(
+                gitHash = "a",
+                gitDate = Clock.System.now().minus(9.days),
+                fileCount = 3,
+                createdAt = "b"
+            ),
+            CountRecord(
+                gitHash = "a",
+                gitDate = Clock.System.now().minus(50.days),
+                fileCount = 22,
+                createdAt = "b"
+            ),
+            CountRecord(
+                gitHash = "a",
+                gitDate = Clock.System.now().minus(200.days),
+                fileCount = 88,
+                createdAt = "b"
+            )
+        )
+
+        val data = buildChartData(records, TimeView.Last12Months)
+
+        assertThat(data.xLabels).isEqualTo(
+            listOf(
+                "", "10 months ago",
+                "", "8 months ago",
+                "", "6 months ago",
+                "", "4 months ago",
+                "", "2 months ago",
+                "1 month ago",
+                "This month"
+            )
+        )
+        assertThat(data.yValues).isEqualTo(
+            listOf(0, 0, 0, 0, 0, 88, 88, 88, 88, 88, 22, 3)
+        )
+    }
 }

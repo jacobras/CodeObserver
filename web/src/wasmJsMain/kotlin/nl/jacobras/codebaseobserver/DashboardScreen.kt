@@ -218,5 +218,6 @@ private fun RecordsTable(
 internal enum class TimeView(val label: String) {
     Last7Days("Last 7 days"),
     Last30Days("Last 30 days"),
-    Last6Months("Last 6 months")
+    Last6Months("Last 6 months"),
+    Last12Months("Last 12 months")
 }
