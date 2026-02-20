@@ -36,7 +36,13 @@ internal fun buildChartData(
 
     val xLabels = mutableListOf<String>()
     val yValues = mutableListOf<Int>()
-    var lastValue = 0
+
+    // Find the last known value before the time window to start chart with the oldest known data.
+    var lastValue = records
+        .filter { it.gitDate < windowStart }
+        .maxByOrNull { it.gitDate }
+        ?.fileCount
+        ?: 0
 
     for (i in 0 until bucketCount) {
         val bucketRecords = buckets[i]

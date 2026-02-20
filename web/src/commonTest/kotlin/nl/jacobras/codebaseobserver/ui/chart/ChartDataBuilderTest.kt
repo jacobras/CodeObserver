@@ -54,6 +54,12 @@ class ChartDataBuilderTest {
                 gitDate = Clock.System.now().minus(5.days),
                 fileCount = 8,
                 createdAt = "b"
+            ),
+            CountRecord(
+                gitHash = "a",
+                gitDate = Clock.System.now().minus(400.days),
+                fileCount = 2,
+                createdAt = "b"
             )
         )
 
@@ -74,7 +80,7 @@ class ChartDataBuilderTest {
             )
         )
         assertThat(data.yValues).isEqualTo(
-            List(25) { 0 } + List(4) { 8 } + listOf(3)
+            List(25) { 2 } + List(4) { 8 } + listOf(3)
         )
     }
 
@@ -83,14 +89,20 @@ class ChartDataBuilderTest {
         val records = listOf(
             CountRecord(
                 gitHash = "a",
+                gitDate = Clock.System.now().minus(10.days),
+                fileCount = 22,
+                createdAt = "b"
+            ),
+            CountRecord(
+                gitHash = "a",
                 gitDate = Clock.System.now().minus(90.days),
                 fileCount = 3,
                 createdAt = "b"
             ),
             CountRecord(
                 gitHash = "a",
-                gitDate = Clock.System.now().minus(10.days),
-                fileCount = 22,
+                gitDate = Clock.System.now().minus(400.days),
+                fileCount = 1,
                 createdAt = "b"
             )
         )
@@ -108,7 +120,7 @@ class ChartDataBuilderTest {
             )
         )
         assertThat(data.yValues).isEqualTo(
-            listOf(0, 0, 0, 3, 3, 22)
+            listOf(1, 1, 1, 3, 3, 22)
         )
     }
 
@@ -132,6 +144,12 @@ class ChartDataBuilderTest {
                 gitDate = Clock.System.now().minus(200.days),
                 fileCount = 88,
                 createdAt = "b"
+            ),
+            CountRecord(
+                gitHash = "a",
+                gitDate = Clock.System.now().minus(400.days),
+                fileCount = 150,
+                createdAt = "b"
             )
         )
 
@@ -149,7 +167,7 @@ class ChartDataBuilderTest {
             )
         )
         assertThat(data.yValues).isEqualTo(
-            listOf(0, 0, 0, 0, 0, 88, 88, 88, 88, 88, 22, 3)
+            listOf(150, 150, 150, 150, 150, 88, 88, 88, 88, 88, 22, 3)
         )
     }
 }
