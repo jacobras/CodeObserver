@@ -9,7 +9,8 @@
 ## Server
 
 - Ktor server with JSON API.
-- DB: SQLite (embedded). Table:
+- DB: SQLite (embedded).
+- Table `counts`:
     - `createdAt` (TEXT)
     - `gitHash` (TEXT)
     - `gitDate` (TEXT)
