@@ -16,7 +16,6 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import nl.jacobras.codebaseobserver.cli.command.measure_gradle.GradleRequest
 import nl.jacobras.codebaseobserver.cli.runCommand
 import java.io.File
 import java.nio.file.Files
@@ -117,22 +116,9 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
 
         return try {
             val content = Files.readString(settingsFile)
-            // Build a dependency graph from settings.gradle.kts
-            // Parse all include directives to get module names
-            val includeBlockPattern = Regex("""include\s*\((.*?)\)""", RegexOption.DOT_MATCHES_ALL)
-            val modulePattern = Regex("""["']([^"']+)["']""")
 
-            val modules = mutableSetOf<String>()
+            val modules = GradleSettingsParser.parseModules(content)
             val dependencies = mutableMapOf<String, Set<String>>()
-
-            includeBlockPattern.findAll(content).forEach { match ->
-                val includeBlock = match.groupValues[1]
-                modulePattern.findAll(includeBlock).forEach { moduleMatch ->
-                    val moduleName = moduleMatch.groupValues[1].removePrefix(":")
-                    modules.add(moduleName)
-                    dependencies[moduleName] = setOf()
-                }
-            }
 
             // Parse build.gradle.kts files to find dependencies between modules
             val buildGradlePattern = Regex("""include\s*\((.*?)\)""", RegexOption.DOT_MATCHES_ALL)
@@ -163,7 +149,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         }
     }
 
-    private fun calculateGraphHeight(modules: Set<String>, dependencies: Map<String, Set<String>>): Int {
+    private fun calculateGraphHeight(modules: List<String>, dependencies: Map<String, Set<String>>): Int {
         if (modules.isEmpty()) return 0
 
         val visited = mutableSetOf<String>()
