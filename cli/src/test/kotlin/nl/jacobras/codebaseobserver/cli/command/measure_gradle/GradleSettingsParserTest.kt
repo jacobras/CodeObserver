@@ -12,11 +12,12 @@ class GradleSettingsParserTest {
             ":module1",
             ":module2", // Someone's comment
             ":module3", // Someone's comment
-            ":module4"
+            ":module4:a",
+            ":module4:b"
         )"""
 
         val modules = GradleSettingsParser.parseModules(file)
 
-        assertThat(modules).isEqualTo(listOf("module1", "module2", "module3", "module4"))
+        assertThat(modules).isEqualTo(listOf("module1", "module2", "module3", "module4:a", "module4:b"))
     }
 }

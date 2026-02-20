@@ -118,7 +118,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
             val content = Files.readString(settingsFile)
 
             val modules = GradleSettingsParser.parseModules(content)
-            val dependencies = mutableMapOf<String, Set<String>>()
+            val dependencies = mutableMapOf<String, List<String>>()
 
             // Parse build.gradle.kts files to find dependencies between modules
             val buildGradlePattern = Regex("""include\s*\((.*?)\)""", RegexOption.DOT_MATCHES_ALL)
@@ -128,15 +128,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
                 val buildGradle = modulePath.resolve("build.gradle.kts")
                 if (Files.exists(buildGradle)) {
                     val buildContent = Files.readString(buildGradle)
-                    // Simple pattern to find project dependencies like project(":other")
-                    val depPattern = Regex("""project\s*\(\s*["':]*([^"']+)["']?\s*\)""")
-                    val deps = mutableSetOf<String>()
-                    depPattern.findAll(buildContent).forEach { depMatch ->
-                        val depName = depMatch.groupValues[1].removePrefix(":")
-                        if (modules.contains(depName)) {
-                            deps.add(depName)
-                        }
-                    }
+                    val deps = GradleDependencyParser.parse(buildContent)
                     dependencies[module] = deps
                 }
             }
@@ -149,7 +141,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         }
     }
 
-    private fun calculateGraphHeight(modules: List<String>, dependencies: Map<String, Set<String>>): Int {
+    private fun calculateGraphHeight(modules: List<String>, dependencies: Map<String, List<String>>): Int {
         if (modules.isEmpty()) return 0
 
         val visited = mutableSetOf<String>()
