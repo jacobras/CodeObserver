@@ -48,6 +48,8 @@ import nl.jacobras.codebaseobserver.web.BuildConfig
 fun App() {
     var records by remember { mutableStateOf<List<CountRecord>>(emptyList()) }
     var gradleRecords by remember { mutableStateOf<List<GradleRecord>>(emptyList()) }
+    var projectIds by remember { mutableStateOf<List<String>>(emptyList()) }
+    var selectedProjectId by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var gitHashInput by remember { mutableStateOf("") }
     var gitDateInput by remember { mutableStateOf("") }
@@ -74,12 +76,31 @@ fun App() {
         isEditing = false
     }
 
+    suspend fun reloadProjects() {
+        projectIds = client.get("/projects").body()
+        if (selectedProjectId.isBlank() && projectIds.isNotEmpty()) {
+            selectedProjectId = projectIds.first()
+        }
+    }
+
     suspend fun reloadRecords() {
-        records = client.get("/counts").body()
+        if (selectedProjectId.isBlank()) {
+            records = emptyList()
+            return
+        }
+        records = client.get("/counts") {
+            url { parameters.append("projectId", selectedProjectId) }
+        }.body()
     }
 
     suspend fun reloadGradleRecords() {
-        gradleRecords = client.get("/gradle").body()
+        if (selectedProjectId.isBlank()) {
+            gradleRecords = emptyList()
+            return
+        }
+        gradleRecords = client.get("/gradle") {
+            url { parameters.append("projectId", selectedProjectId) }
+        }.body()
     }
 
     DisposableEffect(Unit) {
@@ -87,6 +108,17 @@ fun App() {
     }
 
     LaunchedEffect(Unit) {
+        try {
+            reloadProjects()
+            reloadRecords()
+            reloadGradleRecords()
+        } catch (ex: Throwable) {
+            error = ex.message ?: "Failed to load"
+        }
+    }
+
+    LaunchedEffect(selectedProjectId) {
+        if (selectedProjectId.isBlank()) return@LaunchedEffect
         try {
             reloadRecords()
             reloadGradleRecords()
@@ -127,6 +159,9 @@ fun App() {
                                     records = records,
                                     gradleRecords = gradleRecords,
                                     error = error,
+                                    projectIds = projectIds,
+                                    selectedProjectId = selectedProjectId,
+                                    onProjectIdChange = { selectedProjectId = it.trim() },
                                     gitHashInput = gitHashInput,
                                     gitDateInput = gitDateInput,
                                     linesOfCodeInput = linesOfCodeInput,
@@ -137,9 +172,14 @@ fun App() {
                                     onSubmit = {
                                         scope.launch {
                                             error = null
+                                            val trimmedProjectId = selectedProjectId.trim()
                                             val trimmedHash = gitHashInput.trim()
                                             val trimmedDate = gitDateInput.trim()
                                             val countValue = linesOfCodeInput.trim().toIntOrNull()
+                                            if (trimmedProjectId.isEmpty()) {
+                                                error = "Select a project"
+                                                return@launch
+                                            }
                                             if (trimmedHash.isEmpty() || trimmedDate.isEmpty() || countValue == null) {
                                                 error = "Enter git hash, git date, and lines of code"
                                                 return@launch
@@ -148,13 +188,14 @@ fun App() {
                                                 if (isEditing) {
                                                     client.put("/counts/$trimmedHash") {
                                                         contentType(ContentType.Application.Json)
-                                                        setBody(UpdateCountRequest(trimmedDate, countValue))
+                                                        setBody(UpdateCountRequest(trimmedProjectId, trimmedDate, countValue))
                                                     }
                                                 } else {
                                                     client.post("/counts") {
                                                         contentType(ContentType.Application.Json)
                                                         setBody(
                                                             CreateCountRequest(
+                                                                trimmedProjectId,
                                                                 trimmedHash,
                                                                 trimmedDate,
                                                                 countValue
@@ -162,6 +203,7 @@ fun App() {
                                                         )
                                                     }
                                                 }
+                                                reloadProjects()
                                                 reloadRecords()
                                                 resetForm()
                                             } catch (ex: Throwable) {
@@ -180,7 +222,10 @@ fun App() {
                                         scope.launch {
                                             error = null
                                             try {
-                                                client.delete("/counts/${record.gitHash}")
+                                                client.delete("/counts/${record.gitHash}") {
+                                                    url { parameters.append("projectId", selectedProjectId) }
+                                                }
+                                                reloadProjects()
                                                 reloadRecords()
                                                 if (isEditing && gitHashInput == record.gitHash) {
                                                     resetForm()

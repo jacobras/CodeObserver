@@ -31,6 +31,9 @@ internal fun DashboardScreen(
     records: List<CountRecord>,
     gradleRecords: List<GradleRecord>,
     error: String?,
+    projectIds: List<String>,
+    selectedProjectId: String,
+    onProjectIdChange: (String) -> Unit,
     gitHashInput: String,
     gitDateInput: String,
     linesOfCodeInput: String,
@@ -44,6 +47,29 @@ internal fun DashboardScreen(
     onDelete: (CountRecord) -> Unit
 ) {
     Text("Dashboard", style = MaterialTheme.typography.headlineLarge)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("Project", style = MaterialTheme.typography.titleMedium)
+        if (projectIds.isEmpty()) {
+            Text("No project yet. Create one by submitting data via the CLI.")
+        } else {
+            projectIds.forEach { projectId ->
+                val selected = projectId == selectedProjectId
+                if (selected) {
+                    Button(onClick = { onProjectIdChange(projectId) }) {
+                        Text(projectId)
+                    }
+                } else {
+                    TextButton(onClick = { onProjectIdChange(projectId) }) {
+                        Text(projectId)
+                    }
+                }
+            }
+        }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Add or update count", style = MaterialTheme.typography.titleMedium)
         OutlinedTextField(

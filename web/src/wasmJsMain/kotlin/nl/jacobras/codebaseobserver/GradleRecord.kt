@@ -5,6 +5,7 @@ import kotlin.time.Instant
 
 @Serializable
 data class GradleRecord(
+    val projectId: String,
     val gitHash: String,
     val gitDate: Instant,
     val moduleCount: Int,
@@ -14,6 +15,7 @@ data class GradleRecord(
 
 @Serializable
 data class CreateGradleRequest(
+    val projectId: String,
     val gitHash: String,
     val gitDate: String,
     val moduleCount: Int,
@@ -22,6 +24,7 @@ data class CreateGradleRequest(
 
 @Serializable
 data class UpdateGradleRequest(
+    val projectId: String,
     val gitDate: String,
     val moduleCount: Int,
     val moduleTreeHeight: Int

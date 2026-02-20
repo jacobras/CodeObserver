@@ -48,10 +48,12 @@ When the server is running, the development build will be accessible at http://l
 - General help: `./gradlew :cli:run`
 - Measure code help: `./gradlew :cli:run --args="measure-code --help"`
 - Measure code execute: `./gradlew :cli:run --args="measure-code"`
-- Measure code execute and upload: `./gradlew :cli:run --args="measure-code --server http://localhost:8080"`
+- Measure code execute and upload:
+  `./gradlew :cli:run --args="measure-code --project test --server http://localhost:8080"`
 - Measure Gradle help: `./gradlew :cli:run --args="measure-gradle --help"`
 - Measure Gradle execute: `./gradlew :cli:run --args="measure-gradle"`
-- Measure Gradle execute and upload: `./gradlew :cli:run --args="measure-gradle --server http://localhost:8080"`
+- Measure Gradle execute and upload:
+  `./gradlew :cli:run --args="measure-gradle --project test --server http://localhost:8080"`
 
 #### Release
 
