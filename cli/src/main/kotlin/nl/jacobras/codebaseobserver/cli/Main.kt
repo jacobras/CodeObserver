@@ -15,7 +15,7 @@ fun main(args: Array<String>) {
 
 private class RootCommand : CliktCommand(name = "codebaseobserver") {
     init {
-        subcommands(MeasureCodeCommand())
+        subcommands(MeasureCodeCommand(), MeasureGradleCommand())
     }
 
     override fun run() = Unit

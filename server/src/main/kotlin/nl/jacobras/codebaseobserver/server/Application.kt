@@ -20,8 +20,11 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.server.dto.CountRequest
+import nl.jacobras.codebaseobserver.server.dto.GradleRequest
 import nl.jacobras.codebaseobserver.server.dto.UpdateCountRequest
+import nl.jacobras.codebaseobserver.server.dto.UpdateGradleRequest
 import nl.jacobras.codebaseobserver.server.entity.CountRecord
+import nl.jacobras.codebaseobserver.server.entity.GradleRecord
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SortOrder
@@ -40,6 +43,14 @@ object CountsTable : Table("counts") {
     val gitHash = text("gitHash")
     val gitDate = text("gitDate")
     val linesOfCode = integer("linesOfCode")
+    override val primaryKey = PrimaryKey(gitHash)
+}
+
+object GradleTable : Table("gradle") {
+    val createdAt = text("createdAt")
+    val gitHash = text("gitHash")
+    val gitDate = text("gitDate")
+    val moduleCount = integer("moduleCount")
     override val primaryKey = PrimaryKey(gitHash)
 }
 
@@ -72,7 +83,7 @@ fun Application.module() {
     val dbFile = File(dbPath)
     dbFile.parentFile?.mkdirs()
     Database.connect("jdbc:sqlite:${dbFile.absolutePath}", driver = "org.sqlite.JDBC")
-    transaction { SchemaUtils.create(CountsTable) }
+    transaction { SchemaUtils.create(CountsTable, GradleTable) }
 
     routing {
         staticFiles("/", File("app/web")) {
@@ -134,6 +145,66 @@ fun Application.module() {
             }
             val deletedRows = transaction {
                 CountsTable.deleteWhere { CountsTable.gitHash eq gitHash }
+            }
+            if (deletedRows == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
+            }
+        }
+        post("/gradle") {
+            val request = call.receive<GradleRequest>()
+            val createdAt = Instant.now().toString()
+            transaction {
+                GradleTable.insert {
+                    it[gitHash] = request.gitHash
+                    it[gitDate] = request.gitDate
+                    it[moduleCount] = request.moduleCount
+                    it[GradleTable.createdAt] = createdAt
+                }
+            }
+            call.respond(HttpStatusCode.Created, mapOf("status" to "stored"))
+        }
+        get("/gradle") {
+            val records = transaction {
+                GradleTable.selectAll().orderBy(GradleTable.gitDate to SortOrder.ASC).map {
+                    GradleRecord(
+                        gitHash = it[GradleTable.gitHash],
+                        gitDate = it[GradleTable.gitDate],
+                        moduleCount = it[GradleTable.moduleCount],
+                        createdAt = it[GradleTable.createdAt]
+                    )
+                }
+            }
+            call.respond(records)
+        }
+        put("/gradle/{gitHash}") {
+            val gitHash = call.parameters["gitHash"]
+            if (gitHash.isNullOrBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
+                return@put
+            }
+            val request = call.receive<UpdateGradleRequest>()
+            val updatedRows = transaction {
+                GradleTable.update({ GradleTable.gitHash eq gitHash }) {
+                    it[gitDate] = request.gitDate
+                    it[moduleCount] = request.moduleCount
+                }
+            }
+            if (updatedRows == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "updated"))
+            }
+        }
+        delete("/gradle/{gitHash}") {
+            val gitHash = call.parameters["gitHash"]
+            if (gitHash.isNullOrBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
+                return@delete
+            }
+            val deletedRows = transaction {
+                GradleTable.deleteWhere { GradleTable.gitHash eq gitHash }
             }
             if (deletedRows == 0) {
                 call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
