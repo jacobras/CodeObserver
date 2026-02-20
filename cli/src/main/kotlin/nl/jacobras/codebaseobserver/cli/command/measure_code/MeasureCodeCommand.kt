@@ -1,9 +1,10 @@
-package nl.jacobras.codebaseobserver.cli
+package nl.jacobras.codebaseobserver.cli.command.measure_code
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
@@ -16,6 +17,8 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.cli.command.measure_code.CountRequest
+import nl.jacobras.codebaseobserver.cli.runCommand
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files

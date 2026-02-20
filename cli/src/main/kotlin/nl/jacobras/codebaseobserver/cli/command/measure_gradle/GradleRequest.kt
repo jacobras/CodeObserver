@@ -1,4 +1,4 @@
-package nl.jacobras.codebaseobserver.cli
+package nl.jacobras.codebaseobserver.cli.command.measure_gradle
 
 import kotlinx.serialization.Serializable
 

@@ -1,4 +1,4 @@
-package nl.jacobras.codebaseobserver.cli
+package nl.jacobras.codebaseobserver.cli.command.measure_gradle
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.default
@@ -16,6 +16,8 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.cli.command.measure_gradle.GradleRequest
+import nl.jacobras.codebaseobserver.cli.runCommand
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path

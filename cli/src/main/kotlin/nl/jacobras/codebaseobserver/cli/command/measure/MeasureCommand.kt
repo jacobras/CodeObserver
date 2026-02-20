@@ -1,9 +1,11 @@
-package nl.jacobras.codebaseobserver.cli
+package nl.jacobras.codebaseobserver.cli.command.measure
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
+import nl.jacobras.codebaseobserver.cli.command.measure_code.MeasureCodeCommand
+import nl.jacobras.codebaseobserver.cli.command.measure_gradle.MeasureGradleCommand
 
 class MeasureCommand : CliktCommand(name = "measure") {
     private val path by option(
