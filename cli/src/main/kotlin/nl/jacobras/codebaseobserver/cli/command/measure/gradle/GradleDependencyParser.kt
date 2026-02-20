@@ -1,4 +1,4 @@
-package nl.jacobras.codebaseobserver.cli.command.measure_gradle
+package nl.jacobras.codebaseobserver.cli.command.measure.gradle
 
 internal object GradleDependencyParser {
 
@@ -6,7 +6,7 @@ internal object GradleDependencyParser {
         val deps = mutableListOf<String>()
 
         // Pattern 1: projects.a.b.c -> a:b:c
-        val projectsPattern = Regex("""projects(?:\.(\w+))+""")
+        val projectsPattern = Regex("""projects(?:\.\w+)+""")
         projectsPattern.findAll(buildFile).forEach { match ->
             val fullMatch = match.value
             val parts = fullMatch.substring("projects".length).split(".").filter { it.isNotEmpty() }

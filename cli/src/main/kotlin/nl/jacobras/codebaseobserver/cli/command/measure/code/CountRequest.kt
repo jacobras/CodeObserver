@@ -1,4 +1,4 @@
-package nl.jacobras.codebaseobserver.cli.command.measure_code
+package nl.jacobras.codebaseobserver.cli.command.measure.code
 
 import kotlinx.serialization.Serializable
 

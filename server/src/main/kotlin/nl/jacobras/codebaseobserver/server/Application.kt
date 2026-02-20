@@ -80,7 +80,7 @@ fun Application.module() {
         }
     }
 
-    val dbPath = System.getenv("DB_PATH") ?: "/data/app.db"
+    val dbPath = System.getenv("DB_PATH") ?: "data/app.db"
     val dbFile = File(dbPath)
     dbFile.parentFile?.mkdirs()
     Database.connect("jdbc:sqlite:${dbFile.absolutePath}", driver = "org.sqlite.JDBC")

@@ -1,4 +1,4 @@
-package nl.jacobras.codebaseobserver.cli.command.measure_gradle
+package nl.jacobras.codebaseobserver.cli.command.measure.gradle
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.default

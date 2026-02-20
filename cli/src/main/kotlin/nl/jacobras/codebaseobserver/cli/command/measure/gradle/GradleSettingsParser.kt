@@ -1,9 +1,8 @@
-package nl.jacobras.codebaseobserver.cli.command.measure_gradle
+package nl.jacobras.codebaseobserver.cli.command.measure.gradle
 
 internal object GradleSettingsParser {
 
     fun parseModules(settingsFile: String): List<String> {
-        // Build a dependency graph from settings.gradle.kts
         // Parse all include directives to get module names
         val includeBlockPattern = Regex("""include\s*\((.*?)\)""", RegexOption.DOT_MATCHES_ALL)
         val modulePattern = Regex(""""([^"]*)"""")

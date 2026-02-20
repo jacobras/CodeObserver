@@ -2,6 +2,7 @@ package nl.jacobras.codebaseobserver.cli.command.measure_gradle
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import nl.jacobras.codebaseobserver.cli.command.measure.gradle.GradleDependencyParser
 import kotlin.test.Test
 
 class GradleDependencyParserTest {
