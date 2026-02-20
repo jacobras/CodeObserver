@@ -23,7 +23,12 @@ import nl.jacobras.codebaseobserver.CountRecord
 
 @Composable
 internal fun LinesOfCodeChart(records: List<CountRecord>, timeView: TimeView) {
-    val chartData = buildChartData(records, timeView)
+    val chartData = buildChartData(
+        records = records,
+        timeView = timeView,
+        getDate = { it.gitDate },
+        getValue = { it.linesOfCode }
+    )
     val lineData = remember(records, timeView) {
         listOf(
             Line(

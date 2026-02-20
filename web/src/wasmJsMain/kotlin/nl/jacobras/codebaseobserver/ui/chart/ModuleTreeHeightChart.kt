@@ -23,7 +23,12 @@ import nl.jacobras.codebaseobserver.GradleRecord
 
 @Composable
 internal fun ModuleTreeHeightChart(records: List<GradleRecord>, timeView: TimeView) {
-    val chartData = buildModuleTreeHeightChartData(records, timeView)
+    val chartData = buildChartData(
+        records = records,
+        timeView = timeView,
+        getDate = { it.gitDate },
+        getValue = { it.moduleTreeHeight }
+    )
     val lineData = remember(records, timeView) {
         listOf(
             Line(

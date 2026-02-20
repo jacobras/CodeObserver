@@ -10,6 +10,15 @@ import kotlin.time.Duration.Companion.minutes
 
 class ChartDataBuilderTest {
 
+    private fun buildChartData(records: List<CountRecord>, timeView: TimeView): ChartData {
+        return buildChartData(
+            records = records,
+            timeView = timeView,
+            getDate = { it.gitDate },
+            getValue = { it.linesOfCode }
+        )
+    }
+
     @Test
     fun last7Days() {
         val records = listOf(

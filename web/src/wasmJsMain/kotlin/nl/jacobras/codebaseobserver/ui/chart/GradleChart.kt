@@ -23,7 +23,12 @@ import nl.jacobras.codebaseobserver.GradleRecord
 
 @Composable
 internal fun GradleChart(records: List<GradleRecord>, timeView: TimeView) {
-    val chartData = buildGradleChartData(records, timeView)
+    val chartData = buildChartData(
+        records = records,
+        timeView = timeView,
+        getDate = { it.gitDate },
+        getValue = { it.moduleCount }
+    )
     val lineData = remember(records, timeView) {
         listOf(
             Line(
