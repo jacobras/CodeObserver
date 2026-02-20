@@ -24,20 +24,29 @@ import kotlin.io.path.isRegularFile
 import kotlin.streams.asSequence
 
 class CountFilesCommand : CliktCommand(name = "count-files") {
-    private val path by option("--path", help = "Folder to scan").default(".")
-    private val serverUrl by option("--server", help = "Server base URL. Without this, the count will not be uploaded.")
-    private val extensions by option("--extensions", help = "Comma-separated list of extensions to filter on.")
+    private val path by option(
+        "--path",
+        help = "Folder to scan. Defaults to the current working directory."
+    ).default(".")
+    private val serverUrl by option(
+        "--server",
+        help = "Server base URL. Without this, the count will not be uploaded."
+    )
+    private val include by option(
+        "--include",
+        help = "Glob patterns to include files/folders (comma-separated). Defaults to .kt/.kts."
+    ).default("**/*.kt,**/*.kts")
     private val exclude by option(
         "--exclude",
-        help = "Glob patterns to exclude files/folders (comma-separated). Defaults to /build, /.git, /.gradle, /.kotlin and /.idea.'."
+        help = "Glob patterns to exclude files/folders (comma-separated). Defaults to common build/IDE folders.'."
     ).default("**/build/**,**/.git/**,/**/.gradle/**,**/.kotlin/**,**/.idea/**")
 
     override fun run() {
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
-        val extFilter = extensions?.split(",")?.map { it.trim().lowercase() }?.filter { it.isNotEmpty() }
+        val includePatterns = include.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         val excludePatterns = exclude.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-        val fileCount = countFiles(targetPath, extFilter, excludePatterns)
+        val fileCount = countFiles(targetPath, includePatterns, excludePatterns)
         println("Counted $fileCount files in $targetPath")
 
         serverUrl?.let { url ->
@@ -56,57 +65,56 @@ class CountFilesCommand : CliktCommand(name = "count-files") {
 
     private fun countFiles(
         root: Path,
-        extensions: List<String>? = null,
-        excludePatterns: List<String> = emptyList()
+        includePatterns: List<String>,
+        excludePatterns: List<String>
     ): Int {
         if (!Files.exists(root)) return 0
 
-        val matchers = excludePatterns.map { pattern ->
+        val includeMatchers = includePatterns.map { pattern ->
+            FileSystems.getDefault().getPathMatcher("glob:$pattern")
+        }
+        val excludeMatchers = excludePatterns.map { pattern ->
             FileSystems.getDefault().getPathMatcher("glob:$pattern")
         }
 
         Files.walk(root).use { stream ->
             return stream.asSequence()
-                .filter { it.isRegularFile() }
-                .filter { path -> matchers.none { it.matches(path) } }
+                .filter {
+                    // Filter out symlinks and such.
+                    it.isRegularFile()
+                }
                 .count { path ->
-                    if (extensions.isNullOrEmpty()) {
-                        true
-                    } else {
-                        val name = path.fileName.toString().lowercase()
-                        extensions.any { ext ->
-                            val normalizedExt = ext.removePrefix(".").lowercase()
-                            name.endsWith(".$normalizedExt")
-                        }
-                    }
+                    // Handle inclusion/exclusion patterns.
+                    (includeMatchers.isEmpty() || includeMatchers.any { it.matches(path) }) &&
+                            excludeMatchers.none { it.matches(path) }
                 }
         }
     }
-}
 
-private suspend fun upload(
-    serverUrl: String,
-    gitHash: String,
-    gitDate: String,
-    fileCount: Int
-) {
-    val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+    private suspend fun upload(
+        serverUrl: String,
+        gitHash: String,
+        gitDate: String,
+        fileCount: Int
+    ) {
+        val client = HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
         }
+        val payload = CountRequest(
+            gitHash = gitHash,
+            gitDate = gitDate,
+            fileCount = fileCount
+        )
+        val response = client.post("${serverUrl.trimEnd('/')}/counts") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json)
+            contentType(ContentType.Application.Json)
+            setBody(payload)
+        }
+        client.close()
+        val statusCode = response.status.value
+        val responseBody = response.bodyAsText()
+        println("Server response: $statusCode: $responseBody")
     }
-    val payload = CountRequest(
-        gitHash = gitHash,
-        gitDate = gitDate,
-        fileCount = fileCount
-    )
-    val response = client.post("${serverUrl.trimEnd('/')}/counts") {
-        header(HttpHeaders.ContentType, ContentType.Application.Json)
-        contentType(ContentType.Application.Json)
-        setBody(payload)
-    }
-    client.close()
-    val statusCode = response.status.value
-    val responseBody = response.bodyAsText()
-    println("Server response: $statusCode: $responseBody")
 }

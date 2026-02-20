@@ -29,7 +29,7 @@
         - Arguments:
             - `--path` (folder to scan, default `.`)
             - `--server` (server URL to upload results, optional)
-            - `--extensions` optional file filter (comma-separated).
+            - `--include` glob patterns to include files or folders (comma-separated, optional).
             - `--exclude` glob patterns to exclude files or folders (comma-separated, optional).
         - Behavior:
             - Count regular files under the given `path` (recursive).
@@ -47,7 +47,9 @@
     - Axis labels: horizontal time, vertical file count.
     - Time selection: last 7 days/last 30 days/last 6 months.
 - Navigation:
-    - Top nav bar with `Dashboard` (current screen) and `Settings`.
+    - Top nav bar with main screens:
+        - `Dashboard`
+        - `Settings`.
 - Add/update/delete counts:
     - Add: form for `gitHash`, `gitDate`, `fileCount` -> `POST /counts`.
     - Update: edit existing row by `gitHash` -> `PUT /counts/{gitHash}`.

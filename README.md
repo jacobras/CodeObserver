@@ -46,7 +46,7 @@ When the server is running, the development build will be accessible at http://l
 - General help: `./gradlew :cli:run`
 - Count files help: `./gradlew :cli:run --args="count-files --help"`
 - Count files execute: `./gradlew :cli:run --args="count-files"`
-- Count files execute and upload: `./gradlew :cli:run --args="count-files --path . --server http://localhost:8080"`
+- Count files execute and upload: `./gradlew :cli:run --args="count-files --server http://localhost:8080"`
 
 #### Release
 
