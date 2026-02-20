@@ -1,6 +1,6 @@
 services:
   app:
-    image: mrras/codebase-observer:0.2.0
+    image: mrras/codebase-observer:0.3.0
     container_name: codebase-observer
     ports:
       - "8080:8080"
