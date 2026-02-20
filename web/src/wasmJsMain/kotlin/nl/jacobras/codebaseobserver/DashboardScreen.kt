@@ -54,7 +54,7 @@ internal fun DashboardScreen(
     ) {
         Text("Project", style = MaterialTheme.typography.titleMedium)
         if (projectIds.isEmpty()) {
-            Text("No project yet. Create one by submitting data via the CLI.")
+            Text("No projects yet. Create one by submitting data via the CLI.")
         } else {
             projectIds.forEach { projectId ->
                 val selected = projectId == selectedProjectId

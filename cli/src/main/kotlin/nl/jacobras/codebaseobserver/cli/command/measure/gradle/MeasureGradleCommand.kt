@@ -17,6 +17,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.cli.runCommand
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
