@@ -7,6 +7,8 @@ Track codebase health metrics over time.
 Current supported metrics:
 
 - Lines of code (including comments, imports, blank lines).
+- Number of Gradle modules.
+- Height of the Gradle dependency tree (the longest path from a module to its root consumer).
 
 ## Run locally
 
