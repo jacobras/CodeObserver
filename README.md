@@ -7,6 +7,8 @@ Track codebase health metrics over time.
 Current supported metrics:
 
 - Lines of code (including comments, imports, blank lines).
+- Number of Gradle modules.
+- Height of the Gradle dependency tree (the longest path from a module to its root consumer).
 
 ## Run locally
 
@@ -24,12 +26,12 @@ This hosts both the API and the UI (see Web below).
 
 1. Build the web app: `./gradlew :web:wasmJsBrowserDistribution`
 2. Build the server: `./gradlew :server:shadowJar`
-3. Build the image: `docker build -t mrras/codebase-observer:0.2.0 .`
+3. Build the image: `docker build -t mrras/codebase-observer:0.3.0 .`
 4. Now run with `docker compose up`
 
 #### Publish
 
-`docker push mrras/codebase-observer:0.2.0`
+`docker push mrras/codebase-observer:0.3.0`
 
 ### Web
 

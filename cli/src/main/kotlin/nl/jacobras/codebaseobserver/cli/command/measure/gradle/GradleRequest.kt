@@ -1,4 +1,4 @@
-package nl.jacobras.codebaseobserver.cli
+package nl.jacobras.codebaseobserver.cli.command.measure.gradle
 
 import kotlinx.serialization.Serializable
 
@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class GradleRequest(
     val gitHash: String,
     val gitDate: String,
-    val moduleCount: Int
+    val moduleCount: Int,
+    val moduleTreeHeight: Int
 )

@@ -51,6 +51,7 @@ object GradleTable : Table("gradle") {
     val gitHash = text("gitHash")
     val gitDate = text("gitDate")
     val moduleCount = integer("moduleCount")
+    val moduleTreeHeight = integer("moduleTreeHeight")
     override val primaryKey = PrimaryKey(gitHash)
 }
 
@@ -79,7 +80,7 @@ fun Application.module() {
         }
     }
 
-    val dbPath = System.getenv("DB_PATH") ?: "/data/app.db"
+    val dbPath = System.getenv("DB_PATH") ?: "data/app.db"
     val dbFile = File(dbPath)
     dbFile.parentFile?.mkdirs()
     Database.connect("jdbc:sqlite:${dbFile.absolutePath}", driver = "org.sqlite.JDBC")
@@ -160,6 +161,7 @@ fun Application.module() {
                     it[gitHash] = request.gitHash
                     it[gitDate] = request.gitDate
                     it[moduleCount] = request.moduleCount
+                    it[moduleTreeHeight] = request.moduleTreeHeight
                     it[GradleTable.createdAt] = createdAt
                 }
             }
@@ -172,6 +174,7 @@ fun Application.module() {
                         gitHash = it[GradleTable.gitHash],
                         gitDate = it[GradleTable.gitDate],
                         moduleCount = it[GradleTable.moduleCount],
+                        moduleTreeHeight = it[GradleTable.moduleTreeHeight],
                         createdAt = it[GradleTable.createdAt]
                     )
                 }
@@ -189,6 +192,7 @@ fun Application.module() {
                 GradleTable.update({ GradleTable.gitHash eq gitHash }) {
                     it[gitDate] = request.gitDate
                     it[moduleCount] = request.moduleCount
+                    it[moduleTreeHeight] = request.moduleTreeHeight
                 }
             }
             if (updatedRows == 0) {

@@ -6,3 +6,9 @@
 ## Code style
 
 - No newline at the end of a file.
+
+## Building
+
+- CLI: `gradlew :cli:compileKotlin`
+- Server: `gradlew :server:compileKotlin`
+- Web: `gradlew :web:compileKotlinWasmJs`

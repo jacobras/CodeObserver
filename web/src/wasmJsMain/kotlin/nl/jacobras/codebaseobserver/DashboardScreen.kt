@@ -21,8 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import nl.jacobras.codebaseobserver.ui.chart.Chart
 import nl.jacobras.codebaseobserver.ui.chart.GradleChart
+import nl.jacobras.codebaseobserver.ui.chart.LinesOfCodeChart
+import nl.jacobras.codebaseobserver.ui.chart.ModuleTreeHeightChart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
 @Composable
@@ -108,12 +109,13 @@ internal fun DashboardScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Chart(records, timeView)
+                LinesOfCodeChart(records, timeView)
             }
-            if (gradleRecords.isNotEmpty()) {
-                Column(modifier = Modifier.weight(1f)) {
-                    GradleChart(gradleRecords, timeView)
-                }
+            Column(modifier = Modifier.weight(1f)) {
+                GradleChart(gradleRecords, timeView)
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                ModuleTreeHeightChart(gradleRecords, timeView)
             }
         }
         RecordsTable(

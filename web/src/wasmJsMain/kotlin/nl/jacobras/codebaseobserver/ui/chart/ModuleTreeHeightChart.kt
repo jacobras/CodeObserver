@@ -22,25 +22,25 @@ import ir.ehsannarmani.compose_charts.models.Line
 import nl.jacobras.codebaseobserver.GradleRecord
 
 @Composable
-internal fun GradleChart(records: List<GradleRecord>, timeView: TimeView) {
+internal fun ModuleTreeHeightChart(records: List<GradleRecord>, timeView: TimeView) {
     val chartData = buildChartData(
         records = records,
         timeView = timeView,
         getDate = { it.gitDate },
-        getValue = { it.moduleCount }
+        getValue = { it.moduleTreeHeight }
     )
     val lineData = remember(records, timeView) {
         listOf(
             Line(
-                label = "Module count",
-                color = SolidColor(Color(0xFFE76F51)),
+                label = "Module tree height",
+                color = SolidColor(Color(0xFF264653)),
                 values = chartData.yValues.map { it.toDouble() },
-                firstGradientFillColor = Color(0xFFE76F51).copy(alpha = 0.35f),
+                firstGradientFillColor = Color(0xFF264653).copy(alpha = 0.35f),
                 secondGradientFillColor = Color.Transparent,
                 dotProperties = DotProperties(
                     enabled = true,
                     color = SolidColor(Color.White),
-                    strokeColor = SolidColor(Color(0xFFE76F51)),
+                    strokeColor = SolidColor(Color(0xFF264653)),
                     radius = 6.dp,
                     strokeWidth = 3.dp
                 )
@@ -81,3 +81,4 @@ internal fun GradleChart(records: List<GradleRecord>, timeView: TimeView) {
         )
     }
 }
+
