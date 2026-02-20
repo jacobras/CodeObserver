@@ -35,9 +35,12 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
 
         val moduleCount = countGradleModules(targetPath)
-        val moduleHeight = calculateModuleHeight(targetPath)
+        val (moduleHeight, longestPath) = calculateModuleHeightWithPath(targetPath)
         println("Found $moduleCount Gradle modules in $targetPath")
         println("Module graph height: $moduleHeight")
+        if (longestPath.isNotEmpty()) {
+            println("Longest path: ${longestPath.joinToString(" > ")}")
+        }
 
         serverUrl?.let { url ->
             val gitHash = runCommand("git", "rev-parse", "HEAD")?.trim().orEmpty()
@@ -134,33 +137,89 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
             }
 
             // Calculate the height of the dependency graph using topological sort
-            calculateGraphHeight(modules, dependencies)
+            calculateGraphHeight(modules, dependencies).first
         } catch (e: Exception) {
             println("Failed to calculate module height because of ${e.message}")
             0
         }
     }
 
-    private fun calculateGraphHeight(modules: List<String>, dependencies: Map<String, List<String>>): Int {
-        if (modules.isEmpty()) return 0
+    private fun calculateModuleHeightWithPath(root: Path): Pair<Int, List<String>> {
+        if (!Files.exists(root)) {
+            println("Warning: $root does not exist")
+            return Pair(0, emptyList())
+        }
+
+        val settingsFile = findSettingsGradleFile(root)
+        if (settingsFile == null) {
+            println("Warning: settings.gradle.kts not found in $root")
+            return Pair(0, emptyList())
+        }
+
+        return try {
+            val content = Files.readString(settingsFile)
+
+            val modules = GradleSettingsParser.parseModules(content)
+            val dependencies = mutableMapOf<String, List<String>>()
+
+            // Parse build.gradle.kts files to find dependencies between modules
+            val buildGradlePattern = Regex("""include\s*\((.*?)\)""", RegexOption.DOT_MATCHES_ALL)
+
+            modules.forEach { module ->
+                val modulePath = root.resolve(module.replace(":", File.separator))
+                val buildGradle = modulePath.resolve("build.gradle.kts")
+                if (Files.exists(buildGradle)) {
+                    val buildContent = Files.readString(buildGradle)
+                    val deps = GradleDependencyParser.parse(buildContent)
+                    dependencies[module] = deps
+                }
+            }
+
+            // Calculate the height of the dependency graph using topological sort
+            calculateGraphHeight(modules, dependencies)
+        } catch (e: Exception) {
+            println("Failed to calculate module height because of ${e.message}")
+            Pair(0, emptyList())
+        }
+    }
+
+    private fun calculateGraphHeight(modules: List<String>, dependencies: Map<String, List<String>>): Pair<Int, List<String>> {
+        if (modules.isEmpty()) return Pair(0, emptyList())
 
         val visited = mutableSetOf<String>()
         val memo = mutableMapOf<String, Int>()
+        val pathMemo = mutableMapOf<String, List<String>>()
 
-        fun dfs(module: String): Int {
-            if (module in memo) return memo[module]!!
-            if (module in visited) return 0 // Cycle detection
+        fun dfs(module: String): Pair<Int, List<String>> {
+            if (module in memo) return Pair(memo[module]!!, pathMemo[module]!!)
+            if (module in visited) return Pair(0, emptyList()) // Cycle detection
 
             visited.add(module)
-            val height = 1 + (dependencies[module]?.maxOfOrNull { dfs(it) } ?: 0)
-            visited.remove(module)
+            val deps = dependencies[module] ?: emptyList()
 
+            if (deps.isEmpty()) {
+                visited.remove(module)
+                memo[module] = 1
+                pathMemo[module] = listOf(module)
+                return Pair(1, listOf(module))
+            }
+
+            val (maxHeight, longestPath) = deps
+                .map { dfs(it) }
+                .maxByOrNull { it.first } ?: Pair(0, emptyList())
+
+            val height = 1 + maxHeight
+            val path = listOf(module) + longestPath
+
+            visited.remove(module)
             memo[module] = height
-            return height
+            pathMemo[module] = path
+            return Pair(height, path)
         }
 
-        val maxHeight = modules.maxOfOrNull { dfs(it) } ?: 0
-        return maxHeight
+        val results = modules.map { dfs(it) }
+        val maxResult = results.maxByOrNull { it.first } ?: Pair(0, emptyList())
+        return maxResult
     }
 
     private suspend fun upload(
