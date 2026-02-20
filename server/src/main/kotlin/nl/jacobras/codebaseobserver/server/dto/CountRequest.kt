@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class CountRequest(
     val gitHash: String,
     val gitDate: String,
-    val fileCount: Int
+    val linesOfCode: Int
 )

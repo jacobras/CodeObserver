@@ -39,11 +39,11 @@ internal fun DashboardScreen(
     error: String?,
     gitHashInput: String,
     gitDateInput: String,
-    fileCountInput: String,
+    linesOfCodeInput: String,
     isEditing: Boolean,
     onGitHashChange: (String) -> Unit,
     onGitDateChange: (String) -> Unit,
-    onFileCountChange: (String) -> Unit,
+    onLinesOfCodeChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onClear: () -> Unit,
     onEdit: (CountRecord) -> Unit,
@@ -66,9 +66,9 @@ internal fun DashboardScreen(
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
-            value = fileCountInput,
-            onValueChange = onFileCountChange,
-            label = { Text("File count") },
+            value = linesOfCodeInput,
+            onValueChange = onLinesOfCodeChange,
+            label = { Text("Lines of code") },
             modifier = Modifier.fillMaxWidth()
         )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -77,7 +77,7 @@ internal fun DashboardScreen(
             }
             Button(
                 onClick = onClear,
-                enabled = gitHashInput.isNotEmpty() || gitDateInput.isNotEmpty() || fileCountInput.isNotEmpty()
+                enabled = gitHashInput.isNotEmpty() || gitDateInput.isNotEmpty() || linesOfCodeInput.isNotEmpty()
             ) {
                 Text("Clear")
             }
@@ -125,7 +125,7 @@ private fun Chart(records: List<CountRecord>, timeView: TimeView) {
     val lineData = remember(records, timeView) {
         listOf(
             Line(
-                label = "File count",
+                label = "Lines of code",
                 color = SolidColor(Color(0xFF264653)),
                 values = chartData.yValues.map { it.toDouble() },
                 firstGradientFillColor = Color(0xFF2A9D8F).copy(alpha = 0.35f),
@@ -184,7 +184,7 @@ private fun RecordsTable(
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("Git Date", modifier = Modifier.weight(1f))
-            Text("Files", modifier = Modifier.weight(1f))
+            Text("Lines of code", modifier = Modifier.weight(1f))
             Text("Hash", modifier = Modifier.weight(1f))
             Text("Actions", modifier = Modifier.weight(1f))
         }
@@ -196,7 +196,7 @@ private fun RecordsTable(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(record.gitDate.toString(), modifier = Modifier.weight(1f))
-                    Text(record.fileCount.toString(), modifier = Modifier.weight(1f))
+                    Text(record.linesOfCode.toString(), modifier = Modifier.weight(1f))
                     Text(record.gitHash.take(7), modifier = Modifier.weight(1f))
                     Row(
                         modifier = Modifier.weight(1f),

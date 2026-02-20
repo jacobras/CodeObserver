@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class UpdateCountRequest(
     val gitDate: String,
-    val fileCount: Int
+    val linesOfCode: Int
 )

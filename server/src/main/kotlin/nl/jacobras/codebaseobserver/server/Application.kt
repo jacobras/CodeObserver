@@ -39,7 +39,7 @@ object CountsTable : Table("counts") {
     val createdAt = text("createdAt")
     val gitHash = text("gitHash")
     val gitDate = text("gitDate")
-    val fileCount = integer("fileCount")
+    val linesOfCode = integer("linesOfCode")
     override val primaryKey = PrimaryKey(gitHash)
 }
 
@@ -88,7 +88,7 @@ fun Application.module() {
                 CountsTable.insert {
                     it[gitHash] = request.gitHash
                     it[gitDate] = request.gitDate
-                    it[fileCount] = request.fileCount
+                    it[linesOfCode] = request.linesOfCode
                     it[CountsTable.createdAt] = createdAt
                 }
             }
@@ -100,7 +100,7 @@ fun Application.module() {
                     CountRecord(
                         gitHash = it[CountsTable.gitHash],
                         gitDate = it[CountsTable.gitDate],
-                        fileCount = it[CountsTable.fileCount],
+                        linesOfCode = it[CountsTable.linesOfCode],
                         createdAt = it[CountsTable.createdAt]
                     )
                 }
@@ -117,7 +117,7 @@ fun Application.module() {
             val updatedRows = transaction {
                 CountsTable.update({ CountsTable.gitHash eq gitHash }) {
                     it[gitDate] = request.gitDate
-                    it[fileCount] = request.fileCount
+                    it[linesOfCode] = request.linesOfCode
                 }
             }
             if (updatedRows == 0) {

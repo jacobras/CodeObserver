@@ -23,7 +23,7 @@ import java.nio.file.Path
 import kotlin.io.path.isRegularFile
 import kotlin.streams.asSequence
 
-class CountFilesCommand : CliktCommand(name = "count-files") {
+class MeasureCodeCommand : CliktCommand(name = "measure-code") {
     private val path by option(
         "--path",
         help = "Folder to scan. Defaults to the current working directory."
@@ -46,8 +46,8 @@ class CountFilesCommand : CliktCommand(name = "count-files") {
         val includePatterns = include.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         val excludePatterns = exclude.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-        val fileCount = countFiles(targetPath, includePatterns, excludePatterns)
-        println("Counted $fileCount files in $targetPath")
+        val linesOfCode = countLinesOfCode(targetPath, includePatterns, excludePatterns)
+        println("Counted $linesOfCode lines of code in $targetPath")
 
         serverUrl?.let { url ->
             val gitHash = runCommand("git", "rev-parse", "HEAD")?.trim().orEmpty()
@@ -59,11 +59,11 @@ class CountFilesCommand : CliktCommand(name = "count-files") {
             require(gitDate.isNotEmpty()) {
                 "Could not determine git date. Make sure you are in a git repository."
             }
-            runBlocking { upload(url, gitHash, gitDate, fileCount) }
+            runBlocking { upload(url, gitHash, gitDate, linesOfCode) }
         }
     }
 
-    private fun countFiles(
+    private fun countLinesOfCode(
         root: Path,
         includePatterns: List<String>,
         excludePatterns: List<String>
@@ -83,10 +83,14 @@ class CountFilesCommand : CliktCommand(name = "count-files") {
                     // Filter out symlinks and such.
                     it.isRegularFile()
                 }
-                .count { path ->
+                .filter { path ->
                     // Handle inclusion/exclusion patterns.
                     (includeMatchers.isEmpty() || includeMatchers.any { it.matches(path) }) &&
                             excludeMatchers.none { it.matches(path) }
+                }
+                .sumOf { filePath ->
+                    // Count lines in each matching file
+                    Files.lines(filePath).use { lines -> lines.count().toInt() }
                 }
         }
     }
@@ -95,7 +99,7 @@ class CountFilesCommand : CliktCommand(name = "count-files") {
         serverUrl: String,
         gitHash: String,
         gitDate: String,
-        fileCount: Int
+        linesOfCode: Int
     ) {
         val client = HttpClient(CIO) {
             install(ContentNegotiation) {
@@ -105,7 +109,7 @@ class CountFilesCommand : CliktCommand(name = "count-files") {
         val payload = CountRequest(
             gitHash = gitHash,
             gitDate = gitDate,
-            fileCount = fileCount
+            linesOfCode = linesOfCode
         )
         val response = client.post("${serverUrl.trimEnd('/')}/counts") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)

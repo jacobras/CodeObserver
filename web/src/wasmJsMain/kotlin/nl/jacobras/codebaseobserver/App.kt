@@ -50,7 +50,7 @@ fun App() {
     var error by remember { mutableStateOf<String?>(null) }
     var gitHashInput by remember { mutableStateOf("") }
     var gitDateInput by remember { mutableStateOf("") }
-    var fileCountInput by remember { mutableStateOf("") }
+    var linesOfCodeInput by remember { mutableStateOf("") }
     var isEditing by remember { mutableStateOf(false) }
     var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
 
@@ -69,7 +69,7 @@ fun App() {
     fun resetForm() {
         gitHashInput = ""
         gitDateInput = ""
-        fileCountInput = ""
+        linesOfCodeInput = ""
         isEditing = false
     }
 
@@ -122,19 +122,19 @@ fun App() {
                                     error = error,
                                     gitHashInput = gitHashInput,
                                     gitDateInput = gitDateInput,
-                                    fileCountInput = fileCountInput,
+                                    linesOfCodeInput = linesOfCodeInput,
                                     isEditing = isEditing,
                                     onGitHashChange = { gitHashInput = it },
                                     onGitDateChange = { gitDateInput = it },
-                                    onFileCountChange = { fileCountInput = it },
+                                    onLinesOfCodeChange = { linesOfCodeInput = it },
                                     onSubmit = {
                                         scope.launch {
                                             error = null
                                             val trimmedHash = gitHashInput.trim()
                                             val trimmedDate = gitDateInput.trim()
-                                            val countValue = fileCountInput.trim().toIntOrNull()
+                                            val countValue = linesOfCodeInput.trim().toIntOrNull()
                                             if (trimmedHash.isEmpty() || trimmedDate.isEmpty() || countValue == null) {
-                                                error = "Enter git hash, git date, and numeric file count"
+                                                error = "Enter git hash, git date, and lines of code"
                                                 return@launch
                                             }
                                             try {
@@ -166,7 +166,7 @@ fun App() {
                                     onEdit = { record ->
                                         gitHashInput = record.gitHash
                                         gitDateInput = record.gitDate.toString()
-                                        fileCountInput = record.fileCount.toString()
+                                        linesOfCodeInput = record.linesOfCode.toString()
                                         isEditing = true
                                     },
                                     onDelete = { record ->

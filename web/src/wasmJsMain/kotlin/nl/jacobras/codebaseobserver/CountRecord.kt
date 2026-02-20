@@ -7,7 +7,7 @@ import kotlin.time.Instant
 data class CountRecord(
     val gitHash: String,
     val gitDate: Instant,
-    val fileCount: Int,
+    val linesOfCode: Int,
     val createdAt: String
 )
 
@@ -15,11 +15,11 @@ data class CountRecord(
 data class CreateCountRequest(
     val gitHash: String,
     val gitDate: String,
-    val fileCount: Int
+    val linesOfCode: Int
 )
 
 @Serializable
 data class UpdateCountRequest(
     val gitDate: String,
-    val fileCount: Int
+    val linesOfCode: Int
 )

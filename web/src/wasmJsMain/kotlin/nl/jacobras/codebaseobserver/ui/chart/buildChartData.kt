@@ -41,7 +41,7 @@ internal fun buildChartData(
     var lastValue = records
         .filter { it.gitDate < windowStart }
         .maxByOrNull { it.gitDate }
-        ?.fileCount
+        ?.linesOfCode
         ?: 0
 
     for (i in 0 until bucketCount) {
@@ -50,7 +50,7 @@ internal fun buildChartData(
         // Take the newest data point that fits a bucket
         val value = bucketRecords
             .maxByOrNull { it.gitDate }
-            ?.fileCount
+            ?.linesOfCode
             ?: lastValue
 
         lastValue = value

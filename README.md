@@ -6,7 +6,7 @@ Track codebase health metrics over time.
 
 Current supported metrics:
 
-- Number of files (filterable by extension).
+- Lines of code (including comments, imports, blank lines).
 
 ## Run locally
 
@@ -44,9 +44,9 @@ When the server is running, the development build will be accessible at http://l
 #### Development
 
 - General help: `./gradlew :cli:run`
-- Count files help: `./gradlew :cli:run --args="count-files --help"`
-- Count files execute: `./gradlew :cli:run --args="count-files"`
-- Count files execute and upload: `./gradlew :cli:run --args="count-files --server http://localhost:8080"`
+- Measure code help: `./gradlew :cli:run --args="measure-code --help"`
+- Measure code execute: `./gradlew :cli:run --args="measure-code"`
+- Measure code execute and upload: `./gradlew :cli:run --args="measure-code --server http://localhost:8080"`
 
 #### Release
 

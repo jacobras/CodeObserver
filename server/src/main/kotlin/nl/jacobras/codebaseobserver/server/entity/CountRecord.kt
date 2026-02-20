@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 data class CountRecord(
     val gitHash: String,
     val gitDate: String,
-    val fileCount: Int,
+    val linesOfCode: Int,
     val createdAt: String
 )

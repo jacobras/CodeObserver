@@ -17,7 +17,7 @@ class ChartDataBuilderTest {
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(1.minutes),
-                fileCount = 3,
+                linesOfCode = 3,
                 createdAt = "b"
             )
         )
@@ -46,19 +46,19 @@ class ChartDataBuilderTest {
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(1.minutes),
-                fileCount = 3,
+                linesOfCode = 3,
                 createdAt = "b"
             ),
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(5.days),
-                fileCount = 8,
+                linesOfCode = 8,
                 createdAt = "b"
             ),
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(400.days),
-                fileCount = 2,
+                linesOfCode = 2,
                 createdAt = "b"
             )
         )
@@ -90,19 +90,19 @@ class ChartDataBuilderTest {
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(10.days),
-                fileCount = 22,
+                linesOfCode = 22,
                 createdAt = "b"
             ),
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(90.days),
-                fileCount = 3,
+                linesOfCode = 3,
                 createdAt = "b"
             ),
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(400.days),
-                fileCount = 1,
+                linesOfCode = 1,
                 createdAt = "b"
             )
         )
@@ -130,25 +130,25 @@ class ChartDataBuilderTest {
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(9.days),
-                fileCount = 3,
+                linesOfCode = 3,
                 createdAt = "b"
             ),
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(50.days),
-                fileCount = 22,
+                linesOfCode = 22,
                 createdAt = "b"
             ),
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(200.days),
-                fileCount = 88,
+                linesOfCode = 88,
                 createdAt = "b"
             ),
             CountRecord(
                 gitHash = "a",
                 gitDate = Clock.System.now().minus(400.days),
-                fileCount = 150,
+                linesOfCode = 150,
                 createdAt = "b"
             )
         )
