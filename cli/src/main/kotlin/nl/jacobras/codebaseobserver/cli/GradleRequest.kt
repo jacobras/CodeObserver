@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class GradleRequest(
     val gitHash: String,
     val gitDate: String,
-    val moduleCount: Int
+    val moduleCount: Int,
+    val moduleHeight: Int
 )

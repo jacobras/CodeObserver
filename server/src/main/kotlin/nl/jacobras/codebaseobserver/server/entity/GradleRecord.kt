@@ -7,5 +7,6 @@ data class GradleRecord(
     val gitHash: String,
     val gitDate: String,
     val moduleCount: Int,
+    val moduleHeight: Int,
     val createdAt: String
 )

@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class UpdateGradleRequest(
     val gitDate: String,
-    val moduleCount: Int
+    val moduleCount: Int,
+    val moduleHeight: Int
 )

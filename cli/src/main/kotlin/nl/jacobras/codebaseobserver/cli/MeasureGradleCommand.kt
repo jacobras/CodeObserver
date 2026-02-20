@@ -19,7 +19,6 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.isRegularFile
 
 class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
     private val path by option(
@@ -35,7 +34,9 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
 
         val moduleCount = countGradleModules(targetPath)
+        val moduleHeight = calculateModuleHeight(targetPath)
         println("Found $moduleCount Gradle modules in $targetPath")
+        println("Module graph height: $moduleHeight")
 
         serverUrl?.let { url ->
             val gitHash = runCommand("git", "rev-parse", "HEAD")?.trim().orEmpty()
@@ -47,12 +48,15 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
             require(gitDate.isNotEmpty()) {
                 "Could not determine git date. Make sure you are in a git repository."
             }
-            runBlocking { upload(url, gitHash, gitDate, moduleCount) }
+            runBlocking { upload(url, gitHash, gitDate, moduleCount, moduleHeight) }
         }
     }
 
     private fun countGradleModules(root: Path): Int {
-        if (!Files.exists(root)) return 0
+        if (!Files.exists(root)) {
+            println("Warning: $root does not exist")
+            return 0
+        }
 
         // Find settings.gradle.kts file
         val settingsFile = findSettingsGradleFile(root)
@@ -66,15 +70,10 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
     }
 
     private fun findSettingsGradleFile(root: Path): Path? {
-        return try {
-            Files.walk(root).use { stream ->
-                stream
-                    .filter { it.isRegularFile() }
-                    .filter { it.fileName.toString() == "settings.gradle.kts" }
-                    .findFirst()
-                    .orElse(null)
-            }
-        } catch (e: Exception) {
+        val settingsPath = root.resolve("settings.gradle.kts")
+        return if (Files.exists(settingsPath)) {
+            settingsPath
+        } else {
             null
         }
     }
@@ -97,15 +96,99 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
 
             moduleCount
         } catch (e: Exception) {
+            println("Failed to count modules because of ${e.message}")
             0
         }
+    }
+
+    private fun calculateModuleHeight(root: Path): Int {
+        if (!Files.exists(root)) {
+            println("Warning: $root does not exist")
+            return 0
+        }
+
+        val settingsFile = findSettingsGradleFile(root)
+        if (settingsFile == null) {
+            println("Warning: settings.gradle.kts not found in $root")
+            return 0
+        }
+
+        return try {
+            val content = Files.readString(settingsFile)
+            // Build a dependency graph from settings.gradle.kts
+            // Parse all include directives to get module names
+            val includeBlockPattern = Regex("""include\s*\((.*?)\)""", RegexOption.DOT_MATCHES_ALL)
+            val modulePattern = Regex("""["']([^"']+)["']""")
+
+            val modules = mutableSetOf<String>()
+            val dependencies = mutableMapOf<String, Set<String>>()
+
+            includeBlockPattern.findAll(content).forEach { match ->
+                val includeBlock = match.groupValues[1]
+                modulePattern.findAll(includeBlock).forEach { moduleMatch ->
+                    val moduleName = moduleMatch.groupValues[1].removePrefix(":")
+                    modules.add(moduleName)
+                    dependencies[moduleName] = setOf()
+                }
+            }
+
+            // Parse build.gradle.kts files to find dependencies between modules
+            val buildGradlePattern = Regex("""include\s*\((.*?)\)""", RegexOption.DOT_MATCHES_ALL)
+
+            modules.forEach { module ->
+                val modulePath = root.resolve(module.replace(":", File.separator))
+                val buildGradle = modulePath.resolve("build.gradle.kts")
+                if (Files.exists(buildGradle)) {
+                    val buildContent = Files.readString(buildGradle)
+                    // Simple pattern to find project dependencies like project(":other")
+                    val depPattern = Regex("""project\s*\(\s*["':]*([^"']+)["']?\s*\)""")
+                    val deps = mutableSetOf<String>()
+                    depPattern.findAll(buildContent).forEach { depMatch ->
+                        val depName = depMatch.groupValues[1].removePrefix(":")
+                        if (modules.contains(depName)) {
+                            deps.add(depName)
+                        }
+                    }
+                    dependencies[module] = deps
+                }
+            }
+
+            // Calculate the height of the dependency graph using topological sort
+            calculateGraphHeight(modules, dependencies)
+        } catch (e: Exception) {
+            println("Failed to calculate module height because of ${e.message}")
+            0
+        }
+    }
+
+    private fun calculateGraphHeight(modules: Set<String>, dependencies: Map<String, Set<String>>): Int {
+        if (modules.isEmpty()) return 0
+
+        val visited = mutableSetOf<String>()
+        val memo = mutableMapOf<String, Int>()
+
+        fun dfs(module: String): Int {
+            if (module in memo) return memo[module]!!
+            if (module in visited) return 0 // Cycle detection
+
+            visited.add(module)
+            val height = 1 + (dependencies[module]?.maxOfOrNull { dfs(it) } ?: 0)
+            visited.remove(module)
+
+            memo[module] = height
+            return height
+        }
+
+        val maxHeight = modules.maxOfOrNull { dfs(it) } ?: 0
+        return maxHeight
     }
 
     private suspend fun upload(
         serverUrl: String,
         gitHash: String,
         gitDate: String,
-        moduleCount: Int
+        moduleCount: Int,
+        moduleHeight: Int
     ) {
         val client = HttpClient(CIO) {
             install(ContentNegotiation) {
@@ -115,7 +198,8 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         val payload = GradleRequest(
             gitHash = gitHash,
             gitDate = gitDate,
-            moduleCount = moduleCount
+            moduleCount = moduleCount,
+            moduleHeight = moduleHeight
         )
         val response = client.post("${serverUrl.trimEnd('/')}/gradle") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
@@ -128,4 +212,3 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         println("Server response: $statusCode: $responseBody")
     }
 }
-

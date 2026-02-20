@@ -8,6 +8,7 @@ data class GradleRecord(
     val gitHash: String,
     val gitDate: Instant,
     val moduleCount: Int,
+    val moduleHeight: Int,
     val createdAt: String
 )
 
@@ -15,11 +16,13 @@ data class GradleRecord(
 data class CreateGradleRequest(
     val gitHash: String,
     val gitDate: String,
-    val moduleCount: Int
+    val moduleCount: Int,
+    val moduleHeight: Int
 )
 
 @Serializable
 data class UpdateGradleRequest(
     val gitDate: String,
-    val moduleCount: Int
+    val moduleCount: Int,
+    val moduleHeight: Int
 )

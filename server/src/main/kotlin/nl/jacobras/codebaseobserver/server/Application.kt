@@ -51,6 +51,7 @@ object GradleTable : Table("gradle") {
     val gitHash = text("gitHash")
     val gitDate = text("gitDate")
     val moduleCount = integer("moduleCount")
+    val moduleHeight = integer("moduleHeight")
     override val primaryKey = PrimaryKey(gitHash)
 }
 
@@ -160,6 +161,7 @@ fun Application.module() {
                     it[gitHash] = request.gitHash
                     it[gitDate] = request.gitDate
                     it[moduleCount] = request.moduleCount
+                    it[moduleHeight] = request.moduleHeight
                     it[GradleTable.createdAt] = createdAt
                 }
             }
@@ -172,6 +174,7 @@ fun Application.module() {
                         gitHash = it[GradleTable.gitHash],
                         gitDate = it[GradleTable.gitDate],
                         moduleCount = it[GradleTable.moduleCount],
+                        moduleHeight = it[GradleTable.moduleHeight],
                         createdAt = it[GradleTable.createdAt]
                     )
                 }
@@ -189,6 +192,7 @@ fun Application.module() {
                 GradleTable.update({ GradleTable.gitHash eq gitHash }) {
                     it[gitDate] = request.gitDate
                     it[moduleCount] = request.moduleCount
+                    it[moduleHeight] = request.moduleHeight
                 }
             }
             if (updatedRows == 0) {
