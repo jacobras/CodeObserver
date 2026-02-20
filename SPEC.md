@@ -36,6 +36,13 @@
 - Kotlin Multiplatform CLI (JVM only).
 - Running without any command lists available commands.
 - Commands:
+    - `measure`
+        - Arguments:
+            - `--path` (folder to scan, default `.`)
+            - `--server` (server URL to upload results, optional)
+        - Behavior:
+            - Runs both `measure-code` and `measure-gradle` sequentially with the same arguments.
+            - Print a startup message and summary from both commands.
     - `measure-code`
         - Arguments:
             - `--path` (folder to scan, default `.`)
