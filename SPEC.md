@@ -25,11 +25,11 @@
     - `gitHash` (TEXT)
     - `gitDate` (TEXT)
     - `moduleCount` (INTEGER)
-    - `moduleHeight` (INTEGER)
+    - `moduleTreeHeight` (INTEGER)
     - Endpoints:
-        - `POST /gradle` body `{ gitHash, gitDate, moduleCount, moduleHeight }` -> stores record.
+        - `POST /gradle` body `{ gitHash, gitDate, moduleCount, moduleTreeHeight }` -> stores record.
         - `GET /gradle` -> list of records ordered by `gitDate` asc.
-        - `PUT /gradle/{gitHash}` body `{ gitDate, moduleCount, moduleHeight }` -> updates matching record.
+        - `PUT /gradle/{gitHash}` body `{ gitDate, moduleCount, moduleTreeHeight }` -> updates matching record.
         - `DELETE /gradle/{gitHash}` -> deletes matching record.
 
 ## CLI

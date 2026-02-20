@@ -35,9 +35,9 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
 
         val moduleCount = countGradleModules(targetPath)
-        val (moduleHeight, longestPath) = calculateModuleHeightWithPath(targetPath)
+        val (moduleTreeHeight, longestPath) = calculateModuleTreeHeightWithPath(targetPath)
         println("Found $moduleCount Gradle modules in $targetPath")
-        println("Module graph height: $moduleHeight")
+        println("Module tree height: $moduleTreeHeight")
         if (longestPath.isNotEmpty()) {
             println("Longest path: ${longestPath.joinToString(" > ")}")
         }
@@ -52,7 +52,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
             require(gitDate.isNotEmpty()) {
                 "Could not determine git date. Make sure you are in a git repository."
             }
-            runBlocking { upload(url, gitHash, gitDate, moduleCount, moduleHeight) }
+            runBlocking { upload(url, gitHash, gitDate, moduleCount, moduleTreeHeight) }
         }
     }
 
@@ -105,46 +105,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         }
     }
 
-    private fun calculateModuleHeight(root: Path): Int {
-        if (!Files.exists(root)) {
-            println("Warning: $root does not exist")
-            return 0
-        }
-
-        val settingsFile = findSettingsGradleFile(root)
-        if (settingsFile == null) {
-            println("Warning: settings.gradle.kts not found in $root")
-            return 0
-        }
-
-        return try {
-            val content = Files.readString(settingsFile)
-
-            val modules = GradleSettingsParser.parseModules(content)
-            val dependencies = mutableMapOf<String, List<String>>()
-
-            // Parse build.gradle.kts files to find dependencies between modules
-            val buildGradlePattern = Regex("""include\s*\((.*?)\)""", RegexOption.DOT_MATCHES_ALL)
-
-            modules.forEach { module ->
-                val modulePath = root.resolve(module.replace(":", File.separator))
-                val buildGradle = modulePath.resolve("build.gradle.kts")
-                if (Files.exists(buildGradle)) {
-                    val buildContent = Files.readString(buildGradle)
-                    val deps = GradleDependencyParser.parse(buildContent)
-                    dependencies[module] = deps
-                }
-            }
-
-            // Calculate the height of the dependency graph using topological sort
-            calculateGraphHeight(modules, dependencies).first
-        } catch (e: Exception) {
-            println("Failed to calculate module height because of ${e.message}")
-            0
-        }
-    }
-
-    private fun calculateModuleHeightWithPath(root: Path): Pair<Int, List<String>> {
+    private fun calculateModuleTreeHeightWithPath(root: Path): Pair<Int, List<String>> {
         if (!Files.exists(root)) {
             println("Warning: $root does not exist")
             return Pair(0, emptyList())
@@ -161,9 +122,6 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
 
             val modules = GradleSettingsParser.parseModules(content)
             val dependencies = mutableMapOf<String, List<String>>()
-
-            // Parse build.gradle.kts files to find dependencies between modules
-            val buildGradlePattern = Regex("""include\s*\((.*?)\)""", RegexOption.DOT_MATCHES_ALL)
 
             modules.forEach { module ->
                 val modulePath = root.resolve(module.replace(":", File.separator))
@@ -183,7 +141,10 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         }
     }
 
-    private fun calculateGraphHeight(modules: List<String>, dependencies: Map<String, List<String>>): Pair<Int, List<String>> {
+    private fun calculateGraphHeight(
+        modules: List<String>,
+        dependencies: Map<String, List<String>>
+    ): Pair<Int, List<String>> {
         if (modules.isEmpty()) return Pair(0, emptyList())
 
         val visited = mutableSetOf<String>()
@@ -227,7 +188,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         gitHash: String,
         gitDate: String,
         moduleCount: Int,
-        moduleHeight: Int
+        moduleTreeHeight: Int
     ) {
         val client = HttpClient(CIO) {
             install(ContentNegotiation) {
@@ -238,7 +199,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
             gitHash = gitHash,
             gitDate = gitDate,
             moduleCount = moduleCount,
-            moduleHeight = moduleHeight
+            moduleTreeHeight = moduleTreeHeight
         )
         val response = client.post("${serverUrl.trimEnd('/')}/gradle") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
