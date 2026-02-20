@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,17 +20,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
-import ir.ehsannarmani.compose_charts.LineChart
-import ir.ehsannarmani.compose_charts.models.AnimationMode
-import ir.ehsannarmani.compose_charts.models.DividerProperties
-import ir.ehsannarmani.compose_charts.models.DotProperties
-import ir.ehsannarmani.compose_charts.models.GridProperties
-import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
-import ir.ehsannarmani.compose_charts.models.LabelProperties
-import ir.ehsannarmani.compose_charts.models.Line
-import nl.jacobras.codebaseobserver.ui.chart.buildChartData
+import nl.jacobras.codebaseobserver.ui.chart.Chart
+import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
 @Composable
 internal fun DashboardScreen(
@@ -120,62 +111,6 @@ internal fun DashboardScreen(
 }
 
 @Composable
-private fun Chart(records: List<CountRecord>, timeView: TimeView) {
-    val chartData = buildChartData(records, timeView)
-    val lineData = remember(records, timeView) {
-        listOf(
-            Line(
-                label = "Lines of code",
-                color = SolidColor(Color(0xFF264653)),
-                values = chartData.yValues.map { it.toDouble() },
-                firstGradientFillColor = Color(0xFF2A9D8F).copy(alpha = 0.35f),
-                secondGradientFillColor = Color.Transparent,
-                dotProperties = DotProperties(
-                    enabled = true,
-                    color = SolidColor(Color.White),
-                    strokeColor = SolidColor(Color(0xFF2A9D8F)),
-                    radius = 6.dp,
-                    strokeWidth = 3.dp
-                )
-            )
-        )
-    }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        LineChart(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp)
-                .padding(horizontal = 12.dp),
-            data = lineData,
-            curvedEdges = false,
-            animationMode = AnimationMode.None,
-            gridProperties = GridProperties(
-                enabled = true,
-                xAxisProperties = GridProperties.AxisProperties(enabled = false),
-                yAxisProperties = GridProperties.AxisProperties(
-                    enabled = true,
-                    thickness = 1.dp,
-                    color = SolidColor(Color(0xFFE0E0E0))
-                )
-            ),
-            indicatorProperties = HorizontalIndicatorProperties(
-                enabled = true,
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF2F4858)),
-                padding = 12.dp
-            ),
-            labelProperties = LabelProperties(
-                enabled = true,
-                labels = chartData.xLabels,
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF2F4858)),
-                rotation = LabelProperties.Rotation(degree = 0f)
-            ),
-            dividerProperties = DividerProperties(enabled = false)
-        )
-    }
-}
-
-@Composable
 private fun RecordsTable(
     records: List<CountRecord>,
     onEdit: (CountRecord) -> Unit,
@@ -213,11 +148,4 @@ private fun RecordsTable(
             }
         }
     }
-}
-
-internal enum class TimeView(val label: String) {
-    Last7Days("Last 7 days"),
-    Last30Days("Last 30 days"),
-    Last6Months("Last 6 months"),
-    Last12Months("Last 12 months")
 }
