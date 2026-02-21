@@ -86,6 +86,5 @@
     - Options sourced from `GET /projects`.
     - Selected `projectId` is required for all fetches and CRUD operations.
 - Add/update/delete records:
-    - Add: form for `projectId`, `gitHash`, `gitDate`, `linesOfCode` -> `POST /metrics/code`.
     - Update: edit existing row by `projectId` + `gitHash` -> `PUT /metrics/{gitHash}`.
     - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.

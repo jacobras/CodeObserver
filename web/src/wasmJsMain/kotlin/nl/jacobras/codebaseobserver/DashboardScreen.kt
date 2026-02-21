@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -67,39 +66,6 @@ internal fun DashboardScreen(
                         Text(projectId)
                     }
                 }
-            }
-        }
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Add or update count", style = MaterialTheme.typography.titleMedium)
-        OutlinedTextField(
-            value = gitHashInput,
-            onValueChange = onGitHashChange,
-            label = { Text("Git hash") },
-            enabled = !isEditing,
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = gitDateInput,
-            onValueChange = onGitDateChange,
-            label = { Text("Git date (ISO)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = linesOfCodeInput,
-            onValueChange = onLinesOfCodeChange,
-            label = { Text("Lines of code") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = onSubmit) {
-                Text(if (isEditing) "Update" else "Add")
-            }
-            Button(
-                onClick = onClear,
-                enabled = gitHashInput.isNotEmpty() || gitDateInput.isNotEmpty() || linesOfCodeInput.isNotEmpty()
-            ) {
-                Text("Clear")
             }
         }
     }
