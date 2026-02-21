@@ -24,3 +24,11 @@ jobs:
 
       - name: Run tests
         run: ./gradlew test
+
+      - name: Publish unit test report
+        if: always()
+        uses: mikepenz/action-junit-report@v6
+        with:
+          check_name: Unit test report
+          require_tests: true
+          report_paths: "**/build/test-results/**/TEST-*.xml"
