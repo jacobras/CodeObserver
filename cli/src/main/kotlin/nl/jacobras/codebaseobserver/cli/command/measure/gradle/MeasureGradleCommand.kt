@@ -14,13 +14,16 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.cli.runCommand
+import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.time.Instant
 
 class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
     private val path by option(
@@ -202,14 +205,14 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
                 json(Json { ignoreUnknownKeys = true })
             }
         }
-        val payload = GradleRequest(
+        val payload = GradleMetricsRequest(
             projectId = projectId,
             gitHash = gitHash,
-            gitDate = gitDate,
+            gitDate = Instant.parse(gitDate),
             moduleCount = moduleCount,
             moduleTreeHeight = moduleTreeHeight
         )
-        val response = client.post("${serverUrl.trimEnd('/')}/gradle") {
+        val response = client.post("${serverUrl.trimEnd('/')}/metrics/gradle") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             contentType(ContentType.Application.Json)
             setBody(payload)
@@ -217,6 +220,9 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         client.close()
         val statusCode = response.status.value
         val responseBody = response.bodyAsText()
-        println("Server response: $statusCode: $responseBody")
+        require(response.status.isSuccess()) {
+            "Error uploading metrics: $statusCode - $responseBody"
+        }
+        println("Server response: $statusCode - $responseBody")
     }
 }

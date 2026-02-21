@@ -35,6 +35,8 @@ dependencies {
     implementation(libs.ktor.server.status.pages)
     implementation(libs.logback.classic)
     implementation(libs.sqlite.jdbc)
+
+    implementation(projects.serverDto)
 }
 
 tasks.named<ShadowJar>("shadowJar") {

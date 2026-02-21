@@ -1,12 +1,13 @@
-package nl.jacobras.codebaseobserver.server.dto
+package nl.jacobras.codebaseobserver.dto
 
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 
 @Serializable
-data class GradleRequest(
+data class GradleMetricsRequest(
     val projectId: String,
     val gitHash: String,
-    val gitDate: String,
+    val gitDate: Instant,
     val moduleCount: Int,
     val moduleTreeHeight: Int
 )

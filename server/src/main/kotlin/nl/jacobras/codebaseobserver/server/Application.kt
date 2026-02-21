@@ -16,48 +16,24 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
-import nl.jacobras.codebaseobserver.server.dto.CountRequest
-import nl.jacobras.codebaseobserver.server.dto.GradleRequest
-import nl.jacobras.codebaseobserver.server.dto.UpdateCountRequest
-import nl.jacobras.codebaseobserver.server.dto.UpdateGradleRequest
-import nl.jacobras.codebaseobserver.server.entity.CountRecord
-import nl.jacobras.codebaseobserver.server.entity.GradleRecord
+import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
+import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
+import nl.jacobras.codebaseobserver.dto.MetricsDto
+import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.upsert
 import java.io.File
-import java.time.Instant
-
-object CountsTable : Table("counts") {
-    val createdAt = text("createdAt")
-    val projectId = text("projectId")
-    val gitHash = text("gitHash")
-    val gitDate = text("gitDate")
-    val linesOfCode = integer("linesOfCode")
-    override val primaryKey = PrimaryKey(projectId, gitHash)
-}
-
-object GradleTable : Table("gradle") {
-    val createdAt = text("createdAt")
-    val projectId = text("projectId")
-    val gitHash = text("gitHash")
-    val gitDate = text("gitDate")
-    val moduleCount = integer("moduleCount")
-    val moduleTreeHeight = integer("moduleTreeHeight")
-    override val primaryKey = PrimaryKey(projectId, gitHash)
-}
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 fun main() {
     embeddedServer(Netty, port = 8080, module = Application::module).start(wait = true)
@@ -71,7 +47,7 @@ fun Application.module() {
             ignoreUnknownKeys = true
         })
     }
-    install(CORS) {
+    install(CORS) { // TODO remove?
         anyHost()
         allowHeader(HttpHeaders.ContentType)
     }
@@ -88,7 +64,7 @@ fun Application.module() {
     val dbFile = File(dbPath)
     dbFile.parentFile?.mkdirs()
     Database.connect("jdbc:sqlite:${dbFile.absolutePath}", driver = "org.sqlite.JDBC")
-    transaction { SchemaUtils.create(CountsTable, GradleTable) }
+    transaction { SchemaUtils.create(MetricsTable) }
 
     routing {
         staticFiles("/", File("app/web")) {
@@ -97,174 +73,90 @@ fun Application.module() {
         staticFiles("/dev", File("../web/build/dist/wasmJs/developmentExecutable")) {
             default("index.html")
         }
-        post("/counts") {
-            val request = call.receive<CountRequest>()
-            val createdAt = Instant.now().toString()
-            transaction {
-                CountsTable.insert {
-                    it[projectId] = request.projectId
-                    it[gitHash] = request.gitHash
-                    it[gitDate] = request.gitDate
-                    it[linesOfCode] = request.linesOfCode
-                    it[CountsTable.createdAt] = createdAt
-                }
-            }
-            call.respond(HttpStatusCode.Created, mapOf("status" to "stored"))
-        }
-        get("/counts") {
-            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
-            if (projectId.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-                return@get
-            }
-            val records = transaction {
-                CountsTable.select { CountsTable.projectId eq projectId }
-                    .orderBy(CountsTable.gitDate to SortOrder.ASC)
-                    .map {
-                        CountRecord(
-                            projectId = it[CountsTable.projectId],
-                            gitHash = it[CountsTable.gitHash],
-                            gitDate = it[CountsTable.gitDate],
-                            linesOfCode = it[CountsTable.linesOfCode],
-                            createdAt = it[CountsTable.createdAt]
-                        )
-                    }
-            }
-            call.respond(records)
-        }
-        put("/counts/{gitHash}") {
-            val gitHash = call.parameters["gitHash"]
-            if (gitHash.isNullOrBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
-                return@put
-            }
-            val request = call.receive<UpdateCountRequest>()
-            if (request.projectId.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-                return@put
-            }
-            val updatedRows = transaction {
-                CountsTable.update({ (CountsTable.projectId eq request.projectId) and (CountsTable.gitHash eq gitHash) }) {
-                    it[gitDate] = request.gitDate
-                    it[linesOfCode] = request.linesOfCode
-                }
-            }
-            if (updatedRows == 0) {
-                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
-            } else {
-                call.respond(HttpStatusCode.OK, mapOf("status" to "updated"))
-            }
-        }
-        delete("/counts/{gitHash}") {
-            val gitHash = call.parameters["gitHash"]
-            if (gitHash.isNullOrBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
-                return@delete
-            }
-            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
-            if (projectId.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-                return@delete
-            }
-            val deletedRows = transaction {
-                CountsTable.deleteWhere { (CountsTable.projectId eq projectId) and (CountsTable.gitHash eq gitHash) }
-            }
-            if (deletedRows == 0) {
-                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
-            } else {
-                call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
-            }
-        }
-        post("/gradle") {
-            val request = call.receive<GradleRequest>()
-            val createdAt = Instant.now().toString()
-            transaction {
-                GradleTable.insert {
-                    it[projectId] = request.projectId
-                    it[gitHash] = request.gitHash
-                    it[gitDate] = request.gitDate
-                    it[moduleCount] = request.moduleCount
-                    it[moduleTreeHeight] = request.moduleTreeHeight
-                    it[GradleTable.createdAt] = createdAt
-                }
-            }
-            call.respond(HttpStatusCode.Created, mapOf("status" to "stored"))
-        }
-        get("/gradle") {
-            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
-            if (projectId.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-                return@get
-            }
-            val records = transaction {
-                GradleTable.select { GradleTable.projectId eq projectId }
-                    .orderBy(GradleTable.gitDate to SortOrder.ASC)
-                    .map {
-                        GradleRecord(
-                            projectId = it[GradleTable.projectId],
-                            gitHash = it[GradleTable.gitHash],
-                            gitDate = it[GradleTable.gitDate],
-                            moduleCount = it[GradleTable.moduleCount],
-                            moduleTreeHeight = it[GradleTable.moduleTreeHeight],
-                            createdAt = it[GradleTable.createdAt]
-                        )
-                    }
-            }
-            call.respond(records)
-        }
-        put("/gradle/{gitHash}") {
-            val gitHash = call.parameters["gitHash"]
-            if (gitHash.isNullOrBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
-                return@put
-            }
-            val request = call.receive<UpdateGradleRequest>()
-            if (request.projectId.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-                return@put
-            }
-            val updatedRows = transaction {
-                GradleTable.update({ (GradleTable.projectId eq request.projectId) and (GradleTable.gitHash eq gitHash) }) {
-                    it[gitDate] = request.gitDate
-                    it[moduleCount] = request.moduleCount
-                    it[moduleTreeHeight] = request.moduleTreeHeight
-                }
-            }
-            if (updatedRows == 0) {
-                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
-            } else {
-                call.respond(HttpStatusCode.OK, mapOf("status" to "updated"))
-            }
-        }
-        delete("/gradle/{gitHash}") {
-            val gitHash = call.parameters["gitHash"]
-            if (gitHash.isNullOrBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
-                return@delete
-            }
-            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
-            if (projectId.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-                return@delete
-            }
-            val deletedRows = transaction {
-                GradleTable.deleteWhere { (GradleTable.projectId eq projectId) and (GradleTable.gitHash eq gitHash) }
-            }
-            if (deletedRows == 0) {
-                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
-            } else {
-                call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
-            }
-        }
         get("/projects") {
             val projects = transaction {
-                val countProjects = CountsTable.slice(CountsTable.projectId).selectAll().withDistinct()
-                    .map { it[CountsTable.projectId] }
-                val gradleProjects = GradleTable.slice(GradleTable.projectId).selectAll().withDistinct()
-                    .map { it[GradleTable.projectId] }
-                (countProjects + gradleProjects).toSet().sorted()
+                MetricsTable
+                    .select(MetricsTable.projectId)
+                    .withDistinct()
+                    .map { it[MetricsTable.projectId] }
+                    .sorted()
             }
             call.respond(projects)
+        }
+        get("/metrics") {
+            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@get
+            }
+            val records = transaction {
+                MetricsTable.selectAll()
+                    .where { MetricsTable.projectId eq projectId }
+                    .orderBy(MetricsTable.gitDate to SortOrder.ASC)
+                    .map {
+                        MetricsDto(
+                            projectId = it[MetricsTable.projectId],
+                            createdAt = Instant.fromEpochSeconds(it[MetricsTable.createdAt]),
+                            gitHash = it[MetricsTable.gitHash],
+                            gitDate = Instant.fromEpochSeconds(it[MetricsTable.gitDate]),
+                            linesOfCode = it[MetricsTable.linesOfCode],
+                            moduleCount = it[MetricsTable.moduleCount],
+                            moduleTreeHeight = it[MetricsTable.moduleTreeHeight]
+                        )
+                    }
+            }
+            call.respond(records)
+        }
+        post("/metrics/code") {
+            val request = call.receive<CodeMetricsRequest>()
+            transaction {
+                MetricsTable.upsert(
+                    onUpdateExclude = listOf(MetricsTable.moduleCount, MetricsTable.moduleTreeHeight)
+                ) {
+                    it[projectId] = request.projectId
+                    it[createdAt] = Clock.System.now().epochSeconds
+                    it[gitHash] = request.gitHash
+                    it[gitDate] = request.gitDate.epochSeconds
+                    it[linesOfCode] = request.linesOfCode
+                }
+            }
+            call.respond(HttpStatusCode.Created, mapOf("status" to "stored"))
+        }
+        post("/metrics/gradle") {
+            val request = call.receive<GradleMetricsRequest>()
+            transaction {
+                MetricsTable.upsert(
+                    onUpdateExclude = listOf(MetricsTable.linesOfCode)
+                ) {
+                    it[projectId] = request.projectId
+                    it[createdAt] = Clock.System.now().epochSeconds
+                    it[gitHash] = request.gitHash
+                    it[gitDate] = request.gitDate.epochSeconds
+                    it[moduleCount] = request.moduleCount
+                    it[moduleTreeHeight] = request.moduleTreeHeight
+                }
+            }
+            call.respond(HttpStatusCode.Created, mapOf("status" to "stored"))
+        }
+        delete("/metrics/{gitHash}") {
+            val gitHash = call.parameters["gitHash"]
+            if (gitHash.isNullOrBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
+                return@delete
+            }
+            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@delete
+            }
+            val deletedRows = transaction {
+                MetricsTable.deleteWhere { (MetricsTable.projectId eq projectId) and (MetricsTable.gitHash eq gitHash) }
+            }
+            if (deletedRows == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
+            }
         }
     }
 }

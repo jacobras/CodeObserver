@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import nl.jacobras.codebaseobserver.dto.MetricsDto
 import nl.jacobras.codebaseobserver.ui.chart.GradleChart
 import nl.jacobras.codebaseobserver.ui.chart.LinesOfCodeChart
 import nl.jacobras.codebaseobserver.ui.chart.ModuleTreeHeightChart
@@ -28,8 +29,7 @@ import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
 @Composable
 internal fun DashboardScreen(
-    records: List<CountRecord>,
-    gradleRecords: List<GradleRecord>,
+    records: List<MetricsDto>,
     error: String?,
     projectIds: List<String>,
     selectedProjectId: String,
@@ -43,8 +43,8 @@ internal fun DashboardScreen(
     onLinesOfCodeChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onClear: () -> Unit,
-    onEdit: (CountRecord) -> Unit,
-    onDelete: (CountRecord) -> Unit
+    onEdit: (MetricsDto) -> Unit,
+    onDelete: (MetricsDto) -> Unit
 ) {
     Text("Dashboard", style = MaterialTheme.typography.headlineLarge)
     Row(
@@ -138,10 +138,10 @@ internal fun DashboardScreen(
                 LinesOfCodeChart(records, timeView)
             }
             Column(modifier = Modifier.weight(1f)) {
-                GradleChart(gradleRecords, timeView)
+                GradleChart(records, timeView)
             }
             Column(modifier = Modifier.weight(1f)) {
-                ModuleTreeHeightChart(gradleRecords, timeView)
+                ModuleTreeHeightChart(records, timeView)
             }
         }
         RecordsTable(
@@ -154,9 +154,9 @@ internal fun DashboardScreen(
 
 @Composable
 private fun RecordsTable(
-    records: List<CountRecord>,
-    onEdit: (CountRecord) -> Unit,
-    onDelete: (CountRecord) -> Unit
+    records: List<MetricsDto>,
+    onEdit: (MetricsDto) -> Unit,
+    onDelete: (MetricsDto) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

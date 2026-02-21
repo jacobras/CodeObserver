@@ -1,6 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
 rootProject.name = "CodebaseObserver"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
     repositories {
@@ -32,5 +33,6 @@ dependencyResolutionManagement {
 include(
     ":cli",
     ":server",
+    ":server-dto",
     ":web"
 )

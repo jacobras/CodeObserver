@@ -42,12 +42,14 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
+import nl.jacobras.codebaseobserver.dto.MetricsDto
 import nl.jacobras.codebaseobserver.web.BuildConfig
+import kotlin.time.Instant
 
 @Composable
 fun App() {
-    var records by remember { mutableStateOf<List<CountRecord>>(emptyList()) }
-    var gradleRecords by remember { mutableStateOf<List<GradleRecord>>(emptyList()) }
+    var records by remember { mutableStateOf<List<MetricsDto>>(emptyList()) }
     var projectIds by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedProjectId by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
@@ -88,17 +90,7 @@ fun App() {
             records = emptyList()
             return
         }
-        records = client.get("/counts") {
-            url { parameters.append("projectId", selectedProjectId) }
-        }.body()
-    }
-
-    suspend fun reloadGradleRecords() {
-        if (selectedProjectId.isBlank()) {
-            gradleRecords = emptyList()
-            return
-        }
-        gradleRecords = client.get("/gradle") {
+        records = client.get("/metrics") {
             url { parameters.append("projectId", selectedProjectId) }
         }.body()
     }
@@ -110,8 +102,6 @@ fun App() {
     LaunchedEffect(Unit) {
         try {
             reloadProjects()
-            reloadRecords()
-            reloadGradleRecords()
         } catch (ex: Throwable) {
             error = ex.message ?: "Failed to load"
         }
@@ -121,7 +111,6 @@ fun App() {
         if (selectedProjectId.isBlank()) return@LaunchedEffect
         try {
             reloadRecords()
-            reloadGradleRecords()
         } catch (ex: Throwable) {
             error = ex.message ?: "Failed to load"
         }
@@ -157,7 +146,6 @@ fun App() {
                             Screen.Dashboard -> {
                                 DashboardScreen(
                                     records = records,
-                                    gradleRecords = gradleRecords,
                                     error = error,
                                     projectIds = projectIds,
                                     selectedProjectId = selectedProjectId,
@@ -186,19 +174,26 @@ fun App() {
                                             }
                                             try {
                                                 if (isEditing) {
-                                                    client.put("/counts/$trimmedHash") {
-                                                        contentType(ContentType.Application.Json)
-                                                        setBody(UpdateCountRequest(trimmedProjectId, trimmedDate, countValue))
-                                                    }
-                                                } else {
-                                                    client.post("/counts") {
+                                                    client.put("/metrics/$trimmedHash") {
                                                         contentType(ContentType.Application.Json)
                                                         setBody(
-                                                            CreateCountRequest(
-                                                                trimmedProjectId,
-                                                                trimmedHash,
-                                                                trimmedDate,
-                                                                countValue
+                                                            CodeMetricsRequest(
+                                                                projectId = trimmedProjectId,
+                                                                gitHash = trimmedHash,
+                                                                gitDate = Instant.parse(trimmedDate),
+                                                                linesOfCode = countValue
+                                                            )
+                                                        )
+                                                    }
+                                                } else {
+                                                    client.post("/metrics/code") {
+                                                        contentType(ContentType.Application.Json)
+                                                        setBody(
+                                                            CodeMetricsRequest(
+                                                                projectId = trimmedProjectId,
+                                                                gitHash = trimmedHash,
+                                                                gitDate = Instant.parse(trimmedDate),
+                                                                linesOfCode = countValue
                                                             )
                                                         )
                                                     }
@@ -222,7 +217,7 @@ fun App() {
                                         scope.launch {
                                             error = null
                                             try {
-                                                client.delete("/counts/${record.gitHash}") {
+                                                client.delete("/metrics/${record.gitHash}") {
                                                     url { parameters.append("projectId", selectedProjectId) }
                                                 }
                                                 reloadProjects()
