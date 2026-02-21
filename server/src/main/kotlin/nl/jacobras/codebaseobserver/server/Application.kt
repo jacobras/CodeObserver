@@ -1,6 +1,5 @@
 package nl.jacobras.codebaseobserver.server
 
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -9,7 +8,6 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.http.content.staticFiles
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -46,10 +44,6 @@ fun Application.module() {
             isLenient = true
             ignoreUnknownKeys = true
         })
-    }
-    install(CORS) { // TODO remove?
-        anyHost()
-        allowHeader(HttpHeaders.ContentType)
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
