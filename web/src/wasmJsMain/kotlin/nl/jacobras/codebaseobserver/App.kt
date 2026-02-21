@@ -34,7 +34,6 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
-import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -101,8 +100,8 @@ fun App() {
     LaunchedEffect(Unit) {
         try {
             reloadProjects()
-        } catch (ex: Throwable) {
-            error = ex.message ?: "Failed to load"
+        } catch (e: Throwable) {
+            error = e.message ?: "Failed to load"
         }
     }
 
@@ -110,8 +109,8 @@ fun App() {
         if (selectedProjectId.isBlank()) return@LaunchedEffect
         try {
             reloadRecords()
-        } catch (ex: Throwable) {
-            error = ex.message ?: "Failed to load"
+        } catch (e: Throwable) {
+            error = e.message ?: "Failed to load"
         }
     }
 
@@ -172,36 +171,22 @@ fun App() {
                                                 return@launch
                                             }
                                             try {
-                                                if (isEditing) {
-                                                    client.put("/metrics/$trimmedHash") {
-                                                        contentType(ContentType.Application.Json)
-                                                        setBody(
-                                                            CodeMetricsRequest(
-                                                                projectId = trimmedProjectId,
-                                                                gitHash = trimmedHash,
-                                                                gitDate = Instant.parse(trimmedDate),
-                                                                linesOfCode = countValue
-                                                            )
+                                                client.post("/metrics/$trimmedHash") {
+                                                    contentType(ContentType.Application.Json)
+                                                    setBody(
+                                                        CodeMetricsRequest(
+                                                            projectId = trimmedProjectId,
+                                                            gitHash = trimmedHash,
+                                                            gitDate = Instant.parse(trimmedDate),
+                                                            linesOfCode = countValue
                                                         )
-                                                    }
-                                                } else {
-                                                    client.post("/metrics/code") {
-                                                        contentType(ContentType.Application.Json)
-                                                        setBody(
-                                                            CodeMetricsRequest(
-                                                                projectId = trimmedProjectId,
-                                                                gitHash = trimmedHash,
-                                                                gitDate = Instant.parse(trimmedDate),
-                                                                linesOfCode = countValue
-                                                            )
-                                                        )
-                                                    }
+                                                    )
                                                 }
                                                 reloadProjects()
                                                 reloadRecords()
                                                 resetForm()
-                                            } catch (ex: Throwable) {
-                                                error = ex.message ?: "Failed to submit"
+                                            } catch (e: Throwable) {
+                                                error = e.message ?: "Failed to submit"
                                             }
                                         }
                                     },
@@ -224,8 +209,8 @@ fun App() {
                                                 if (isEditing && gitHashInput == record.gitHash) {
                                                     resetForm()
                                                 }
-                                            } catch (ex: Throwable) {
-                                                error = ex.message ?: "Failed to delete"
+                                            } catch (e: Throwable) {
+                                                error = e.message ?: "Failed to delete"
                                             }
                                         }
                                     }

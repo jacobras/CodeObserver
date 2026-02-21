@@ -5,9 +5,9 @@ import kotlin.time.Instant
 
 @Serializable
 data class GradleMetricsRequest(
-    val projectId: String,
-    val gitHash: String,
-    val gitDate: Instant,
+    override val projectId: String,
+    override val gitHash: String,
+    override val gitDate: Instant,
     val moduleCount: Int,
     val moduleTreeHeight: Int
-)
+) : ProjectAndGitInfo

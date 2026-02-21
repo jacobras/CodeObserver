@@ -103,9 +103,18 @@ fun Application.module() {
         }
         post("/metrics/code") {
             val request = call.receive<CodeMetricsRequest>()
+            val error = verifyBasicInfo(projectId = request.projectId, gitHash = request.gitHash)
+            if (error.isNotEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to error))
+                return@post
+            }
             transaction {
                 MetricsTable.upsert(
-                    onUpdateExclude = listOf(MetricsTable.moduleCount, MetricsTable.moduleTreeHeight)
+                    onUpdateExclude = listOf(
+                        MetricsTable.createdAt,
+                        MetricsTable.moduleCount,
+                        MetricsTable.moduleTreeHeight
+                    )
                 ) {
                     it[projectId] = request.projectId
                     it[createdAt] = Clock.System.now().epochSeconds
@@ -118,9 +127,17 @@ fun Application.module() {
         }
         post("/metrics/gradle") {
             val request = call.receive<GradleMetricsRequest>()
+            val error = verifyBasicInfo(projectId = request.projectId, gitHash = request.gitHash)
+            if (error.isNotEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to error))
+                return@post
+            }
             transaction {
                 MetricsTable.upsert(
-                    onUpdateExclude = listOf(MetricsTable.linesOfCode)
+                    onUpdateExclude = listOf(
+                        MetricsTable.createdAt,
+                        MetricsTable.linesOfCode
+                    )
                 ) {
                     it[projectId] = request.projectId
                     it[createdAt] = Clock.System.now().epochSeconds
@@ -133,14 +150,11 @@ fun Application.module() {
             call.respond(HttpStatusCode.Created, mapOf("status" to "stored"))
         }
         delete("/metrics/{gitHash}") {
-            val gitHash = call.parameters["gitHash"]
-            if (gitHash.isNullOrBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
-                return@delete
-            }
+            val gitHash = call.parameters["gitHash"]?.trim().orEmpty()
             val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
-            if (projectId.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+            val error = verifyBasicInfo(projectId = projectId, gitHash = gitHash)
+            if (error.isNotEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to error))
                 return@delete
             }
             val deletedRows = transaction {
@@ -153,4 +167,18 @@ fun Application.module() {
             }
         }
     }
+}
+
+/**
+ * Verifies that the request contains all required fields.
+ * @return error message.
+ */
+private fun verifyBasicInfo(projectId: String, gitHash: String): String {
+    if (projectId.isEmpty()) {
+        return "Missing projectId"
+    }
+    if (gitHash.isEmpty()) {
+        return "Missing gitHash"
+    }
+    return ""
 }

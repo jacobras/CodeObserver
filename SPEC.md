@@ -69,7 +69,7 @@
 ## Web
 
 - Compose Multiplatform WASM app.
-- Fetch from `GET /metrics?projectId=...` and `GET /gradle?projectId=...`.
+- Fetch from `GET /metrics?projectId=...`.
 - Web app is built and served by the same server host (same origin).
 - Display:
     - Line chart of `linesOfCode` vs `gitDate` (using ComposeCharts).
@@ -86,6 +86,6 @@
     - Options sourced from `GET /projects`.
     - Selected `projectId` is required for all fetches and CRUD operations.
 - Add/update/delete records:
-    - Add: form for `projectId`, `gitHash`, `gitDate`, `linesOfCode` -> `POST /metrics`.
+    - Add: form for `projectId`, `gitHash`, `gitDate`, `linesOfCode` -> `POST /metrics/code`.
     - Update: edit existing row by `projectId` + `gitHash` -> `PUT /metrics/{gitHash}`.
     - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
