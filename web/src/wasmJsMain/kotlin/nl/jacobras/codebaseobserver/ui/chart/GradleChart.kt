@@ -19,10 +19,10 @@ import ir.ehsannarmani.compose_charts.models.GridProperties
 import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
 import ir.ehsannarmani.compose_charts.models.LabelProperties
 import ir.ehsannarmani.compose_charts.models.Line
-import nl.jacobras.codebaseobserver.GradleRecord
+import nl.jacobras.codebaseobserver.dto.MetricsDto
 
 @Composable
-internal fun GradleChart(records: List<GradleRecord>, timeView: TimeView) {
+internal fun GradleChart(records: List<MetricsDto>, timeView: TimeView) {
     val chartData = buildChartData(
         records = records,
         timeView = timeView,

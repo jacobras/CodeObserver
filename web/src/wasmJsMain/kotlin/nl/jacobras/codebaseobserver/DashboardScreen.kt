@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -21,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import nl.jacobras.codebaseobserver.dto.MetricsDto
 import nl.jacobras.codebaseobserver.ui.chart.GradleChart
 import nl.jacobras.codebaseobserver.ui.chart.LinesOfCodeChart
 import nl.jacobras.codebaseobserver.ui.chart.ModuleTreeHeightChart
@@ -28,52 +28,34 @@ import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
 @Composable
 internal fun DashboardScreen(
-    records: List<CountRecord>,
-    gradleRecords: List<GradleRecord>,
+    records: List<MetricsDto>,
     error: String?,
-    gitHashInput: String,
-    gitDateInput: String,
-    linesOfCodeInput: String,
-    isEditing: Boolean,
-    onGitHashChange: (String) -> Unit,
-    onGitDateChange: (String) -> Unit,
-    onLinesOfCodeChange: (String) -> Unit,
-    onSubmit: () -> Unit,
-    onClear: () -> Unit,
-    onEdit: (CountRecord) -> Unit,
-    onDelete: (CountRecord) -> Unit
+    projectIds: List<String>,
+    selectedProjectId: String,
+    onProjectIdChange: (String) -> Unit,
+    onDelete: (MetricsDto) -> Unit
 ) {
     Text("Dashboard", style = MaterialTheme.typography.headlineLarge)
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Add or update count", style = MaterialTheme.typography.titleMedium)
-        OutlinedTextField(
-            value = gitHashInput,
-            onValueChange = onGitHashChange,
-            label = { Text("Git hash") },
-            enabled = !isEditing,
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = gitDateInput,
-            onValueChange = onGitDateChange,
-            label = { Text("Git date (ISO)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = linesOfCodeInput,
-            onValueChange = onLinesOfCodeChange,
-            label = { Text("Lines of code") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = onSubmit) {
-                Text(if (isEditing) "Update" else "Add")
-            }
-            Button(
-                onClick = onClear,
-                enabled = gitHashInput.isNotEmpty() || gitDateInput.isNotEmpty() || linesOfCodeInput.isNotEmpty()
-            ) {
-                Text("Clear")
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("Project", style = MaterialTheme.typography.titleMedium)
+        if (projectIds.isEmpty()) {
+            Text("No projects yet. Create one by submitting data via the CLI.")
+        } else {
+            projectIds.forEach { projectId ->
+                val selected = projectId == selectedProjectId
+                if (selected) {
+                    Button(onClick = { onProjectIdChange(projectId) }) {
+                        Text(projectId)
+                    }
+                } else {
+                    TextButton(onClick = { onProjectIdChange(projectId) }) {
+                        Text(projectId)
+                    }
+                }
             }
         }
     }
@@ -112,15 +94,14 @@ internal fun DashboardScreen(
                 LinesOfCodeChart(records, timeView)
             }
             Column(modifier = Modifier.weight(1f)) {
-                GradleChart(gradleRecords, timeView)
+                GradleChart(records, timeView)
             }
             Column(modifier = Modifier.weight(1f)) {
-                ModuleTreeHeightChart(gradleRecords, timeView)
+                ModuleTreeHeightChart(records, timeView)
             }
         }
         RecordsTable(
             records = records,
-            onEdit = onEdit,
             onDelete = onDelete
         )
     }
@@ -128,9 +109,8 @@ internal fun DashboardScreen(
 
 @Composable
 private fun RecordsTable(
-    records: List<CountRecord>,
-    onEdit: (CountRecord) -> Unit,
-    onDelete: (CountRecord) -> Unit
+    records: List<MetricsDto>,
+    onDelete: (MetricsDto) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -153,9 +133,6 @@ private fun RecordsTable(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        TextButton(onClick = { onEdit(record) }) {
-                            Text("Edit", color = Color(0xFF2A9D8F))
-                        }
                         TextButton(onClick = { onDelete(record) }) {
                             Text("Delete", color = Color(0xFFE76F51))
                         }

@@ -3,6 +3,7 @@ package nl.jacobras.codebaseobserver.cli.command.measure.gradle
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.required
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -13,13 +14,16 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.cli.runCommand
+import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.time.Instant
 
 class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
     private val path by option(
@@ -30,6 +34,10 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         "--server",
         help = "Server base URL. Without this, the count will not be uploaded."
     )
+    private val projectId by option(
+        "--project",
+        help = "Project identifier for this measurement."
+    ).required()
 
     override fun run() {
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
@@ -43,8 +51,9 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         }
 
         serverUrl?.let { url ->
-            val gitHash = runCommand("git", "rev-parse", "HEAD")?.trim().orEmpty()
-            val gitDate = runCommand("git", "show", "-s", "--format=%cI", "HEAD")?.trim().orEmpty()
+            val workingDir = targetPath.toFile()
+            val gitHash = runCommand(workingDir, "git", "rev-parse", "HEAD")?.trim().orEmpty()
+            val gitDate = runCommand(workingDir, "git", "show", "-s", "--format=%cI", "HEAD")?.trim().orEmpty()
 
             require(gitHash.isNotEmpty()) {
                 "Could not determine git hash. Make sure you are in a git repository."
@@ -52,7 +61,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
             require(gitDate.isNotEmpty()) {
                 "Could not determine git date. Make sure you are in a git repository."
             }
-            runBlocking { upload(url, gitHash, gitDate, moduleCount, moduleTreeHeight) }
+            runBlocking { upload(url, projectId, gitHash, gitDate, moduleCount, moduleTreeHeight) }
         }
     }
 
@@ -185,6 +194,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
 
     private suspend fun upload(
         serverUrl: String,
+        projectId: String,
         gitHash: String,
         gitDate: String,
         moduleCount: Int,
@@ -195,13 +205,14 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
                 json(Json { ignoreUnknownKeys = true })
             }
         }
-        val payload = GradleRequest(
+        val payload = GradleMetricsRequest(
+            projectId = projectId,
             gitHash = gitHash,
-            gitDate = gitDate,
+            gitDate = Instant.parse(gitDate),
             moduleCount = moduleCount,
             moduleTreeHeight = moduleTreeHeight
         )
-        val response = client.post("${serverUrl.trimEnd('/')}/gradle") {
+        val response = client.post("${serverUrl.trimEnd('/')}/metrics/gradle") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             contentType(ContentType.Application.Json)
             setBody(payload)
@@ -209,6 +220,9 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         client.close()
         val statusCode = response.status.value
         val responseBody = response.bodyAsText()
-        println("Server response: $statusCode: $responseBody")
+        require(response.status.isSuccess()) {
+            "Error uploading metrics: $statusCode - $responseBody"
+        }
+        println("Server response: $statusCode - $responseBody")
     }
 }

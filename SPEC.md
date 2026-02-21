@@ -10,27 +10,25 @@
 
 - Ktor server with JSON API.
 - DB: SQLite (embedded).
-- Table `counts`:
+- Table `metrics`:
     - `createdAt` (TEXT)
+    - `projectId` (TEXT)
     - `gitHash` (TEXT)
     - `gitDate` (TEXT)
     - `linesOfCode` (INTEGER)
-    - Endpoints:
-        - `POST /counts` body `{ gitHash, gitDate, linesOfCode }` -> stores record.
-        - `GET /counts` -> list of records ordered by `gitDate` asc.
-        - `PUT /counts/{gitHash}` body `{ gitDate, linesOfCode }` -> updates matching record.
-        - `DELETE /counts/{gitHash}` -> deletes matching record.
-- Table `gradle`:
-    - `createdAt` (TEXT)
-    - `gitHash` (TEXT)
-    - `gitDate` (TEXT)
     - `moduleCount` (INTEGER)
     - `moduleTreeHeight` (INTEGER)
-    - Endpoints:
-        - `POST /gradle` body `{ gitHash, gitDate, moduleCount, moduleTreeHeight }` -> stores record.
-        - `GET /gradle` -> list of records ordered by `gitDate` asc.
-        - `PUT /gradle/{gitHash}` body `{ gitDate, moduleCount, moduleTreeHeight }` -> updates matching record.
-        - `DELETE /gradle/{gitHash}` -> deletes matching record.
+        - Endpoints:
+            - `GET /metrics?projectId=...` -> list of records ordered by `gitDate` asc.
+            - `POST /metrics/code` -> stores code metrics.
+                - body `{ projectId, gitHash, gitDate, linesOfCode }`
+            - `POST /metrics/gradle` -> stores gradle metrics.
+                - body `{ projectId, gitHash, gitDate, moduleCount, moduleTreeHeight }`
+            - `PUT /metrics/{gitHash}` -> updates matching record by `projectId` + `gitHash`.
+                - body `{ projectId, gitDate, linesOfCode, moduleCount, moduleTreeHeight }`
+            - `DELETE /metrics/{gitHash}` -> deletes matching record
+- Projects:
+    - `GET /projects` -> list of distinct `projectId` values, sorted asc.
 
 ## CLI
 
@@ -41,6 +39,7 @@
         - Arguments:
             - `--path` (folder to scan, default `.`)
             - `--server` (server URL to upload results, optional)
+            - `--project` (required project identifier)
         - Behavior:
             - Runs both `measure-code` and `measure-gradle` sequentially with the same arguments.
             - Print a startup message and summary from both commands.
@@ -48,27 +47,29 @@
         - Arguments:
             - `--path` (folder to scan, default `.`)
             - `--server` (server URL to upload results, optional)
+            - `--project` (required project identifier)
             - `--include` glob patterns to include files or folders (comma-separated, optional).
             - `--exclude` glob patterns to exclude files or folders (comma-separated, optional).
         - Behavior:
             - Count lines of code in regular files under the given `path` (recursive).
             - Exclude files and folders matching the glob patterns specified in `--exclude`.
-            - Send `POST /counts` to server with JSON payload.
+            - Send `POST /metrics/code` to server with JSON payload including `projectId`.
             - Print summary.
     - `measure-gradle`
         - Arguments:
             - `--path` (folder to scan, default `.`)
             - `--server` (server URL to upload results, optional)
+            - `--project` (required project identifier)
         - Behavior:
             - Find `settings.gradle.kts` under the given `path`.
             - Count the number of Gradle modules in the project.
-            - Send `POST /gradle` to server with JSON payload.
+            - Send `POST /metrics/gradle` to server with JSON payload including `projectId`.
             - Print summary.
 
 ## Web
 
 - Compose Multiplatform WASM app.
-- Fetch from `GET /counts` and `GET /gradle`.
+- Fetch from `GET /metrics?projectId=...`.
 - Web app is built and served by the same server host (same origin).
 - Display:
     - Line chart of `linesOfCode` vs `gitDate` (using ComposeCharts).
@@ -80,11 +81,10 @@
     - Top nav bar with main screens:
         - `Dashboard`
         - `Settings`.
-- Add/update/delete counts:
-    - Add: form for `gitHash`, `gitDate`, `linesOfCode` -> `POST /counts`.
-    - Update: edit existing row by `gitHash` -> `PUT /counts/{gitHash}`.
-    - Delete: remove row by `gitHash` -> `DELETE /counts/{gitHash}`.
-- Add/update/delete gradle metrics:
-    - Add: form for `gitHash`, `gitDate`, `moduleCount` -> `POST /gradle`.
-    - Update: edit existing row by `gitHash` -> `PUT /gradle/{gitHash}`.
-    - Delete: remove row by `gitHash` -> `DELETE /gradle/{gitHash}`.
+- Dashboard app switcher:
+    - Switcher at the top of the dashboard to choose between all projects.
+    - Options sourced from `GET /projects`.
+    - Selected `projectId` is required for all fetches and CRUD operations.
+- Add/update/delete records:
+    - Update: edit existing row by `projectId` + `gitHash` -> `PUT /metrics/{gitHash}`.
+    - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.

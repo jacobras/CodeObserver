@@ -12,7 +12,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -34,25 +33,18 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.put
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.dto.MetricsDto
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
 @Composable
 fun App() {
-    var records by remember { mutableStateOf<List<CountRecord>>(emptyList()) }
-    var gradleRecords by remember { mutableStateOf<List<GradleRecord>>(emptyList()) }
+    var records by remember { mutableStateOf<List<MetricsDto>>(emptyList()) }
+    var projectIds by remember { mutableStateOf<List<String>>(emptyList()) }
+    var selectedProjectId by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
-    var gitHashInput by remember { mutableStateOf("") }
-    var gitDateInput by remember { mutableStateOf("") }
-    var linesOfCodeInput by remember { mutableStateOf("") }
-    var isEditing by remember { mutableStateOf(false) }
     var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
 
     val client = remember {
@@ -67,19 +59,21 @@ fun App() {
     }
     val scope = rememberCoroutineScope()
 
-    fun resetForm() {
-        gitHashInput = ""
-        gitDateInput = ""
-        linesOfCodeInput = ""
-        isEditing = false
+    suspend fun reloadProjects() {
+        projectIds = client.get("/projects").body()
+        if (selectedProjectId.isBlank() && projectIds.isNotEmpty()) {
+            selectedProjectId = projectIds.first()
+        }
     }
 
     suspend fun reloadRecords() {
-        records = client.get("/counts").body()
-    }
-
-    suspend fun reloadGradleRecords() {
-        gradleRecords = client.get("/gradle").body()
+        if (selectedProjectId.isBlank()) {
+            records = emptyList()
+            return
+        }
+        records = client.get("/metrics") {
+            url { parameters.append("projectId", selectedProjectId) }
+        }.body()
     }
 
     DisposableEffect(Unit) {
@@ -88,10 +82,18 @@ fun App() {
 
     LaunchedEffect(Unit) {
         try {
+            reloadProjects()
+        } catch (e: Throwable) {
+            error = e.message ?: "Failed to load"
+        }
+    }
+
+    LaunchedEffect(selectedProjectId) {
+        if (selectedProjectId.isBlank()) return@LaunchedEffect
+        try {
             reloadRecords()
-            reloadGradleRecords()
-        } catch (ex: Throwable) {
-            error = ex.message ?: "Failed to load"
+        } catch (e: Throwable) {
+            error = e.message ?: "Failed to load"
         }
     }
 
@@ -125,68 +127,21 @@ fun App() {
                             Screen.Dashboard -> {
                                 DashboardScreen(
                                     records = records,
-                                    gradleRecords = gradleRecords,
                                     error = error,
-                                    gitHashInput = gitHashInput,
-                                    gitDateInput = gitDateInput,
-                                    linesOfCodeInput = linesOfCodeInput,
-                                    isEditing = isEditing,
-                                    onGitHashChange = { gitHashInput = it },
-                                    onGitDateChange = { gitDateInput = it },
-                                    onLinesOfCodeChange = { linesOfCodeInput = it },
-                                    onSubmit = {
-                                        scope.launch {
-                                            error = null
-                                            val trimmedHash = gitHashInput.trim()
-                                            val trimmedDate = gitDateInput.trim()
-                                            val countValue = linesOfCodeInput.trim().toIntOrNull()
-                                            if (trimmedHash.isEmpty() || trimmedDate.isEmpty() || countValue == null) {
-                                                error = "Enter git hash, git date, and lines of code"
-                                                return@launch
-                                            }
-                                            try {
-                                                if (isEditing) {
-                                                    client.put("/counts/$trimmedHash") {
-                                                        contentType(ContentType.Application.Json)
-                                                        setBody(UpdateCountRequest(trimmedDate, countValue))
-                                                    }
-                                                } else {
-                                                    client.post("/counts") {
-                                                        contentType(ContentType.Application.Json)
-                                                        setBody(
-                                                            CreateCountRequest(
-                                                                trimmedHash,
-                                                                trimmedDate,
-                                                                countValue
-                                                            )
-                                                        )
-                                                    }
-                                                }
-                                                reloadRecords()
-                                                resetForm()
-                                            } catch (ex: Throwable) {
-                                                error = ex.message ?: "Failed to submit"
-                                            }
-                                        }
-                                    },
-                                    onClear = { resetForm() },
-                                    onEdit = { record ->
-                                        gitHashInput = record.gitHash
-                                        gitDateInput = record.gitDate.toString()
-                                        linesOfCodeInput = record.linesOfCode.toString()
-                                        isEditing = true
-                                    },
+                                    projectIds = projectIds,
+                                    selectedProjectId = selectedProjectId,
+                                    onProjectIdChange = { selectedProjectId = it.trim() },
                                     onDelete = { record ->
                                         scope.launch {
                                             error = null
                                             try {
-                                                client.delete("/counts/${record.gitHash}")
-                                                reloadRecords()
-                                                if (isEditing && gitHashInput == record.gitHash) {
-                                                    resetForm()
+                                                client.delete("/metrics/${record.gitHash}") {
+                                                    url { parameters.append("projectId", selectedProjectId) }
                                                 }
-                                            } catch (ex: Throwable) {
-                                                error = ex.message ?: "Failed to delete"
+                                                reloadProjects()
+                                                reloadRecords()
+                                            } catch (e: Throwable) {
+                                                error = e.message ?: "Failed to delete"
                                             }
                                         }
                                     }
@@ -224,14 +179,11 @@ private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Screen.entries.forEach { screen ->
                     val selected = screen == active
-                    if (selected) {
-                        Button(onClick = { onSelect(screen) }) {
-                            Text(screen.label)
-                        }
-                    } else {
-                        TextButton(onClick = { onSelect(screen) }) {
-                            Text(screen.label, color = Color(0xFFF5F2EA))
-                        }
+                    Button(onClick = { onSelect(screen) }) {
+                        Text(
+                            text = screen.label,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                        )
                     }
                 }
             }
