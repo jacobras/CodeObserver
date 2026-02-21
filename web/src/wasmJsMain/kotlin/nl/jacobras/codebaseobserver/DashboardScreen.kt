@@ -3,14 +3,13 @@ package nl.jacobras.codebaseobserver
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,8 +17,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.gabrieldrn.carbon.Carbon
+import com.gabrieldrn.carbon.button.Button
+import com.gabrieldrn.carbon.button.ButtonSize
+import com.gabrieldrn.carbon.button.ButtonType
+import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
+import com.gabrieldrn.carbon.foundation.color.CarbonLayer
+import com.gabrieldrn.carbon.foundation.color.layerBackground
+import com.gabrieldrn.carbon.tab.TabItem
+import com.gabrieldrn.carbon.tab.TabList
+import com.gabrieldrn.carbon.tab.TabVariant
 import nl.jacobras.codebaseobserver.dto.MetricsDto
 import nl.jacobras.codebaseobserver.ui.chart.GradleChart
 import nl.jacobras.codebaseobserver.ui.chart.LinesOfCodeChart
@@ -32,78 +40,84 @@ internal fun DashboardScreen(
     error: String?,
     projectIds: List<String>,
     selectedProjectId: String,
-    onProjectIdChange: (String) -> Unit,
+    onSelectProject: (String) -> Unit,
     onDelete: (MetricsDto) -> Unit
 ) {
-    Text("Dashboard", style = MaterialTheme.typography.headlineLarge)
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text("Project", style = MaterialTheme.typography.titleMedium)
-        if (projectIds.isEmpty()) {
-            Text("No projects yet. Create one by submitting data via the CLI.")
-        } else {
-            projectIds.forEach { projectId ->
-                val selected = projectId == selectedProjectId
-                if (selected) {
-                    Button(onClick = { onProjectIdChange(projectId) }) {
-                        Text(projectId)
-                    }
-                } else {
-                    TextButton(onClick = { onProjectIdChange(projectId) }) {
-                        Text(projectId)
-                    }
-                }
-            }
-        }
-    }
-    if (error != null) {
-        Text("Error: $error")
-    }
-    if (records.isEmpty()) {
-        Text("No data yet. Submit counts via the CLI.")
-    } else {
-        var timeView by remember { mutableStateOf(TimeView.Last7Days) }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("View")
-            TimeView.entries.forEach { view ->
-                val selected = view == timeView
-                if (selected) {
-                    Button(onClick = { timeView = view }) {
-                        Text(view.label)
-                    }
-                } else {
-                    TextButton(onClick = { timeView = view }) {
-                        Text(view.label)
-                    }
-                }
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                LinesOfCodeChart(records, timeView)
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                GradleChart(records, timeView)
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                ModuleTreeHeightChart(records, timeView)
-            }
-        }
-        RecordsTable(
-            records = records,
-            onDelete = onDelete
+    Column {
+        BasicText(
+            text = "Dashboard",
+            style = Carbon.typography.heading06
         )
+        Spacer(Modifier.height(16.dp))
+        if (projectIds.isEmpty()) {
+            BasicText(
+                text = "No projects yet. Create one by submitting data via the CLI.",
+                style = Carbon.typography.body02
+            )
+        } else {
+            val tabs = projectIds.map { TabItem(label = it) }
+            TabList(
+                tabs = tabs,
+                variant = TabVariant.Contained,
+                selectedTab = tabs.first { it.label == selectedProjectId },
+                onTabSelected = { tab ->
+                    onSelectProject(tab.label)
+                }
+            )
+        }
+
+        CarbonLayer {
+            Column(
+                modifier = Modifier
+                    .layerBackground()
+                    .padding(16.dp)
+            ) {
+                if (error != null) {
+                    BasicText(
+                        text = "Error: $error",
+                        style = Carbon.typography.body02.copy(color = Carbon.theme.supportError)
+                    )
+                }
+                if (records.isEmpty()) {
+                    BasicText(
+                        text = "No data yet. Submit counts via the CLI.",
+                        style = Carbon.typography.body02
+                    )
+                } else {
+                    var timeView by remember { mutableStateOf(TimeView.Last7Days) }
+
+                    ContentSwitcher(
+                        options = TimeView.entries.map { it.label },
+                        selectedOption = timeView.label,
+                        onOptionSelected = { selected ->
+                            timeView = TimeView.entries.first { it.label == selected }
+                        }
+                    )
+                    Spacer(Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            LinesOfCodeChart(records, timeView)
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            GradleChart(records, timeView)
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            ModuleTreeHeightChart(records, timeView)
+                        }
+                    }
+                    Spacer(Modifier.height(32.dp))
+
+                    RecordsTable(
+                        records = records,
+                        onDelete = onDelete
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -114,10 +128,26 @@ private fun RecordsTable(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Git Date", modifier = Modifier.weight(1f))
-            Text("Lines of code", modifier = Modifier.weight(1f))
-            Text("Hash", modifier = Modifier.weight(1f))
-            Text("Actions", modifier = Modifier.weight(1f))
+            BasicText(
+                text = "Git Date",
+                style = Carbon.typography.body02,
+                modifier = Modifier.weight(1f)
+            )
+            BasicText(
+                text = "Lines of code",
+                style = Carbon.typography.body02,
+                modifier = Modifier.weight(1f)
+            )
+            BasicText(
+                text = "Hash",
+                style = Carbon.typography.body02,
+                modifier = Modifier.weight(1f)
+            )
+            BasicText(
+                text = "Actions",
+                style = Carbon.typography.body02,
+                modifier = Modifier.weight(1f)
+            )
         }
         LazyColumn {
             items(records) { record ->
@@ -126,16 +156,31 @@ private fun RecordsTable(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(record.gitDate.toString(), modifier = Modifier.weight(1f))
-                    Text(record.linesOfCode.toString(), modifier = Modifier.weight(1f))
-                    Text(record.gitHash.take(7), modifier = Modifier.weight(1f))
+                    BasicText(
+                        text = record.gitDate.toString(),
+                        style = Carbon.typography.body02,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BasicText(
+                        text = record.linesOfCode.toString(),
+                        style = Carbon.typography.body02,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BasicText(
+                        text = record.gitHash.take(7),
+                        style = Carbon.typography.body02,
+                        modifier = Modifier.weight(1f)
+                    )
                     Row(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        TextButton(onClick = { onDelete(record) }) {
-                            Text("Delete", color = Color(0xFFE76F51))
-                        }
+                        Button(
+                            label = "Delete",
+                            buttonType = ButtonType.GhostDanger,
+                            buttonSize = ButtonSize.Small,
+                            onClick = { onDelete(record) }
+                        )
                     }
                 }
             }

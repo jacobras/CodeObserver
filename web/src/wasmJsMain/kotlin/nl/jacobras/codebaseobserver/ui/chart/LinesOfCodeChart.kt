@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
+import com.gabrieldrn.carbon.Carbon
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.AnimationMode
 import ir.ehsannarmani.compose_charts.models.DividerProperties
@@ -68,13 +68,13 @@ internal fun LinesOfCodeChart(records: List<MetricsDto>, timeView: TimeView) {
             ),
             indicatorProperties = HorizontalIndicatorProperties(
                 enabled = true,
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF2F4858)),
+                textStyle = Carbon.typography.bodyCompact01.copy(color = Color(0xFF2F4858)),
                 padding = 12.dp
             ),
             labelProperties = LabelProperties(
                 enabled = true,
                 labels = chartData.xLabels,
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF2F4858)),
+                textStyle = Carbon.typography.bodyCompact01.copy(color = Color(0xFF2F4858)),
                 rotation = LabelProperties.Rotation(degree = 0f)
             ),
             dividerProperties = DividerProperties(enabled = false)
