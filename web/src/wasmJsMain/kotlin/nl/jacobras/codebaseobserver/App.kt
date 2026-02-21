@@ -12,7 +12,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -264,14 +263,11 @@ private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Screen.entries.forEach { screen ->
                     val selected = screen == active
-                    if (selected) {
-                        Button(onClick = { onSelect(screen) }) {
-                            Text(screen.label)
-                        }
-                    } else {
-                        TextButton(onClick = { onSelect(screen) }) {
-                            Text(screen.label, color = Color(0xFFF5F2EA))
-                        }
+                    Button(onClick = { onSelect(screen) }) {
+                        Text(
+                            text = screen.label,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                        )
                     }
                 }
             }
