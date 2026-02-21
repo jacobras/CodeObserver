@@ -1,11 +1,25 @@
 package nl.jacobras.codebaseobserver
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.gabrieldrn.carbon.Carbon
 
 @Composable
 internal fun SettingsScreen() {
-    Text("Settings", style = MaterialTheme.typography.headlineLarge)
-    Text("There are no settings to configure yet.", style = MaterialTheme.typography.bodyLarge)
+    Column {
+        BasicText(
+            text = "Settings",
+            style = Carbon.typography.heading06
+        )
+        Spacer(Modifier.height(16.dp))
+        BasicText(
+            text = "There are no settings to configure yet.",
+            style = Carbon.typography.body02
+        )
+    }
 }

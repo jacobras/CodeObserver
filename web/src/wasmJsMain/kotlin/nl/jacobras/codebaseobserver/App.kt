@@ -8,10 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -24,8 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.gabrieldrn.carbon.Carbon
+import com.gabrieldrn.carbon.CarbonDesignSystem
+import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
+import com.gabrieldrn.carbon.button.Button
+import com.gabrieldrn.carbon.button.ButtonType
+import com.gabrieldrn.carbon.foundation.color.WhiteTheme
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.js.Js
@@ -39,6 +41,7 @@ import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.dto.MetricsDto
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
+@OptIn(ExperimentalCarbonApi::class)
 @Composable
 fun App() {
     var records by remember { mutableStateOf<List<MetricsDto>>(emptyList()) }
@@ -101,56 +104,51 @@ fun App() {
         colors = listOf(Color(0xFFF4F1EA), Color(0xFFE9F0F2))
     )
 
-    MaterialTheme(
-        colorScheme = MaterialTheme.colorScheme.copy(
-            primary = Color(0xFF1F3D4D),
-            secondary = Color(0xFFCF8C4B),
-            background = Color(0xFFF4F1EA),
-            surface = Color(0xFFFFFFFF)
-        ),
-        typography = MaterialTheme.typography.copy(
-            headlineLarge = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.SemiBold)
+    CarbonDesignSystem(
+        theme = WhiteTheme.copy(
+            borderInteractive = Color(0xFF1F3D4D)
         )
     ) {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.fillMaxSize().background(backgroundBrush)) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    TopNav(
-                        active = activeScreen,
-                        onSelect = { activeScreen = it }
-                    )
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        when (activeScreen) {
-                            Screen.Dashboard -> {
-                                DashboardScreen(
-                                    records = records,
-                                    error = error,
-                                    projectIds = projectIds,
-                                    selectedProjectId = selectedProjectId,
-                                    onProjectIdChange = { selectedProjectId = it.trim() },
-                                    onDelete = { record ->
-                                        scope.launch {
-                                            error = null
-                                            try {
-                                                client.delete("/metrics/${record.gitHash}") {
-                                                    url { parameters.append("projectId", selectedProjectId) }
-                                                }
-                                                reloadProjects()
-                                                reloadRecords()
-                                            } catch (e: Throwable) {
-                                                error = e.message ?: "Failed to delete"
-                                            }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundBrush)
+        ) {
+            TopNav(
+                active = activeScreen,
+                onSelect = { activeScreen = it }
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 20.dp)
+            ) {
+                when (activeScreen) {
+                    Screen.Dashboard -> {
+                        DashboardScreen(
+                            records = records,
+                            error = error,
+                            projectIds = projectIds,
+                            selectedProjectId = selectedProjectId,
+                            onSelectProject = { selectedProjectId = it.trim() },
+                            onDelete = { record ->
+                                scope.launch {
+                                    error = null
+                                    try {
+                                        client.delete("/metrics/${record.gitHash}") {
+                                            url { parameters.append("projectId", selectedProjectId) }
                                         }
+                                        reloadProjects()
+                                        reloadRecords()
+                                    } catch (e: Throwable) {
+                                        error = e.message ?: "Failed to delete"
                                     }
-                                )
+                                }
                             }
-                            Screen.Settings -> {
-                                SettingsScreen()
-                            }
-                        }
+                        )
+                    }
+                    Screen.Settings -> {
+                        SettingsScreen()
                     }
                 }
             }
@@ -165,27 +163,27 @@ private enum class Screen(val label: String) {
 
 @Composable
 private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
-    Surface(color = Color(0xFF1F3D4D)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "CodebaseObserver ${BuildConfig.VERSION}",
-                color = Color(0xFFF5F2EA),
-                style = MaterialTheme.typography.titleLarge
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Screen.entries.forEach { screen ->
-                    val selected = screen == active
-                    Button(onClick = { onSelect(screen) }) {
-                        Text(
-                            text = screen.label,
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
-                }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF1F3D4D))
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        BasicText(
+            text = "CodebaseObserver ${BuildConfig.VERSION}",
+            style = Carbon.typography.headingCompact02.copy(color = Color(0xFFF5F2EA))
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Screen.entries.forEach { screen ->
+                val selected = screen == active
+                Button(
+                    label = screen.label,
+                    buttonType = if (selected) ButtonType.Primary else ButtonType.Ghost,
+                    buttonSize = com.gabrieldrn.carbon.button.ButtonSize.Small,
+                    onClick = { onSelect(screen) }
+                )
             }
         }
     }
