@@ -1,6 +1,6 @@
 package nl.jacobras.codebaseobserver.server.entity
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 internal object MetricsTable : Table("metrics") {
     val createdAt = long("createdAt")
