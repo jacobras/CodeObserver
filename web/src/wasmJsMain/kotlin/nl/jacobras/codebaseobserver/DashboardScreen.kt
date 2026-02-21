@@ -33,16 +33,6 @@ internal fun DashboardScreen(
     projectIds: List<String>,
     selectedProjectId: String,
     onProjectIdChange: (String) -> Unit,
-    gitHashInput: String,
-    gitDateInput: String,
-    linesOfCodeInput: String,
-    isEditing: Boolean,
-    onGitHashChange: (String) -> Unit,
-    onGitDateChange: (String) -> Unit,
-    onLinesOfCodeChange: (String) -> Unit,
-    onSubmit: () -> Unit,
-    onClear: () -> Unit,
-    onEdit: (MetricsDto) -> Unit,
     onDelete: (MetricsDto) -> Unit
 ) {
     Text("Dashboard", style = MaterialTheme.typography.headlineLarge)
@@ -112,7 +102,6 @@ internal fun DashboardScreen(
         }
         RecordsTable(
             records = records,
-            onEdit = onEdit,
             onDelete = onDelete
         )
     }
@@ -121,7 +110,6 @@ internal fun DashboardScreen(
 @Composable
 private fun RecordsTable(
     records: List<MetricsDto>,
-    onEdit: (MetricsDto) -> Unit,
     onDelete: (MetricsDto) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -145,9 +133,6 @@ private fun RecordsTable(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        TextButton(onClick = { onEdit(record) }) {
-                            Text("Edit", color = Color(0xFF2A9D8F))
-                        }
                         TextButton(onClick = { onDelete(record) }) {
                             Text("Delete", color = Color(0xFFE76F51))
                         }

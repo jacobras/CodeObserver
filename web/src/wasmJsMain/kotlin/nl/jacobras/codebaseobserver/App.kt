@@ -33,17 +33,11 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.MetricsDto
 import nl.jacobras.codebaseobserver.web.BuildConfig
-import kotlin.time.Instant
 
 @Composable
 fun App() {
@@ -51,10 +45,6 @@ fun App() {
     var projectIds by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedProjectId by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
-    var gitHashInput by remember { mutableStateOf("") }
-    var gitDateInput by remember { mutableStateOf("") }
-    var linesOfCodeInput by remember { mutableStateOf("") }
-    var isEditing by remember { mutableStateOf(false) }
     var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
 
     val client = remember {
@@ -68,13 +58,6 @@ fun App() {
         }
     }
     val scope = rememberCoroutineScope()
-
-    fun resetForm() {
-        gitHashInput = ""
-        gitDateInput = ""
-        linesOfCodeInput = ""
-        isEditing = false
-    }
 
     suspend fun reloadProjects() {
         projectIds = client.get("/projects").body()
@@ -148,55 +131,6 @@ fun App() {
                                     projectIds = projectIds,
                                     selectedProjectId = selectedProjectId,
                                     onProjectIdChange = { selectedProjectId = it.trim() },
-                                    gitHashInput = gitHashInput,
-                                    gitDateInput = gitDateInput,
-                                    linesOfCodeInput = linesOfCodeInput,
-                                    isEditing = isEditing,
-                                    onGitHashChange = { gitHashInput = it },
-                                    onGitDateChange = { gitDateInput = it },
-                                    onLinesOfCodeChange = { linesOfCodeInput = it },
-                                    onSubmit = {
-                                        scope.launch {
-                                            error = null
-                                            val trimmedProjectId = selectedProjectId.trim()
-                                            val trimmedHash = gitHashInput.trim()
-                                            val trimmedDate = gitDateInput.trim()
-                                            val countValue = linesOfCodeInput.trim().toIntOrNull()
-                                            if (trimmedProjectId.isEmpty()) {
-                                                error = "Select a project"
-                                                return@launch
-                                            }
-                                            if (trimmedHash.isEmpty() || trimmedDate.isEmpty() || countValue == null) {
-                                                error = "Enter git hash, git date, and lines of code"
-                                                return@launch
-                                            }
-                                            try {
-                                                client.post("/metrics/$trimmedHash") {
-                                                    contentType(ContentType.Application.Json)
-                                                    setBody(
-                                                        CodeMetricsRequest(
-                                                            projectId = trimmedProjectId,
-                                                            gitHash = trimmedHash,
-                                                            gitDate = Instant.parse(trimmedDate),
-                                                            linesOfCode = countValue
-                                                        )
-                                                    )
-                                                }
-                                                reloadProjects()
-                                                reloadRecords()
-                                                resetForm()
-                                            } catch (e: Throwable) {
-                                                error = e.message ?: "Failed to submit"
-                                            }
-                                        }
-                                    },
-                                    onClear = { resetForm() },
-                                    onEdit = { record ->
-                                        gitHashInput = record.gitHash
-                                        gitDateInput = record.gitDate.toString()
-                                        linesOfCodeInput = record.linesOfCode.toString()
-                                        isEditing = true
-                                    },
                                     onDelete = { record ->
                                         scope.launch {
                                             error = null
@@ -206,9 +140,6 @@ fun App() {
                                                 }
                                                 reloadProjects()
                                                 reloadRecords()
-                                                if (isEditing && gitHashInput == record.gitHash) {
-                                                    resetForm()
-                                                }
                                             } catch (e: Throwable) {
                                                 error = e.message ?: "Failed to delete"
                                             }
