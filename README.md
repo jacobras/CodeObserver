@@ -26,12 +26,12 @@ This hosts both the API and the UI (see Web below).
 
 1. Build the web app: `./gradlew :web:wasmJsBrowserDistribution`
 2. Build the server: `./gradlew :server:shadowJar`
-3. Build the image: `docker build -t mrras/codebase-observer:0.3.0 .`
+3. Build the image: `docker build -t mrras/codebase-observer:0.4.0 .`
 4. Now run with `docker compose up`
 
 #### Publish
 
-`docker push mrras/codebase-observer:0.3.0`
+`docker push mrras/codebase-observer:0.4.0`
 
 ### Web
 
