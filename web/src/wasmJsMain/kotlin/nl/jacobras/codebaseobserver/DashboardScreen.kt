@@ -54,6 +54,7 @@ internal fun DashboardScreen(
                 text = "No projects yet. Create one by submitting data via the CLI.",
                 style = Carbon.typography.body02
             )
+            Spacer(Modifier.height(16.dp))
         } else {
             val tabs = projectIds.map { TabItem(label = it) }
             TabList(
@@ -129,7 +130,12 @@ private fun RecordsTable(
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             BasicText(
-                text = "Git Date",
+                text = "Git date",
+                style = Carbon.typography.body02,
+                modifier = Modifier.weight(1f)
+            )
+            BasicText(
+                text = "Git hash",
                 style = Carbon.typography.body02,
                 modifier = Modifier.weight(1f)
             )
@@ -139,7 +145,12 @@ private fun RecordsTable(
                 modifier = Modifier.weight(1f)
             )
             BasicText(
-                text = "Hash",
+                text = "Module count",
+                style = Carbon.typography.body02,
+                modifier = Modifier.weight(1f)
+            )
+            BasicText(
+                text = "Module tree height",
                 style = Carbon.typography.body02,
                 modifier = Modifier.weight(1f)
             )
@@ -162,12 +173,22 @@ private fun RecordsTable(
                         modifier = Modifier.weight(1f)
                     )
                     BasicText(
+                        text = record.gitHash.take(7),
+                        style = Carbon.typography.body02,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BasicText(
                         text = record.linesOfCode.toString(),
                         style = Carbon.typography.body02,
                         modifier = Modifier.weight(1f)
                     )
                     BasicText(
-                        text = record.gitHash.take(7),
+                        text = record.moduleCount.toString(),
+                        style = Carbon.typography.body02,
+                        modifier = Modifier.weight(1f)
+                    )
+                    BasicText(
+                        text = record.moduleTreeHeight.toString(),
                         style = Carbon.typography.body02,
                         modifier = Modifier.weight(1f)
                     )

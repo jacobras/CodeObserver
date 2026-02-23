@@ -85,6 +85,5 @@
     - Switcher at the top of the dashboard to choose between all projects.
     - Options sourced from `GET /projects`.
     - Selected `projectId` is required for all fetches and CRUD operations.
-- Add/update/delete records:
-    - Update: edit existing row by `projectId` + `gitHash` -> `PUT /metrics/{gitHash}`.
+- Edit records:
     - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
