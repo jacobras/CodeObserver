@@ -19,28 +19,35 @@ import ir.ehsannarmani.compose_charts.models.GridProperties
 import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
 import ir.ehsannarmani.compose_charts.models.LabelProperties
 import ir.ehsannarmani.compose_charts.models.Line
-import nl.jacobras.codebaseobserver.dto.MetricsDto
+import kotlin.time.Instant
 
 @Composable
-internal fun ModuleTreeHeightChart(records: List<MetricsDto>, timeView: TimeView) {
+internal fun <T> Chart(
+    title: String,
+    records: List<T>,
+    dateField: (T) -> Instant,
+    metricField: (T) -> Int,
+    color: Color,
+    timeView: TimeView
+) {
     val chartData = buildChartData(
         records = records,
         timeView = timeView,
-        getDate = { it.gitDate },
-        getValue = { it.moduleTreeHeight }
+        getDate = dateField,
+        getValue = metricField
     )
     val lineData = remember(records, timeView) {
         listOf(
             Line(
-                label = "Module tree height",
-                color = SolidColor(Color(0xFF264653)),
+                label = title,
+                color = SolidColor(color),
                 values = chartData.yValues.map { it.toDouble() },
-                firstGradientFillColor = Color(0xFF264653).copy(alpha = 0.35f),
+                firstGradientFillColor = color.copy(alpha = 0.35f),
                 secondGradientFillColor = Color.Transparent,
                 dotProperties = DotProperties(
                     enabled = true,
                     color = SolidColor(Color.White),
-                    strokeColor = SolidColor(Color(0xFF264653)),
+                    strokeColor = SolidColor(color),
                     radius = 6.dp,
                     strokeWidth = 3.dp
                 )

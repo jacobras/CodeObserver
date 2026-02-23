@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
@@ -29,9 +30,7 @@ import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import com.gabrieldrn.carbon.tab.TabVariant
 import nl.jacobras.codebaseobserver.dto.MetricsDto
-import nl.jacobras.codebaseobserver.ui.chart.GradleChart
-import nl.jacobras.codebaseobserver.ui.chart.LinesOfCodeChart
-import nl.jacobras.codebaseobserver.ui.chart.ModuleTreeHeightChart
+import nl.jacobras.codebaseobserver.ui.chart.Chart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
 @Composable
@@ -101,13 +100,34 @@ internal fun DashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            LinesOfCodeChart(records, timeView)
+                            Chart(
+                                title = "Lines of code",
+                                records = records,
+                                dateField = { it.gitDate },
+                                metricField = { it.linesOfCode },
+                                timeView = timeView,
+                                color = Color(0xFF2A9D8F)
+                            )
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            GradleChart(records, timeView)
+                            Chart(
+                                title = "Module count",
+                                records = records,
+                                dateField = { it.gitDate },
+                                metricField = { it.moduleCount },
+                                timeView = timeView,
+                                color = Color(0xFFE76F51)
+                            )
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            ModuleTreeHeightChart(records, timeView)
+                            Chart(
+                                title = "Module tree height",
+                                records = records,
+                                dateField = { it.gitDate },
+                                metricField = { it.moduleTreeHeight },
+                                timeView = timeView,
+                                color = Color(0xFF264653)
+                            )
                         }
                     }
                     Spacer(Modifier.height(32.dp))
