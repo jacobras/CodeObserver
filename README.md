@@ -21,11 +21,11 @@ Then run CLI commands:
 
 - General help: `./gradlew :cli:run`
 - Measure code help: `./gradlew :cli:run --args="measure-code --help"`
-- Measure code execute: `./gradlew :cli:run --args="measure-code"`
+- Measure code execute: `./gradlew :cli:run --args="measure-code --path=.. "`
 - Measure code execute and upload:
   `./gradlew :cli:run --args="measure-code --project=test --path=.. --server=http://localhost:8080"`
 - Measure Gradle help: `./gradlew :cli:run --args="measure-gradle --help"`
-- Measure Gradle execute: `./gradlew :cli:run --args="measure-gradle"`
+- Measure Gradle execute: `./gradlew :cli:run --args="measure-gradle --path=.. "`
 - Measure Gradle execute and upload:
   `./gradlew :cli:run --args="measure-gradle --project=test --path=.. --server=http://localhost:8080"`
 
