@@ -6,6 +6,7 @@ import com.github.ajalt.clikt.core.subcommands
 import nl.jacobras.codebaseobserver.cli.command.measure.MeasureCommand
 import nl.jacobras.codebaseobserver.cli.command.measure.code.MeasureCodeCommand
 import nl.jacobras.codebaseobserver.cli.command.measure.gradle.MeasureGradleCommand
+import nl.jacobras.codebaseobserver.cli.util.ServerUploader
 
 fun main(args: Array<String>) {
     val rootCommand = RootCommand()
@@ -18,7 +19,12 @@ fun main(args: Array<String>) {
 
 private class RootCommand : CliktCommand(name = "codebaseobserver") {
     init {
-        subcommands(MeasureCommand(), MeasureCodeCommand(), MeasureGradleCommand())
+        val uploader = ServerUploader()
+        subcommands(
+            MeasureCommand(),
+            MeasureCodeCommand(uploader),
+            MeasureGradleCommand(uploader)
+        )
     }
 
     override fun run() = Unit

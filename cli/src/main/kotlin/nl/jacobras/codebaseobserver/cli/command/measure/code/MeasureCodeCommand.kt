@@ -4,21 +4,9 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import nl.jacobras.codebaseobserver.cli.runCommand
+import nl.jacobras.codebaseobserver.cli.util.GitInfoCollector
+import nl.jacobras.codebaseobserver.cli.util.ServerUploader
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import java.io.File
 import java.nio.file.FileSystems
@@ -26,9 +14,10 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.isRegularFile
 import kotlin.streams.asSequence
-import kotlin.time.Instant
 
-class MeasureCodeCommand : CliktCommand(name = "measure-code") {
+class MeasureCodeCommand internal constructor(
+    private val uploader: ServerUploader
+) : CliktCommand(name = "measure-code") {
     private val path by option(
         "--path",
         help = "Folder to scan. Defaults to the current working directory."
@@ -60,17 +49,13 @@ class MeasureCodeCommand : CliktCommand(name = "measure-code") {
         println("Counted $linesOfCode lines of code in $targetPath")
 
         serverUrl?.let { url ->
-            val workingDir = targetPath.toFile()
-            val gitHash = runCommand(workingDir, "git", "rev-parse", "HEAD")?.trim().orEmpty()
-            val gitDate = runCommand(workingDir, "git", "show", "-s", "--format=%cI", "HEAD")?.trim().orEmpty()
-
-            require(gitHash.isNotEmpty()) {
-                "Could not determine git hash. Make sure you are in a git repository."
-            }
-            require(gitDate.isNotEmpty()) {
-                "Could not determine git date. Make sure you are in a git repository."
-            }
-            runBlocking { upload(url, projectId, gitHash, gitDate, linesOfCode) }
+            val payload = CodeMetricsRequest(
+                projectId = projectId,
+                gitHash = GitInfoCollector.getGitHash(targetPath),
+                gitDate = GitInfoCollector.getGitDate(targetPath),
+                linesOfCode = linesOfCode
+            )
+            runBlocking { uploader.upload(serverUrl = url, payload = payload) }
         }
     }
 
@@ -111,37 +96,5 @@ class MeasureCodeCommand : CliktCommand(name = "measure-code") {
 
         println("Finished processing $filesProcessed files.")
         return totalLines
-    }
-
-    private suspend fun upload(
-        serverUrl: String,
-        projectId: String,
-        gitHash: String,
-        gitDate: String,
-        linesOfCode: Int
-    ) {
-        val client = HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-            }
-        }
-        val payload = CodeMetricsRequest(
-            projectId = projectId,
-            gitHash = gitHash,
-            gitDate = Instant.parse(gitDate),
-            linesOfCode = linesOfCode
-        )
-        val response = client.post("${serverUrl.trimEnd('/')}/metrics/code") {
-            header(HttpHeaders.ContentType, ContentType.Application.Json)
-            contentType(ContentType.Application.Json)
-            setBody(payload)
-        }
-        client.close()
-        val statusCode = response.status.value
-        val responseBody = response.bodyAsText()
-        require(response.status.isSuccess()) {
-            "Error uploading metrics: $statusCode - $responseBody"
-        }
-        println("Server response: $statusCode - $responseBody")
     }
 }

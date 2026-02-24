@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import nl.jacobras.codebaseobserver.cli.command.measure.code.MeasureCodeCommand
 import nl.jacobras.codebaseobserver.cli.command.measure.gradle.MeasureGradleCommand
+import nl.jacobras.codebaseobserver.cli.util.ServerUploader
 
 class MeasureCommand : CliktCommand(name = "measure") {
     private val path by option(
@@ -30,14 +31,16 @@ class MeasureCommand : CliktCommand(name = "measure") {
         val serverArg = "--server"
         val projectId = "--project"
 
+        val uploader = ServerUploader()
+
         // Run measure-code
         val codeArgs = mutableListOf(pathArg, path, projectId, this@MeasureCommand.projectId)
         serverUrl?.let { codeArgs.addAll(listOf(serverArg, it)) }
-        MeasureCodeCommand().main(codeArgs.toTypedArray())
+        MeasureCodeCommand(uploader).main(codeArgs.toTypedArray())
 
         // Run measure-gradle
         val gradleArgs = mutableListOf(pathArg, path, projectId, this@MeasureCommand.projectId)
         serverUrl?.let { gradleArgs.addAll(listOf(serverArg, it)) }
-        MeasureGradleCommand().main(gradleArgs.toTypedArray())
+        MeasureGradleCommand(uploader).main(gradleArgs.toTypedArray())
     }
 }
