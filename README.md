@@ -12,38 +12,12 @@ Current supported metrics:
 
 ## Run locally
 
-### Server
+1. Run server: `./gradlew :server:run`
+2. Run web app: `./gradlew :web:wasmJsBrowserDevelopmentExecutableDistribution`
 
-#### Development
+When the server is running, the web development build will be accessible at http://localhost:8080/dev/.
 
-```bash
-./gradlew :server:run
-```
-
-This hosts both the API and the UI (see Web below).
-
-#### Release
-
-1. Build the web app: `./gradlew :web:wasmJsBrowserDistribution`
-2. Build the server: `./gradlew :server:shadowJar`
-3. Build the image: `docker build -t mrras/codebase-observer:0.4.0 .`
-4. Now run with `docker compose up`
-
-#### Publish
-
-`docker push mrras/codebase-observer:0.4.0`
-
-### Web
-
-#### Development
-
-`./gradlew :web:wasmJsBrowserDevelopmentExecutableDistribution`
-
-When the server is running, the development build will be accessible at http://localhost:8080/dev/.
-
-### CLI
-
-#### Development
+Then run CLI commands:
 
 - General help: `./gradlew :cli:run`
 - Measure code help: `./gradlew :cli:run --args="measure-code --help"`
@@ -55,6 +29,16 @@ When the server is running, the development build will be accessible at http://l
 - Measure Gradle execute and upload:
   `./gradlew :cli:run --args="measure-gradle --project=test --path=.. --server=http://localhost:8080"`
 
-#### Release
+## Release
+
+### Docker
+
+1. Build the web app: `./gradlew :web:wasmJsBrowserDistribution`
+2. Build the server: `./gradlew :server:shadowJar`
+3. Build the image: `docker build -t mrras/codebase-observer:0.4.0 .`
+4. Now run with `docker compose up`
+5. Push the image: `docker push mrras/codebase-observer:0.4.0`
+
+### CLI
 
 `./gradlew :cli:shadowJar`
