@@ -46,7 +46,7 @@ internal fun <T> Chart(
                     enabled = true,
                     color = SolidColor(Color.White),
                     strokeColor = SolidColor(color),
-                    radius = 6.dp,
+                    radius = 5.dp,
                     strokeWidth = 3.dp
                 )
             )
