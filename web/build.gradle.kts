@@ -22,6 +22,7 @@ kotlin {
             implementation(compose.ui)
             implementation(libs.carbon)
             implementation(libs.compose.charts)
+            implementation(libs.humanReadable)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.js)

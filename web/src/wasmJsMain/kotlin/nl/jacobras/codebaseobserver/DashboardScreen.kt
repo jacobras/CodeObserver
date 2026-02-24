@@ -32,6 +32,7 @@ import com.gabrieldrn.carbon.tab.TabVariant
 import nl.jacobras.codebaseobserver.dto.MetricsDto
 import nl.jacobras.codebaseobserver.ui.chart.Chart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
+import nl.jacobras.humanreadable.HumanReadable
 
 @Composable
 internal fun DashboardScreen(
@@ -198,7 +199,7 @@ private fun RecordsTable(
                         modifier = Modifier.weight(1f)
                     )
                     BasicText(
-                        text = record.linesOfCode.toString(),
+                        text = HumanReadable.abbreviation(record.linesOfCode, decimals = 1),
                         style = Carbon.typography.body02,
                         modifier = Modifier.weight(1f)
                     )
