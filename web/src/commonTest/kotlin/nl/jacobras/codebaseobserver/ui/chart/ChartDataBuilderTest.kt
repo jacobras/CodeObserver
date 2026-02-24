@@ -11,7 +11,7 @@ import kotlin.time.Duration.Companion.minutes
 class ChartDataBuilderTest {
 
     private fun buildChartData(records: List<CountRecord>, timeView: TimeView): ChartData {
-        return buildChartData(
+        return buildTimeChartData(
             records = records,
             timeView = timeView,
             getDate = { it.gitDate },

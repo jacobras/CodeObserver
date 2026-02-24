@@ -55,7 +55,13 @@ class MeasureCodeCommand internal constructor(
                 gitDate = GitInfoCollector.getGitDate(targetPath),
                 linesOfCode = linesOfCode
             )
-            runBlocking { uploader.upload(serverUrl = url, payload = payload) }
+            runBlocking {
+                uploader.upload(
+                    serverUrl = url,
+                    endpoint = "metrics/code",
+                    payload = payload
+                )
+            }
         }
     }
 

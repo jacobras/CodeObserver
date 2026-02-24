@@ -16,25 +16,21 @@ import ir.ehsannarmani.compose_charts.models.GridProperties
 import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
 import ir.ehsannarmani.compose_charts.models.LabelProperties
 import ir.ehsannarmani.compose_charts.models.Line
-import kotlin.time.Instant
 
 @Composable
-internal fun <T> Chart(
+internal fun <T> VersionChart(
     title: String,
     records: List<T>,
-    dateField: (T) -> Instant,
-    metricField: (T) -> Int,
+    versionField: (T) -> String,
+    metricField: (T) -> Long,
     color: Color,
-    timeView: TimeView,
     modifier: Modifier = Modifier
 ) {
-    val chartData = buildChartData(
-        records = records,
-        timeView = timeView,
-        getDate = dateField,
-        getValue = metricField
+    val chartData = ChartData(
+        xLabels = records.map(versionField),
+        yValues = records.map(metricField)
     )
-    val lineData = remember(records, timeView) {
+    val lineData = remember(records) {
         listOf(
             Line(
                 label = title,

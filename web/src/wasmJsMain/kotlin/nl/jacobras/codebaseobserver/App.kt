@@ -38,13 +38,15 @@ import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import nl.jacobras.codebaseobserver.dto.MetricsDto
+import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
+import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
 @OptIn(ExperimentalCarbonApi::class)
 @Composable
 fun App() {
-    var records by remember { mutableStateOf<List<MetricsDto>>(emptyList()) }
+    var metrics by remember { mutableStateOf<List<CodeMetricsDto>>(emptyList()) }
+    var artifactSizes by remember { mutableStateOf<List<ArtifactSizeDto>>(emptyList()) }
     var projectIds by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedProjectId by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
@@ -69,12 +71,15 @@ fun App() {
         }
     }
 
-    suspend fun reloadRecords() {
+    suspend fun reloadMetrics() {
         if (selectedProjectId.isBlank()) {
-            records = emptyList()
+            metrics = emptyList()
             return
         }
-        records = client.get("/metrics") {
+        metrics = client.get("/metrics") {
+            url { parameters.append("projectId", selectedProjectId) }
+        }.body()
+        artifactSizes = client.get("/artifactSizes") {
             url { parameters.append("projectId", selectedProjectId) }
         }.body()
     }
@@ -94,7 +99,7 @@ fun App() {
     LaunchedEffect(selectedProjectId) {
         if (selectedProjectId.isBlank()) return@LaunchedEffect
         try {
-            reloadRecords()
+            reloadMetrics()
         } catch (e: Throwable) {
             error = e.message ?: "Failed to load"
         }
@@ -127,7 +132,8 @@ fun App() {
                 when (activeScreen) {
                     Screen.Dashboard -> {
                         DashboardScreen(
-                            records = records,
+                            metrics = metrics,
+                            artifactSizes = artifactSizes,
                             error = error,
                             projectIds = projectIds,
                             selectedProjectId = selectedProjectId,
@@ -140,7 +146,7 @@ fun App() {
                                             url { parameters.append("projectId", selectedProjectId) }
                                         }
                                         reloadProjects()
-                                        reloadRecords()
+                                        reloadMetrics()
                                     } catch (e: Throwable) {
                                         error = e.message ?: "Failed to delete"
                                     }

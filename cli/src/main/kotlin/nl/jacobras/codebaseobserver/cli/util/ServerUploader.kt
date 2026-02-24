@@ -18,6 +18,7 @@ internal class ServerUploader {
 
     suspend fun upload(
         serverUrl: String,
+        endpoint: String,
         payload: Any
     ) {
         val client = HttpClient(CIO) {
@@ -25,7 +26,7 @@ internal class ServerUploader {
                 json(Json { ignoreUnknownKeys = true })
             }
         }
-        val response = client.post("${serverUrl.trimEnd('/')}/metrics/gradle") {
+        val response = client.post("${serverUrl.trimEnd('/')}/$endpoint") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             contentType(ContentType.Application.Json)
             setBody(payload)
