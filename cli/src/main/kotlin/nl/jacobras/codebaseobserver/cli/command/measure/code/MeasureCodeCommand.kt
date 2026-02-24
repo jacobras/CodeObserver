@@ -51,6 +51,7 @@ class MeasureCodeCommand : CliktCommand(name = "measure-code") {
     ).default("**/build/**,**/.git/**,/**/.gradle/**,**/.kotlin/**,**/.idea/**")
 
     override fun run() {
+        println("Going to measure code")
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
         val includePatterns = include.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         val excludePatterns = exclude.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -87,22 +88,29 @@ class MeasureCodeCommand : CliktCommand(name = "measure-code") {
             FileSystems.getDefault().getPathMatcher("glob:$pattern")
         }
 
+        var totalLines = 0
+        var filesProcessed = 0
+
         Files.walk(root).use { stream ->
-            return stream.asSequence()
-                .filter {
-                    // Filter out symlinks and such.
-                    it.isRegularFile()
-                }
+            stream.asSequence()
+                .filter { it.isRegularFile() }
                 .filter { path ->
-                    // Handle inclusion/exclusion patterns.
                     (includeMatchers.isEmpty() || includeMatchers.any { it.matches(path) }) &&
                             excludeMatchers.none { it.matches(path) }
                 }
-                .sumOf { filePath ->
-                    // Count lines in each matching file
-                    Files.lines(filePath).use { lines -> lines.count().toInt() }
+                .forEach { filePath ->
+                    val lines = Files.lines(filePath).use { it.count().toInt() }
+                    totalLines += lines
+                    filesProcessed++
+
+                    if (filesProcessed % 1000 == 0) {
+                        println("Processed $filesProcessed files...")
+                    }
                 }
         }
+
+        println("Finished processing $filesProcessed files.")
+        return totalLines
     }
 
     private suspend fun upload(

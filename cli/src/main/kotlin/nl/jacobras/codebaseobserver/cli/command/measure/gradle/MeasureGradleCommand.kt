@@ -40,6 +40,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
     ).required()
 
     override fun run() {
+        println("Going to measure gradle modules")
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
 
         val moduleCount = countGradleModules(targetPath)
@@ -47,7 +48,7 @@ class MeasureGradleCommand : CliktCommand(name = "measure-gradle") {
         println("Found $moduleCount Gradle modules in $targetPath")
         println("Module tree height: $moduleTreeHeight")
         if (longestPath.isNotEmpty()) {
-            println("Longest path: ${longestPath.joinToString(" > ")}")
+            println("Longest path: ${longestPath.joinToString(" --> ")}")
         }
 
         serverUrl?.let { url ->
