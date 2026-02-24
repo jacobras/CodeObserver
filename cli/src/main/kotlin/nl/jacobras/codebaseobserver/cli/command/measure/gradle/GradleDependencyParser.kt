@@ -2,23 +2,32 @@ package nl.jacobras.codebaseobserver.cli.command.measure.gradle
 
 internal object GradleDependencyParser {
 
-    fun parse(buildFile: String): List<String> {
-        val deps = mutableListOf<String>()
+    fun parse(text: String): List<String> {
+        val result = mutableListOf<String>()
 
-        // Pattern 1: projects.a.b.c -> a:b:c
-        val projectsPattern = Regex("""projects(?:\.\w+)+""")
-        projectsPattern.findAll(buildFile).forEach { match ->
-            val fullMatch = match.value
-            val parts = fullMatch.substring("projects".length).split(".").filter { it.isNotEmpty() }
-            deps.add(parts.joinToString(":"))
+        // projects.a.b
+        val projectsRegex = Regex("""projects\.([A-Za-z0-9_.-]+)""")
+        projectsRegex.findAll(text).forEach { match ->
+            val path = match.groupValues[1]
+            result.add(dotPathToColon(path))
         }
 
-        // Pattern 2: ":module:path" or ":module" -> module:path or module
-        val stringLiteralPattern = Regex("""":([\w:]+)"""")
-        stringLiteralPattern.findAll(buildFile).forEach { match ->
-            deps.add(match.groupValues[1])
+        // project(":module:sub")
+        val projectStringRegex = Regex("""project\("(:[^"]+)"\)""")
+        projectStringRegex.findAll(text).forEach { match ->
+            val path = match.groupValues[1].removePrefix(":")
+            result.add(path)
         }
+        return result
+    }
 
-        return deps
+    // Convert project accessor to colon-separated module ID.
+    private fun dotPathToColon(path: String): String {
+        val segments = path.split(".")
+        return if (segments.size <= 1) {
+            segments.first()
+        } else {
+            segments.joinToString(":")
+        }
     }
 }
