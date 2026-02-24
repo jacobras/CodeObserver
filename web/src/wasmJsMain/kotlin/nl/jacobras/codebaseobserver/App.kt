@@ -106,7 +106,8 @@ fun App() {
 
     CarbonDesignSystem(
         theme = WhiteTheme.copy(
-            borderInteractive = Color(0xFF1F3D4D)
+            borderInteractive = Color(0xFF1F3D4D),
+            layerSelectedInverse = Color(0xFF1F3D4D)
         )
     ) {
         Column(

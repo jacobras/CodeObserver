@@ -24,6 +24,9 @@ import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
+import com.gabrieldrn.carbon.dropdown.Dropdown
+import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
+import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.tab.TabItem
@@ -48,24 +51,31 @@ internal fun DashboardScreen(
             text = "Dashboard",
             style = Carbon.typography.heading06
         )
+        Dropdown(
+            label = "Project",
+            placeholder = "Select a project",
+            options = projectIds.associateWith {
+                DropdownOption(it)
+            },
+            selectedOption = selectedProjectId,
+            onOptionSelected = { onSelectProject(it) },
+            isInlined = true,
+            state = if (projectIds.isNotEmpty()) DropdownInteractiveState.Enabled else DropdownInteractiveState.Warning(
+                "No projects yet. Create one by submitting data via the CLI."
+            )
+        )
         Spacer(Modifier.height(16.dp))
-        if (projectIds.isEmpty()) {
-            BasicText(
-                text = "No projects yet. Create one by submitting data via the CLI.",
-                style = Carbon.typography.body02
-            )
-            Spacer(Modifier.height(16.dp))
-        } else {
-            val tabs = projectIds.map { TabItem(label = it) }
-            TabList(
-                tabs = tabs,
-                variant = TabVariant.Contained,
-                selectedTab = tabs.first { it.label == selectedProjectId },
-                onTabSelected = { tab ->
-                    onSelectProject(tab.label)
-                }
-            )
-        }
+
+        var selectedTab by remember { mutableStateOf(DashboardTab.Overview) }
+        val tabs = DashboardTab.entries.map { TabItem(label = it.displayName) }
+        TabList(
+            tabs = tabs,
+            variant = TabVariant.Contained,
+            selectedTab = tabs.first { it.label == selectedTab.displayName },
+            onTabSelected = { tab ->
+                selectedTab = DashboardTab.entries.first { it.displayName == tab.label }
+            }
+        )
 
         CarbonLayer {
             Column(
@@ -85,61 +95,73 @@ internal fun DashboardScreen(
                         style = Carbon.typography.body02
                     )
                 } else {
-                    var timeView by remember { mutableStateOf(TimeView.Last7Days) }
-
-                    ContentSwitcher(
-                        options = TimeView.entries.map { it.label },
-                        selectedOption = timeView.label,
-                        onOptionSelected = { selected ->
-                            timeView = TimeView.entries.first { it.label == selected }
-                        }
-                    )
-                    Spacer(Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Chart(
-                                title = "Lines of code",
-                                records = records,
-                                dateField = { it.gitDate },
-                                metricField = { it.linesOfCode },
-                                timeView = timeView,
-                                color = Color(0xFF2A9D8F)
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Chart(
-                                title = "Module count",
-                                records = records,
-                                dateField = { it.gitDate },
-                                metricField = { it.moduleCount },
-                                timeView = timeView,
-                                color = Color(0xFFE76F51)
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Chart(
-                                title = "Module tree height",
-                                records = records,
-                                dateField = { it.gitDate },
-                                metricField = { it.moduleTreeHeight },
-                                timeView = timeView,
-                                color = Color(0xFF264653)
-                            )
-                        }
+                    when (selectedTab) {
+                        DashboardTab.Overview -> Overview(
+                            records = records
+                        )
+                        DashboardTab.Data -> RecordsTable(
+                            records = records,
+                            onDelete = onDelete
+                        )
                     }
-                    Spacer(Modifier.height(32.dp))
-
-                    RecordsTable(
-                        records = records,
-                        onDelete = onDelete
-                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun Overview(
+    records: List<MetricsDto>
+) {
+    var timeView by remember { mutableStateOf(TimeView.Last7Days) }
+
+    ContentSwitcher(
+        options = TimeView.entries.map { it.label },
+        selectedOption = timeView.label,
+        onOptionSelected = { selected ->
+            timeView = TimeView.entries.first { it.label == selected }
+        }
+    )
+    Spacer(Modifier.height(16.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Chart(
+            title = "Lines of code",
+            records = records,
+            dateField = { it.gitDate },
+            metricField = { it.linesOfCode },
+            timeView = timeView,
+            color = Color(0xFF2A9D8F),
+            modifier = Modifier
+                .weight(1f)
+                .height(240.dp)
+        )
+        Chart(
+            title = "Module count",
+            records = records,
+            dateField = { it.gitDate },
+            metricField = { it.moduleCount },
+            timeView = timeView,
+            color = Color(0xFFE76F51),
+            modifier = Modifier
+                .weight(1f)
+                .height(240.dp)
+        )
+        Chart(
+            title = "Module tree height",
+            records = records,
+            dateField = { it.gitDate },
+            metricField = { it.moduleTreeHeight },
+            timeView = timeView,
+            color = Color(0xFF264653),
+            modifier = Modifier
+                .weight(1f)
+                .height(240.dp)
+        )
     }
 }
 

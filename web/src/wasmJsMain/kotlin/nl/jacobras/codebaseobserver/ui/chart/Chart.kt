@@ -1,8 +1,5 @@
 package nl.jacobras.codebaseobserver.ui.chart
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,7 +25,8 @@ internal fun <T> Chart(
     dateField: (T) -> Instant,
     metricField: (T) -> Int,
     color: Color,
-    timeView: TimeView
+    timeView: TimeView,
+    modifier: Modifier = Modifier
 ) {
     val chartData = buildChartData(
         records = records,
@@ -55,36 +53,31 @@ internal fun <T> Chart(
         )
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        LineChart(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp)
-                .padding(horizontal = 12.dp),
-            data = lineData,
-            curvedEdges = false,
-            animationMode = AnimationMode.None,
-            gridProperties = GridProperties(
+    LineChart(
+        modifier = modifier.padding(horizontal = 12.dp),
+        data = lineData,
+        curvedEdges = false,
+        animationMode = AnimationMode.None,
+        gridProperties = GridProperties(
+            enabled = true,
+            xAxisProperties = GridProperties.AxisProperties(enabled = false),
+            yAxisProperties = GridProperties.AxisProperties(
                 enabled = true,
-                xAxisProperties = GridProperties.AxisProperties(enabled = false),
-                yAxisProperties = GridProperties.AxisProperties(
-                    enabled = true,
-                    thickness = 1.dp,
-                    color = SolidColor(Color(0xFFE0E0E0))
-                )
-            ),
-            indicatorProperties = HorizontalIndicatorProperties(
-                enabled = true,
-                textStyle = Carbon.typography.bodyCompact01.copy(color = Color(0xFF2F4858)),
-                padding = 12.dp
-            ),
-            labelProperties = LabelProperties(
-                enabled = true,
-                labels = chartData.xLabels,
-                textStyle = Carbon.typography.bodyCompact01.copy(color = Color(0xFF2F4858)),
-                rotation = LabelProperties.Rotation(degree = 0f)
-            ),
-            dividerProperties = DividerProperties(enabled = false)
-        )
-    }
+                thickness = 1.dp,
+                color = SolidColor(Color(0xFFE0E0E0))
+            )
+        ),
+        indicatorProperties = HorizontalIndicatorProperties(
+            enabled = true,
+            textStyle = Carbon.typography.bodyCompact01.copy(color = Color(0xFF2F4858)),
+            padding = 12.dp
+        ),
+        labelProperties = LabelProperties(
+            enabled = true,
+            labels = chartData.xLabels,
+            textStyle = Carbon.typography.bodyCompact01.copy(color = Color(0xFF2F4858)),
+            rotation = LabelProperties.Rotation(degree = 0f)
+        ),
+        dividerProperties = DividerProperties(enabled = false)
+    )
 }
