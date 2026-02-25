@@ -26,10 +26,12 @@ internal fun <T> VersionChart(
     color: Color,
     modifier: Modifier = Modifier
 ) {
-    val chartData = ChartData(
-        xLabels = records.map(versionField),
-        yValues = records.map(metricField)
-    )
+    val chartData = remember(records) {
+        ChartData(
+            xLabels = records.map(versionField),
+            yValues = records.map(metricField)
+        )
+    }
     val lineData = remember(records) {
         listOf(
             Line(
