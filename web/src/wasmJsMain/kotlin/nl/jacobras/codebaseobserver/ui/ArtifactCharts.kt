@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
+import io.github.z4kn4fein.semver.toVersion
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.ui.chart.VersionChart
 
@@ -42,14 +43,9 @@ internal fun ArtifactCharts(
             records = artifactSizes
                 .filter { it.name == selectedArtifact }
                 .sortedWith { a, b ->
-                    val aParts = a.semVer.split(".").map { it.toIntOrNull() ?: 0 }
-                    val bParts = b.semVer.split(".").map { it.toIntOrNull() ?: 0 }
-
-                    for (i in 0..2) {
-                        val cmp = aParts.getOrElse(i) { 0 }.compareTo(bParts.getOrElse(i) { 0 })
-                        if (cmp != 0) return@sortedWith cmp
-                    }
-                    0
+                    val a = a.semVer.toVersion()
+                    val b = b.semVer.toVersion()
+                    a.compareTo(b)
                 },
             versionField = { it.semVer },
             metricField = { it.size },
