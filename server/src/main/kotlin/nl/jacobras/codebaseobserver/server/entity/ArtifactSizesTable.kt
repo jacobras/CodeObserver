@@ -8,5 +8,5 @@ internal object ArtifactSizesTable : Table("artifactSizes") {
     val name = text("name")
     val semVer = text("semVer")
     val size = long("sizeBytes")
-    override val primaryKey = PrimaryKey(projectId, semVer)
+    override val primaryKey = PrimaryKey(projectId, name, semVer)
 }

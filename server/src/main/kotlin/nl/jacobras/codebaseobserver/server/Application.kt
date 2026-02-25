@@ -1,5 +1,6 @@
 package nl.jacobras.codebaseobserver.server
 
+import io.github.z4kn4fein.semver.toVersionOrNull
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -127,7 +128,7 @@ fun Application.module() {
                     it[linesOfCode] = request.linesOfCode
                 }
             }
-            call.respond(HttpStatusCode.Accepted)
+            call.respond(HttpStatusCode.Created)
         }
         post("/metrics/gradle") {
             val request = call.receive<GradleMetricsRequest>()
@@ -151,7 +152,7 @@ fun Application.module() {
                     it[moduleTreeHeight] = request.moduleTreeHeight
                 }
             }
-            call.respond(HttpStatusCode.Accepted)
+            call.respond(HttpStatusCode.Created)
         }
         delete("/metrics/{gitHash}") {
             val gitHash = call.parameters["gitHash"]?.trim().orEmpty()
@@ -197,6 +198,18 @@ fun Application.module() {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
                 return@post
             }
+            if (request.name.isEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
+                return@post
+            }
+            if (request.semVer.toVersionOrNull() == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid semVer: ${request.semVer}"))
+                return@post
+            }
+            if (request.size == 0L) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing size"))
+                return@post
+            }
             transaction {
                 ArtifactSizesTable.upsert(
                     onUpdateExclude = listOf(ArtifactSizesTable.createdAt)
@@ -208,7 +221,7 @@ fun Application.module() {
                     it[size] = request.size
                 }
             }
-            call.respond(HttpStatusCode.Accepted)
+            call.respond(HttpStatusCode.Created)
         }
     }
 }

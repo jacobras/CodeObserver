@@ -80,9 +80,9 @@ internal fun DashboardScreen(
                         style = Carbon.typography.body02.copy(color = Carbon.theme.supportError)
                     )
                 }
-                if (metrics.isEmpty()) {
+                if (metrics.isEmpty() && artifactSizes.isEmpty()) {
                     BasicText(
-                        text = "No data yet. Submit counts via the CLI.",
+                        text = "No data yet. Submit via the CLI.",
                         style = Carbon.typography.body02
                     )
                 } else {

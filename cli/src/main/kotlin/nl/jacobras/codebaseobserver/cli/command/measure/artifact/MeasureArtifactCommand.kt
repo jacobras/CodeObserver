@@ -19,7 +19,7 @@ class MeasureArtifactCommand internal constructor(
     private val file by option(
         "--file",
         help = "File to measure."
-    ).default(".")
+    ).required()
     private val serverUrl by option(
         "--server",
         help = "Server base URL. Without this, the count will not be uploaded."
@@ -30,7 +30,7 @@ class MeasureArtifactCommand internal constructor(
     ).required()
     private val name by option(
         "--name",
-        help = "SemVer identifying this artifact."
+        help = "Name identifying this artifact."
     ).required()
     private val semVer by option(
         "--semVer",

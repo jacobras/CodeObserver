@@ -29,13 +29,13 @@
             - `DELETE /metrics/{gitHash}` -> deletes matching record
 - Table `artifactSizes`:
     - `projectId` (TEXT)
-    - `artifactName` (TEXT)
+    - `name` (TEXT)
     - `semVer` (TEXT)
     - `size` (INTEGER)
         - Endpoints:
             - `GET /artifactSizes?projectId=...` -> list of records.
             - `POST /artifactSizes` -> stores artifact size.
-                - body `{ projectId, artifactName, semVer, size }`
+                - body `{ projectId, name, semVer, size }`
 - Projects:
     - `GET /projects` -> list of distinct `projectId` values from `metrics`, sorted asc.
 

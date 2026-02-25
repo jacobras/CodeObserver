@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.logback.classic)
+    implementation(libs.semver)
     implementation(libs.sqlite.jdbc)
 
     implementation(projects.serverDto)
