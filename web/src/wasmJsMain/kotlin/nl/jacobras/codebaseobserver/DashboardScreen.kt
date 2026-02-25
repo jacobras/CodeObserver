@@ -2,8 +2,10 @@ package nl.jacobras.codebaseobserver
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSizeIn
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,11 +23,13 @@ import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import com.gabrieldrn.carbon.tab.TabVariant
+import io.ktor.client.HttpClient
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.ui.ArtifactCharts
 import nl.jacobras.codebaseobserver.ui.CodeCharts
 import nl.jacobras.codebaseobserver.ui.CodeTable
+import nl.jacobras.codebaseobserver.ui.DependencyGraph
 
 @Composable
 internal fun DashboardScreen(
@@ -35,7 +39,8 @@ internal fun DashboardScreen(
     projectIds: List<String>,
     selectedProjectId: String,
     onSelectProject: (String) -> Unit,
-    onDelete: (CodeMetricsDto) -> Unit
+    onDelete: (CodeMetricsDto) -> Unit,
+    client: HttpClient
 ) {
     Column {
         BasicText(
@@ -96,6 +101,10 @@ internal fun DashboardScreen(
                         )
                         DashboardTab.Artifacts -> ArtifactCharts(
                             artifactSizes = artifactSizes
+                        )
+                        DashboardTab.ModuleGraph -> DependencyGraph(
+                            projectId = selectedProjectId,
+                            client = client
                         )
                     }
                 }

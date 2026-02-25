@@ -33,7 +33,9 @@ class MeasureGradleCommand internal constructor(
         val targetPath = File(path).toPath().normalize().toAbsolutePath()
 
         val moduleCount = countGradleModules(targetPath)
-        val (moduleTreeHeight, longestPath) = calculateModuleTreeHeightWithPath(targetPath)
+        val graphInfo = calculateModuleTreeHeightWithPath(targetPath)
+        val moduleTreeHeight = graphInfo.height
+        val longestPath = graphInfo.longestPath
         println("Found $moduleCount Gradle modules in $targetPath")
         println("Module tree height: $moduleTreeHeight")
         if (longestPath.isNotEmpty()) {
@@ -46,7 +48,8 @@ class MeasureGradleCommand internal constructor(
                 gitHash = GitInfoCollector.getGitHash(targetPath),
                 gitDate = GitInfoCollector.getGitDate(targetPath),
                 moduleCount = moduleCount,
-                moduleTreeHeight = moduleTreeHeight
+                moduleTreeHeight = moduleTreeHeight,
+                graph = graphInfo.graph
             )
             runBlocking {
                 uploader.upload(
@@ -57,6 +60,12 @@ class MeasureGradleCommand internal constructor(
             }
         }
     }
+
+    private data class ModuleGraphInfo(
+        val height: Int,
+        val longestPath: List<String>,
+        val graph: Map<String, List<String>>
+    )
 
     private fun countGradleModules(root: Path): Int {
         if (!Files.exists(root)) {
@@ -107,16 +116,16 @@ class MeasureGradleCommand internal constructor(
         }
     }
 
-    private fun calculateModuleTreeHeightWithPath(root: Path): Pair<Int, List<String>> {
+    private fun calculateModuleTreeHeightWithPath(root: Path): ModuleGraphInfo {
         if (!Files.exists(root)) {
             println("Warning: $root does not exist")
-            return Pair(0, emptyList())
+            return ModuleGraphInfo(0, emptyList(), emptyMap())
         }
 
         val settingsFile = findSettingsGradleFile(root)
         if (settingsFile == null) {
             println("Warning: settings.gradle.kts not found in $root")
-            return Pair(0, emptyList())
+            return ModuleGraphInfo(0, emptyList(), emptyMap())
         }
 
         return try {
@@ -132,14 +141,41 @@ class MeasureGradleCommand internal constructor(
                     val buildContent = Files.readString(buildGradle)
                     val deps = GradleDependencyParser.parse(buildContent)
                     dependencies[module] = deps
+                } else {
+                    dependencies.putIfAbsent(module, emptyList())
                 }
             }
-            // Calculate the height of the dependency graph using topological sort
-            calculateGraphHeight(modules, dependencies)
+
+            println("MERMAID start")
+            println(drawMermaid(modules, dependencies))
+            println("MERMAID end")
+
+            val (height, path) = calculateGraphHeight(modules, dependencies)
+            ModuleGraphInfo(height, path, dependencies.toMap())
         } catch (e: Exception) {
             println("Failed to calculate module height because of ${e.message}")
-            Pair(0, emptyList())
+            ModuleGraphInfo(0, emptyList(), emptyMap())
         }
+    }
+
+    private fun drawMermaid(
+        modules: List<String>,
+        dependencies: Map<String, List<String>>
+    ): String {
+        val builder = StringBuilder()
+        builder.appendLine("graph TD\n") // Top-down layout
+
+        modules.forEach { module ->
+            builder.appendLine("    $module")
+        }
+
+        builder.appendLine("\n%% Dependencies")
+        dependencies.forEach { (module, deps) ->
+            deps.forEach { dep ->
+                builder.appendLine("    $module --> $dep")
+            }
+        }
+        return builder.toString()
     }
 
     private fun calculateGraphHeight(
