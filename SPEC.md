@@ -27,8 +27,17 @@
             - `PUT /metrics/{gitHash}` -> updates matching record by `projectId` + `gitHash`.
                 - body `{ projectId, gitDate, linesOfCode, moduleCount, moduleTreeHeight }`
             - `DELETE /metrics/{gitHash}` -> deletes matching record
+- Table `artifactSizes`:
+    - `projectId` (TEXT)
+    - `name` (TEXT)
+    - `semVer` (TEXT)
+    - `size` (INTEGER)
+        - Endpoints:
+            - `GET /artifactSizes?projectId=...` -> list of records.
+            - `POST /artifactSizes` -> stores artifact size.
+                - body `{ projectId, name, semVer, size }`
 - Projects:
-    - `GET /projects` -> list of distinct `projectId` values, sorted asc.
+    - `GET /projects` -> list of distinct `projectId` values from `metrics`, sorted asc.
 
 ## CLI
 
@@ -65,6 +74,14 @@
             - Count the number of Gradle modules in the project.
             - Send `POST /metrics/gradle` to server with JSON payload including `projectId`.
             - Print summary.
+    - `measure-artifact-size`
+        - Arguments:
+            - `--file` (path to the artifact file, required)
+            - `--server` (server URL to upload results, optional)
+            - `--project` (required project identifier)
+        - Behavior:
+            - Send `POST /artifactSizes` to server with JSON payload including `projectId` and `artifactName`.
+            - If extension is `.aab`, exclude /base/lib/* that's not arm64-v8a from the size calculation.
 
 ## Web
 
@@ -87,3 +104,7 @@
     - Selected `projectId` is required for all fetches and CRUD operations.
 - Edit records:
     - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
+- Artifact size chart:
+    - Version chart showing artifact sizes across versions.
+    - X-axis: versions (sorted using semver).
+    - Y-axis: artifact size in bytes.

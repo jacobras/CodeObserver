@@ -1,5 +1,6 @@
 package nl.jacobras.codebaseobserver.server
 
+import io.github.z4kn4fein.semver.toVersionOrNull
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -16,9 +17,12 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
+import nl.jacobras.codebaseobserver.dto.ArtifactSizeRequest
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
-import nl.jacobras.codebaseobserver.dto.MetricsDto
+import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -59,7 +63,7 @@ fun Application.module() {
     val dbFile = File(dbPath)
     dbFile.parentFile?.mkdirs()
     Database.connect("jdbc:sqlite:${dbFile.absolutePath}", driver = "org.sqlite.JDBC")
-    transaction { SchemaUtils.create(MetricsTable) }
+    transaction { SchemaUtils.create(MetricsTable, ArtifactSizesTable) }
 
     routing {
         staticFiles("/", File("app/web")) {
@@ -89,7 +93,7 @@ fun Application.module() {
                     .where { MetricsTable.projectId eq projectId }
                     .orderBy(MetricsTable.gitDate to SortOrder.ASC)
                     .map {
-                        MetricsDto(
+                        CodeMetricsDto(
                             projectId = it[MetricsTable.projectId],
                             createdAt = Instant.fromEpochSeconds(it[MetricsTable.createdAt]),
                             gitHash = it[MetricsTable.gitHash],
@@ -124,7 +128,7 @@ fun Application.module() {
                     it[linesOfCode] = request.linesOfCode
                 }
             }
-            call.respond(HttpStatusCode.Created, mapOf("status" to "stored"))
+            call.respond(HttpStatusCode.Created)
         }
         post("/metrics/gradle") {
             val request = call.receive<GradleMetricsRequest>()
@@ -148,7 +152,7 @@ fun Application.module() {
                     it[moduleTreeHeight] = request.moduleTreeHeight
                 }
             }
-            call.respond(HttpStatusCode.Created, mapOf("status" to "stored"))
+            call.respond(HttpStatusCode.Created)
         }
         delete("/metrics/{gitHash}") {
             val gitHash = call.parameters["gitHash"]?.trim().orEmpty()
@@ -166,6 +170,58 @@ fun Application.module() {
             } else {
                 call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
             }
+        }
+        get("/artifactSizes") {
+            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@get
+            }
+            val records = transaction {
+                ArtifactSizesTable.selectAll()
+                    .where { ArtifactSizesTable.projectId eq projectId }
+                    .map {
+                        ArtifactSizeDto(
+                            projectId = it[ArtifactSizesTable.projectId],
+                            createdAt = Instant.fromEpochSeconds(it[ArtifactSizesTable.createdAt]),
+                            name = it[ArtifactSizesTable.name],
+                            semVer = it[ArtifactSizesTable.semVer],
+                            size = it[ArtifactSizesTable.size]
+                        )
+                    }
+            }
+            call.respond(records)
+        }
+        post("/artifactSizes") {
+            val request = call.receive<ArtifactSizeRequest>()
+            if (request.projectId.isEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@post
+            }
+            if (request.name.isEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
+                return@post
+            }
+            if (request.semVer.toVersionOrNull() == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid semVer: ${request.semVer}"))
+                return@post
+            }
+            if (request.size == 0L) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing size"))
+                return@post
+            }
+            transaction {
+                ArtifactSizesTable.upsert(
+                    onUpdateExclude = listOf(ArtifactSizesTable.createdAt)
+                ) {
+                    it[projectId] = request.projectId
+                    it[createdAt] = Clock.System.now().epochSeconds
+                    it[name] = request.name
+                    it[semVer] = request.semVer
+                    it[size] = request.size
+                }
+            }
+            call.respond(HttpStatusCode.Created)
         }
     }
 }

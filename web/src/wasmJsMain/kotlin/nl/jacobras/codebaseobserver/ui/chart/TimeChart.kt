@@ -19,7 +19,7 @@ import ir.ehsannarmani.compose_charts.models.Line
 import kotlin.time.Instant
 
 @Composable
-internal fun <T> Chart(
+internal fun <T> TimeChart(
     title: String,
     records: List<T>,
     dateField: (T) -> Instant,
@@ -28,7 +28,7 @@ internal fun <T> Chart(
     timeView: TimeView,
     modifier: Modifier = Modifier
 ) {
-    val chartData = buildChartData(
+    val chartData = buildTimeChartData(
         records = records,
         timeView = timeView,
         getDate = dateField,

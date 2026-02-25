@@ -5,7 +5,7 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 
 @Suppress("MagicNumber")
-internal fun <T> buildChartData(
+internal fun <T> buildTimeChartData(
     records: List<T>,
     timeView: TimeView,
     clock: Clock = Clock.System,
@@ -37,7 +37,7 @@ internal fun <T> buildChartData(
     }
 
     val xLabels = mutableListOf<String>()
-    val yValues = mutableListOf<Int>()
+    val yValues = mutableListOf<Long>()
 
     // Find the last known value before the time window to start chart with the oldest known data.
     var lastValue = records
@@ -56,7 +56,7 @@ internal fun <T> buildChartData(
             ?: lastValue
 
         lastValue = value
-        yValues += value
+        yValues += value.toLong()
         xLabels += when (timeView) {
             TimeView.Last12Months -> {
                 when {

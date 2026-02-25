@@ -1,6 +1,8 @@
-package nl.jacobras.codebaseobserver.cli
+package nl.jacobras.codebaseobserver.cli.util
 
-internal fun runCommand(workingDir: java.io.File?, vararg args: String): String? {
+import java.io.File
+
+internal fun runCommand(workingDir: File?, vararg args: String): String? {
     return try {
         val builder = ProcessBuilder(*args)
         if (workingDir != null) {

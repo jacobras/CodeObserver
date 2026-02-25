@@ -4,12 +4,10 @@ import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 
 @Serializable
-data class MetricsDto(
+data class ArtifactSizeDto(
     val projectId: String,
     val createdAt: Instant,
-    val gitHash: String,
-    val gitDate: Instant,
-    val linesOfCode: Int,
-    val moduleCount: Int,
-    val moduleTreeHeight: Int
+    val name: String,
+    val semVer: String,
+    val size: Long
 )
