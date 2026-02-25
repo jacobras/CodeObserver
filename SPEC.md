@@ -104,3 +104,7 @@
     - Selected `projectId` is required for all fetches and CRUD operations.
 - Edit records:
     - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
+- Artifact size chart:
+    - Version chart showing artifact sizes across versions.
+    - X-axis: versions (sorted using semver).
+    - Y-axis: artifact size in bytes.
