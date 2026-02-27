@@ -1,11 +1,18 @@
 package nl.jacobras.codebaseobserver.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.requiredSizeIn
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,11 +21,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.WebElementView
-import com.gabrieldrn.carbon.dropdown.Dropdown
-import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
-import com.gabrieldrn.carbon.dropdown.base.DropdownOption
+import com.gabrieldrn.carbon.Carbon
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -50,19 +56,13 @@ fun DependencyGraph(
             }
         }
 
-        val moduleOptions = mapOf("" to DropdownOption("None")) +
-                modules.associateWith { DropdownOption(it) }
         Row {
-            Dropdown(
-                label = "Focus module",
-                placeholder = "Select a module",
-                options = moduleOptions,
-                selectedOption = startModule,
-                onOptionSelected = { startModule = it },
-                isInlined = true,
-                state = if (!isLoading) DropdownInteractiveState.Enabled else DropdownInteractiveState.Disabled
+            ModuleList(
+                modules = modules,
+                selectedModule = startModule,
+                onSelectModule = { startModule = it },
+                modifier = Modifier.width(300.dp)
             )
-            Spacer(Modifier.width(16.dp))
 
             val graphSrc = buildString {
                 append("graph.html?projectId=")
@@ -79,11 +79,60 @@ fun DependencyGraph(
                             frameBorder = "0"
                         }
                 },
-                modifier = Modifier
-                    .requiredSizeIn(maxWidth = 1800.dp)
-                    .aspectRatio(2f),
+                modifier = Modifier.fillMaxSize(),
                 update = { iframe -> iframe.src = graphSrc }
             )
+        }
+    }
+}
+
+@Composable
+private fun ModuleList(
+    modules: List<String>,
+    selectedModule: String,
+    onSelectModule: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier) {
+        BasicText(
+            text = "Start module",
+            style = Carbon.typography.heading03
+        )
+
+        LazyColumn {
+            item {
+                BasicText(
+                    text = "None",
+                    style = Carbon.typography.body02.copy(
+                        fontWeight = if (selectedModule == "") FontWeight.Bold else FontWeight.Normal
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelectModule("") }
+                        .padding(vertical = 4.dp)
+                )
+                Spacer(Modifier.height(4.dp))
+                Spacer(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(Carbon.theme.borderSubtle00)
+                )
+                Spacer(Modifier.height(4.dp))
+            }
+
+            items(modules) { module ->
+                BasicText(
+                    text = module,
+                    style = Carbon.typography.body02.copy(
+                        fontWeight = if (module == selectedModule) FontWeight.Bold else FontWeight.Normal
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelectModule(module) }
+                        .padding(vertical = 4.dp)
+                )
+            }
         }
     }
 }
