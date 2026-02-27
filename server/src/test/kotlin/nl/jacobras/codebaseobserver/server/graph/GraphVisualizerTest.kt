@@ -150,7 +150,8 @@ class GraphVisualizerTest {
                 "util:d" to emptyList(),
                 "util:e" to emptyList()
             ),
-            groupThreshold = 3
+            groupThreshold = 3,
+            nodeLimit = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -180,7 +181,8 @@ class GraphVisualizerTest {
                     "randomExcludedFromCount"
                 )
             ),
-            groupThreshold = 3
+            groupThreshold = 3,
+            nodeLimit = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -209,6 +211,7 @@ class GraphVisualizerTest {
                 "something-else:c" to emptyList()
             ),
             groupThreshold = 3,
+            nodeLimit = 3,
             startModule = "util"
         )
 
@@ -239,6 +242,7 @@ class GraphVisualizerTest {
                 "util:e" to emptyList()
             ),
             groupThreshold = 3,
+            nodeLimit = 3,
             startModule = "app"
         )
 
@@ -253,6 +257,41 @@ class GraphVisualizerTest {
             %% Dependencies
                 app --> grouputil
             
+            class app start
+            classDef start fill:#a5a5b2;
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `do not group if not needed`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf(
+                "app" to listOf("util:a", "util:b", "util:c"),
+                "util:a" to emptyList(),
+                "util:b" to emptyList(),
+                "util:c" to emptyList(),
+                "util:d" to emptyList(),
+                "util:e" to emptyList()
+            ),
+            groupThreshold = 3,
+            nodeLimit = 10,
+            startModule = "app"
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                app
+                util:a
+                util:b
+                util:c
+            
+            %% Dependencies
+                app --> util:a
+                app --> util:b
+                app --> util:c
+
             class app start
             classDef start fill:#a5a5b2;
         """.trimIndent()

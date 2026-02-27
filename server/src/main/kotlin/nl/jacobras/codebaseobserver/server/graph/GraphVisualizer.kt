@@ -6,7 +6,8 @@ object GraphVisualizer {
         modules: Map<String, List<String>>,
         startModule: String = "",
         startModuleColor: String = "#a5a5b2",
-        groupThreshold: Int
+        groupThreshold: Int,
+        nodeLimit: Int = 30
     ): String {
         val filteredModules = if (startModule.isNotEmpty()) {
             filterModules(modules = modules, startModule = startModule)
@@ -14,9 +15,13 @@ object GraphVisualizer {
             modules
         }
 
-        val groups = getPossibleModuleGroups(filteredModules)
-            .filter { it.value.size >= groupThreshold }
-            .toMutableMap()
+        val groups = if (filteredModules.size > nodeLimit) {
+            getPossibleModuleGroups(filteredModules)
+                .filter { it.value.size >= groupThreshold }
+                .toMutableMap()
+        } else {
+            emptyMap()
+        }
 
         val outputModules = mutableListOf<String>()
         val outputGroups = mutableListOf<String>()
@@ -52,7 +57,7 @@ object GraphVisualizer {
             }
         }
 
-        if (outputModules.size > 30) {
+        if (outputModules.size > nodeLimit) {
             return "graph TD\n    A[Too large: ${outputModules.size} modules.]"
         }
 
