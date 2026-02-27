@@ -63,7 +63,10 @@ object GraphVisualizer {
             }
 
             for (group in outputGroups) {
-                val numberOfModulesInGroup = groups[group]!!.size
+                val numberOfModulesInGroup = modules
+                    .filterKeys { it.startsWith(group) }
+                    .flatMap { listOf(it.key) + it.value }
+                    .size
 
                 appendLine("    subgraph group$group [\"$group\"]")
                 appendLine("        GROUP$group[\"$numberOfModulesInGroup modules\"]")
