@@ -226,4 +226,36 @@ class GraphVisualizerTest {
         """.trimIndent()
         )
     }
+
+    @Test
+    fun `group module count only includes dependencies`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf(
+                "app" to listOf("util:a", "util:b", "util:c"),
+                "util:a" to emptyList(),
+                "util:b" to emptyList(),
+                "util:c" to emptyList(),
+                "util:d" to emptyList(),
+                "util:e" to emptyList()
+            ),
+            groupThreshold = 3,
+            startModule = "app"
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                app
+                subgraph grouputil ["util"]
+                    GROUPutil["3 modules"]
+                end
+            
+            %% Dependencies
+                app --> grouputil
+            
+            class app start
+            classDef start fill:#a5a5b2;
+        """.trimIndent()
+        )
+    }
 }

@@ -68,7 +68,7 @@ object GraphVisualizer {
             }
 
             for (group in outputGroups) {
-                val numberOfModulesInGroup = modules
+                val numberOfModulesInGroup = filteredModules
                     .flatMap { listOf(it.key) + it.value }
                     .distinct()
                     .filter { it.startsWith(group) }
