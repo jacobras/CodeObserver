@@ -133,13 +133,14 @@ class MeasureGradleCommand internal constructor(
 
             val modules = GradleSettingsParser.parseModules(content)
             val dependencies = mutableMapOf<String, List<String>>()
+            val accessorMapping = GradleSettingsParser.parseAccessorMapping(modules)
 
             modules.forEach { module ->
                 val modulePath = root.resolve(module.replace(":", File.separator))
                 val buildGradle = modulePath.resolve("build.gradle.kts")
                 if (Files.exists(buildGradle)) {
                     val buildContent = Files.readString(buildGradle)
-                    val deps = GradleDependencyParser.parse(buildContent)
+                    val deps = GradleDependencyParser.parse(buildContent, accessorMapping)
                     dependencies[module] = deps
                 } else {
                     dependencies.putIfAbsent(module, emptyList())

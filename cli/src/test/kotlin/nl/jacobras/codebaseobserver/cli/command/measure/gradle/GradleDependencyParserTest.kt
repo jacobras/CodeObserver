@@ -7,26 +7,60 @@ import kotlin.test.Test
 class GradleDependencyParserTest {
 
     @Test
-    fun parse() {
+    fun `empty file`() {
+        val dependencies = GradleDependencyParser.parse(
+            text = "",
+            accessorMapping = emptyMap()
+        )
+        assertThat(dependencies).isEqualTo(emptyList())
+    }
+
+    @Test
+    fun `regular accessor`() {
         val file = """
             dependencies {
-                implementation(projects.a.b)
-                implementation(projects.c)
-                implementation(projects.util.design)
-                implementation(project(":module:sub"))
-                implementation(project(":util:debug-settings"))
+                implementation(project(":a"))
+                implementation(project(":b:sub"))
+                implementation(project(":c:sub-with-dashes"))
             }
         """.trimIndent()
 
-        val dependencies = GradleDependencyParser.parse(file)
+        val dependencies = GradleDependencyParser.parse(
+            text = file,
+            accessorMapping = emptyMap()
+        )
 
         assertThat(dependencies).isEqualTo(
             listOf(
-                "a:b",
-                "c",
-                "util:design",
-                "module:sub",
-                "util:debug-settings"
+                "a",
+                "b:sub",
+                "c:sub-with-dashes"
+            )
+        )
+    }
+
+    @Test
+    fun `typesafe accessor`() {
+        val file = """
+            dependencies {
+                implementation(projects.a)
+                implementation(projects.b.sub)
+                implementation(projects.c.subWithDashes)
+            }
+        """.trimIndent()
+
+        val dependencies = GradleDependencyParser.parse(
+            text = file,
+            accessorMapping = mapOf(
+                "c.subWithDashes" to "c:sub-with-dashes"
+            )
+        )
+
+        assertThat(dependencies).isEqualTo(
+            listOf(
+                "a",
+                "b:sub",
+                "c:sub-with-dashes"
             )
         )
     }
