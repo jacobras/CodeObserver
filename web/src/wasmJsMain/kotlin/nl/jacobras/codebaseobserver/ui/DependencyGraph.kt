@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.WebElementView
 import com.gabrieldrn.carbon.Carbon
+import com.gabrieldrn.carbon.checkbox.Checkbox
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -41,6 +42,7 @@ fun DependencyGraph(
     Column(modifier = modifier)
     {
         var startModule by remember { mutableStateOf("") }
+        var alwaysGroup by remember { mutableStateOf(false) }
         var modules by remember { mutableStateOf<List<String>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
 
@@ -61,6 +63,8 @@ fun DependencyGraph(
                 modules = modules,
                 selectedModule = startModule,
                 onSelectModule = { startModule = it },
+                alwaysGroup = alwaysGroup,
+                onAlwaysGroupChange = { alwaysGroup = it },
                 modifier = Modifier.width(300.dp)
             )
 
@@ -70,6 +74,8 @@ fun DependencyGraph(
                 append("&startModule=")
                 append(startModule)
                 append("&groupThreshold=3")
+                append("&alwaysGroup=")
+                append(alwaysGroup)
             }
             WebElementView(
                 factory = {
@@ -91,9 +97,18 @@ private fun ModuleList(
     modules: List<String>,
     selectedModule: String,
     onSelectModule: (String) -> Unit,
+    alwaysGroup: Boolean,
+    onAlwaysGroupChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier) {
+        Checkbox(
+            label = "Always group",
+            checked = alwaysGroup,
+            onClick = { onAlwaysGroupChange(!alwaysGroup) }
+        )
+        Spacer(Modifier.height(16.dp))
+
         BasicText(
             text = "Start module",
             style = Carbon.typography.heading03

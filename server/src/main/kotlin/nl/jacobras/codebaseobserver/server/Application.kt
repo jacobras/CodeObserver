@@ -247,6 +247,7 @@ fun Application.module() {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing groupThreshold"))
                 return@get
             }
+            val alwaysGroup = call.request.queryParameters["alwaysGroup"]?.trim()?.toBoolean() ?: false
 
             val graphRecord = transaction {
                 ModuleGraphTable
@@ -265,7 +266,8 @@ fun Application.module() {
             val graph = GraphVisualizer.build(
                 modules = graphMap,
                 startModule = startModule,
-                groupThreshold = groupThreshold
+                groupThreshold = groupThreshold,
+                alwaysGroup = alwaysGroup
             )
             call.respondText(graph)
         }
