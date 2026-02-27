@@ -6,7 +6,7 @@ object GraphVisualizer {
         modules: Map<String, List<String>>,
         startModule: String = "",
         startModuleColor: String = "#a5a5b2",
-        groupThreshold: Int = 3
+        groupThreshold: Int
     ): String {
         val filteredModules = if (startModule.isNotEmpty()) {
             filterModules(modules = modules, startModule = startModule)

@@ -69,7 +69,7 @@ fun DependencyGraph(
                 append(projectId)
                 append("&startModule=")
                 append(startModule)
-                append("&groupThreshold=30")
+                append("&groupThreshold=3")
             }
             WebElementView(
                 factory = {

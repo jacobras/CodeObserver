@@ -9,7 +9,8 @@ class GraphVisualizerTest {
     @Test
     fun `empty graph`() {
         val graph = GraphVisualizer.build(
-            modules = emptyMap()
+            modules = emptyMap(),
+            groupThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -26,7 +27,8 @@ class GraphVisualizerTest {
     fun `graph with only one module starting at that module`() {
         val graph = GraphVisualizer.build(
             modules = mapOf("hello" to emptyList()),
-            startModule = "hello"
+            startModule = "hello",
+            groupThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -49,7 +51,8 @@ class GraphVisualizerTest {
                 "moduleA" to listOf("moduleB", "moduleD"),
                 "moduleB" to listOf("sub:c"),
                 "sub:c" to emptyList()
-            )
+            ),
+            groupThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -70,7 +73,8 @@ class GraphVisualizerTest {
     @Test
     fun `very wide graph`() {
         val graph = GraphVisualizer.build(
-            modules = List(300) { "module$it" to emptyList<String>() }.toMap()
+            modules = List(300) { "module$it" to emptyList<String>() }.toMap(),
+            groupThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -89,7 +93,8 @@ class GraphVisualizerTest {
                 "moduleB" to listOf("sub:c"),
                 "sub:c" to emptyList()
             ),
-            startModule = "moduleB"
+            startModule = "moduleB",
+            groupThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -116,7 +121,8 @@ class GraphVisualizerTest {
                 "feature:welcome" to listOf("util:design"),
                 "util:design" to emptyList()
             ),
-            startModule = "feature:products"
+            startModule = "feature:products",
+            groupThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
