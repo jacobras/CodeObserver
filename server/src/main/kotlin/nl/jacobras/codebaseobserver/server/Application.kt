@@ -26,7 +26,7 @@ import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphTable
-import nl.jacobras.codebaseobserver.server.graph.GraphBuilder
+import nl.jacobras.codebaseobserver.server.graph.GraphVisualizer
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -262,7 +262,7 @@ fun Application.module() {
             }
 
             val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
-            val graph = GraphBuilder.build(
+            val graph = GraphVisualizer.build(
                 modules = graphMap,
                 startModule = startModule,
                 groupThreshold = groupThreshold
