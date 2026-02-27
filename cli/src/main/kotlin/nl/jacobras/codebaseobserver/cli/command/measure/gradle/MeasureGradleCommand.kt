@@ -146,36 +146,12 @@ class MeasureGradleCommand internal constructor(
                 }
             }
 
-            println("MERMAID start")
-            println(drawMermaid(modules, dependencies))
-            println("MERMAID end")
-
             val (height, path) = calculateGraphHeight(modules, dependencies)
             ModuleGraphInfo(height, path, dependencies.toMap())
         } catch (e: Exception) {
             println("Failed to calculate module height because of ${e.message}")
             ModuleGraphInfo(0, emptyList(), emptyMap())
         }
-    }
-
-    private fun drawMermaid(
-        modules: List<String>,
-        dependencies: Map<String, List<String>>
-    ): String {
-        val builder = StringBuilder()
-        builder.appendLine("graph TD\n") // Top-down layout
-
-        modules.forEach { module ->
-            builder.appendLine("    $module")
-        }
-
-        builder.appendLine("\n%% Dependencies")
-        dependencies.forEach { (module, deps) ->
-            deps.forEach { dep ->
-                builder.appendLine("    $module --> $dep")
-            }
-        }
-        return builder.toString()
     }
 
     private fun calculateGraphHeight(
