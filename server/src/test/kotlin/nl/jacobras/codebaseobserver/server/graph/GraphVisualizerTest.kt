@@ -15,8 +15,29 @@ class GraphVisualizerTest {
         assertThat(graph).isEqualTo(
             """
             graph TD
+                A[No data to display]
             
             %% Dependencies
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `graph with only one module starting at that module`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf("hello" to emptyList()),
+            startModule = "hello"
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                hello
+            
+            %% Dependencies
+            
+            class hello start
+            classDef start fill:#a5a5b2;
         """.trimIndent()
         )
     }
@@ -52,7 +73,12 @@ class GraphVisualizerTest {
             modules = List(300) { "module$it" to emptyList<String>() }.toMap()
         )
 
-        assertThat(graph).isEqualTo("Too large: 300 modules.")
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                A[Too large: 300 modules.]
+        """.trimIndent()
+        )
     }
 
     @Test
@@ -144,7 +170,8 @@ class GraphVisualizerTest {
                 "util:sub" to listOf(
                     "util:sub:1",
                     "util:sub:2",
-                    "util:sub:3"
+                    "util:sub:3",
+                    "randomExcludedFromCount"
                 )
             ),
             groupThreshold = 3
@@ -158,6 +185,38 @@ class GraphVisualizerTest {
                 end
             
             %% Dependencies
+                grouputil --> randomExcludedFromCount
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `irrelevant group is ignored when starting at util`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf(
+                "util" to listOf("util:a", "util:b", "util:c"),
+                "util:a" to emptyList(),
+                "util:b" to emptyList(),
+                "util:c" to emptyList(),
+                "something-else:a" to emptyList(),
+                "something-else:b" to emptyList(),
+                "something-else:c" to emptyList()
+            ),
+            groupThreshold = 3,
+            startModule = "util"
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                subgraph grouputil ["util"]
+                    GROUPutil["4 modules"]
+                end
+            
+            %% Dependencies
+
+            class util start
+            classDef start fill:#a5a5b2;
         """.trimIndent()
         )
     }

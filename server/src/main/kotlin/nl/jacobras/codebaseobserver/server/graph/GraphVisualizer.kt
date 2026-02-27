@@ -14,7 +14,7 @@ object GraphVisualizer {
             modules
         }
 
-        val groups = getPossibleModuleGroups(modules)
+        val groups = getPossibleModuleGroups(filteredModules)
             .filter { it.value.size >= groupThreshold }
             .toMutableMap()
 
@@ -53,19 +53,25 @@ object GraphVisualizer {
         }
 
         if (outputModules.size > 30) {
-            return "Too large: ${outputModules.size} modules."
+            return "graph TD\n    A[Too large: ${outputModules.size} modules.]"
         }
 
         return buildString {
             appendLine("graph TD")
+
+            if (outputModules.isEmpty() && outputGroups.isEmpty()) {
+                appendLine("    A[No data to display]")
+            }
+
             for (module in outputModules) {
                 appendLine("    $module")
             }
 
             for (group in outputGroups) {
                 val numberOfModulesInGroup = modules
-                    .filterKeys { it.startsWith(group) }
                     .flatMap { listOf(it.key) + it.value }
+                    .distinct()
+                    .filter { it.startsWith(group) }
                     .size
 
                 appendLine("    subgraph group$group [\"$group\"]")
