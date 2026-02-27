@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.semver)
     implementation(libs.sqlite.jdbc)
+    implementation("org.jgrapht:jgrapht-core:1.5.2")
 
     implementation(projects.serverDto)
 

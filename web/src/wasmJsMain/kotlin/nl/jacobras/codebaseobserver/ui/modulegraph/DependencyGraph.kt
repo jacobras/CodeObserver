@@ -20,17 +20,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.WebElementView
 import com.gabrieldrn.carbon.Carbon
+import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
 import com.gabrieldrn.carbon.loading.SmallLoading
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.browser.document
+import nl.jacobras.codebaseobserver.dto.GraphModuleDto
+import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.ui.carbon.IntSelector
 import org.w3c.dom.HTMLIFrameElement
 
@@ -46,13 +50,17 @@ internal fun DependencyGraph(
         var startModule by remember { mutableStateOf("") }
         var groupingThreshold by remember { mutableStateOf(3) }
         var layerDepth by remember { mutableStateOf(30) }
-        var modules by remember { mutableStateOf<List<String>>(emptyList()) }
+        var sortOrder by remember { mutableStateOf(ModuleSortOrder.Alphabetical) }
+        var modules by remember { mutableStateOf<List<GraphModuleDto>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
 
-        LaunchedEffect(projectId) {
+        LaunchedEffect(projectId, sortOrder) {
             try {
                 modules = client.get("/modules") {
-                    url { parameters.append("projectId", projectId) }
+                    url {
+                        parameters.append("projectId", projectId)
+                        parameters.append("sort", sortOrder.id)
+                    }
                 }.body()
                 isLoading = false
             } catch (e: Throwable) {
@@ -74,6 +82,8 @@ internal fun DependencyGraph(
                 onGroupingThresholdChange = { groupingThreshold = it },
                 layerDepth = layerDepth,
                 onLayerDepthChange = { layerDepth = it },
+                sortOrder = sortOrder,
+                onSortOrderChange = { sortOrder = it },
                 modifier = Modifier.width(350.dp).padding(end = 16.dp)
             )
 
@@ -104,13 +114,15 @@ internal fun DependencyGraph(
 
 @Composable
 private fun ModuleList(
-    modules: List<String>,
+    modules: List<GraphModuleDto>,
     startModule: String,
     onSelectModule: (String) -> Unit,
     groupingThreshold: Int,
     onGroupingThresholdChange: (Int) -> Unit,
     layerDepth: Int,
     onLayerDepthChange: (Int) -> Unit,
+    sortOrder: ModuleSortOrder,
+    onSortOrderChange: (ModuleSortOrder) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier) {
@@ -134,6 +146,13 @@ private fun ModuleList(
             )
         }
         Spacer(Modifier.height(32.dp))
+
+        ContentSwitcher(
+            options = ModuleSortOrder.entries.map { it.displayName },
+            onOptionSelected = { onSortOrderChange(ModuleSortOrder.fromDisplayName(it)) },
+            selectedOption = sortOrder.displayName,
+        )
+        Spacer(Modifier.height(16.dp))
 
         BasicText(
             text = "Start module",
@@ -163,18 +182,46 @@ private fun ModuleList(
                 Spacer(Modifier.height(4.dp))
             }
 
-            items(modules) { module ->
-                BasicText(
-                    text = module,
-                    style = Carbon.typography.body02.copy(
-                        fontWeight = if (module == startModule) FontWeight.Bold else FontWeight.Normal
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelectModule(module) }
-                        .padding(vertical = 4.dp)
+            items(modules.sortedBy { it.name }.sortedByDescending { it.score }) { module ->
+                ModuleRow(
+                    module = module,
+                    selected = module.name == startModule,
+                    onClick = { onSelectModule(module.name) }
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ModuleRow(
+    module: GraphModuleDto,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        BasicText(
+            text = module.name,
+            style = Carbon.typography.body02.copy(
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            ),
+            modifier = Modifier.weight(1f)
+        )
+        if (module.score > 0) {
+            BasicText(
+                text = module.score.toString(),
+                style = Carbon.typography.body01.copy(
+                    fontWeight = FontWeight.Normal,
+                    color = Carbon.theme.textHelper
+                )
+            )
         }
     }
 }

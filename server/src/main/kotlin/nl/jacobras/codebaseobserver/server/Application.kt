@@ -23,9 +23,12 @@ import nl.jacobras.codebaseobserver.dto.ArtifactSizeRequest
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
+import nl.jacobras.codebaseobserver.dto.GraphModuleDto
+import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphTable
+import nl.jacobras.codebaseobserver.server.graph.GraphUtil
 import nl.jacobras.codebaseobserver.server.graph.GraphVisualizer
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -277,6 +280,14 @@ fun Application.module() {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
                 return@get
             }
+            val sortOrderId = call.request.queryParameters["sort"]?.trim().orEmpty()
+            val sortOrder = ModuleSortOrder.fromId(sortOrderId) ?: run {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("error" to "Unsupported sort order: $sortOrderId")
+                )
+                return@get
+            }
 
             val graphRecord = transaction {
                 ModuleGraphTable
@@ -287,13 +298,22 @@ fun Application.module() {
                     .singleOrNull()
             }
             if (graphRecord == null) {
-                call.respond(emptyList<String>())
+                call.respond(emptyList<GraphModuleDto>())
                 return@get
             }
 
             val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
-            val modules = (graphMap.keys + graphMap.values.flatten()).distinct().sorted()
-            call.respond(modules)
+
+            when (sortOrder) {
+                ModuleSortOrder.BetweennessCentrality -> {
+                    val betweennessCentrality = GraphUtil.calculateBetweennessCentralityScore(graphMap)
+                    call.respond(betweennessCentrality.map { GraphModuleDto(it.key, it.value.toInt()) })
+                }
+                ModuleSortOrder.Alphabetical -> {
+                    val modules = (graphMap.keys + graphMap.values.flatten()).distinct().sorted()
+                    call.respond(modules.map { GraphModuleDto(it, 0) })
+                }
+            }
         }
     }
 }
