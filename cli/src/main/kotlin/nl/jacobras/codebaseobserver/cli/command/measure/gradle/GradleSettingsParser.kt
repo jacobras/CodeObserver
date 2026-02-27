@@ -18,19 +18,25 @@ internal object GradleSettingsParser {
      * For example, "a:my-module" turns into "a.myModule".
      */
     fun parseAccessorMapping(modules: List<String>): Map<String, String> {
+        fun String.toCamelCase(): String =
+            split("_", "-")
+                .mapIndexed { index, part ->
+                    if (index == 0) part
+                    else part.replaceFirstChar { it.uppercaseChar() }
+                }
+                .joinToString("")
+
         return modules.associate { module ->
             val parts = module.split(":")
 
-            // Convert the last part to camelCase for the key (split on _ or -)
-            val keyLastPart = parts.last().split("_", "-").mapIndexed { index, s ->
-                if (index == 0) s else s.replaceFirstChar { it.uppercaseChar() }
-            }.joinToString("")
+            // CamelCase ALL segments for the key
+            val key = parts.joinToString(".") { it.toCamelCase() }
 
-            val key = parts.dropLast(1).plus(keyLastPart).joinToString(".")
-
-            // Convert underscores to hyphens for the value, keep existing hyphens
+            // Only normalize underscores → hyphens for the VALUE last part
             val valueLastPart = parts.last().replace("_", "-")
-            val value = parts.dropLast(1).plus(valueLastPart).joinToString(":")
+            val value = parts.dropLast(1)
+                .plus(valueLastPart)
+                .joinToString(":")
 
             key to value
         }

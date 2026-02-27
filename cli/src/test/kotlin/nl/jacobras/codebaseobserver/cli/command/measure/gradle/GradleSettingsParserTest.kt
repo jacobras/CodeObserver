@@ -41,6 +41,8 @@ class GradleSettingsParserTest {
             "b:deeper:sub",
             "component:with_underscore",
             "component:with-hyphen",
+            "root-hyphen:a-module",
+            "root-hyphen:b"
         )
 
         val accessorMapping = GradleSettingsParser.parseAccessorMapping(modules)
@@ -49,7 +51,9 @@ class GradleSettingsParserTest {
                 "a.sub" to "a:sub",
                 "b.deeper.sub" to "b:deeper:sub",
                 "component.withUnderscore" to "component:with-underscore",
-                "component.withHyphen" to "component:with-hyphen"
+                "component.withHyphen" to "component:with-hyphen",
+                "rootHyphen.aModule" to "root-hyphen:a-module",
+                "rootHyphen.b" to "root-hyphen:b"
             )
         )
     }
