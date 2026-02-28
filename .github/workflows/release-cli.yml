@@ -15,7 +15,7 @@ jobs:
         run: ./gradlew :cli:shadowJar
 
       - name: Upload CLI artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: cli-shadowjar
           path: cli/build/libs/*.jar
