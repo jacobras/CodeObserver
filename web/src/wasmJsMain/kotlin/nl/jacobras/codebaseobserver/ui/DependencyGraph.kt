@@ -117,7 +117,7 @@ private fun ModuleList(
                 label = "Group threshold",
                 value = groupThreshold,
                 onValueChanged = onGroupThresholdChange,
-                values = (2..10).toList()
+                values = listOf(2, 3, 5, 10, 20, 30)
             )
             Spacer(Modifier.width(16.dp))
             IntSelector(
