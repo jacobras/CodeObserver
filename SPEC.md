@@ -45,7 +45,7 @@
         - `POST /artifactSizes` -> stores artifact size.
             - body `{ projectId, name, semVer, size }`
     - Module graph:
-        - `GET /moduleGraph?projectId=...&startModule=...&groupThreshold=...` -> raw graph string.
+        - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> raw graph string.
     - Modules:
       - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
     - Projects:
@@ -122,4 +122,5 @@
     - Y-axis: artifact size in bytes.
 - Module graph
     - Shows the module graph using the `DependencyGraph()` composable.
-    - Dropdown at the top to choose a top module.
+    - List to select a start module.
+    - Tweakable grouping threshold and layer depth.

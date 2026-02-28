@@ -242,9 +242,9 @@ fun Application.module() {
                 return@get
             }
             val startModule = call.request.queryParameters["startModule"]?.trim().orEmpty()
-            val groupThreshold = call.request.queryParameters["groupThreshold"]?.trim()?.toIntOrNull()
-            if (groupThreshold == null) {
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing groupThreshold"))
+            val groupingThreshold = call.request.queryParameters["groupingThreshold"]?.trim()?.toIntOrNull()
+            if (groupingThreshold == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing groupingThreshold"))
                 return@get
             }
             val layerDepth = call.request.queryParameters["layerDepth"]?.trim()?.toIntOrNull() ?: 30
@@ -266,7 +266,7 @@ fun Application.module() {
             val graph = GraphVisualizer.build(
                 modules = graphMap,
                 startModule = startModule,
-                groupThreshold = groupThreshold,
+                groupingThreshold = groupingThreshold,
                 layerDepth = layerDepth
             )
             call.respondText(graph)

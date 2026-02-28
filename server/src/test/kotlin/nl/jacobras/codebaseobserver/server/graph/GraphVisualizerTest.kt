@@ -10,7 +10,7 @@ class GraphVisualizerTest {
     fun `empty graph`() {
         val graph = GraphVisualizer.build(
             modules = emptyMap(),
-            groupThreshold = 3
+            groupingThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -28,7 +28,7 @@ class GraphVisualizerTest {
         val graph = GraphVisualizer.build(
             modules = mapOf("hello" to emptyList()),
             startModule = "hello",
-            groupThreshold = 3
+            groupingThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -52,7 +52,7 @@ class GraphVisualizerTest {
                 "moduleB" to listOf("sub:c"),
                 "sub:c" to emptyList()
             ),
-            groupThreshold = 3
+            groupingThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -74,7 +74,7 @@ class GraphVisualizerTest {
     fun `too many modules`() {
         val graph = GraphVisualizer.build(
             modules = List(300) { "module$it" to emptyList<String>() }.toMap(),
-            groupThreshold = 3
+            groupingThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -99,7 +99,7 @@ class GraphVisualizerTest {
                 put("large:b", emptyList())
                 put("large:c", emptyList())
             },
-            groupThreshold = 2,
+            groupingThreshold = 2,
             nodeLimit = 2
         )
 
@@ -120,7 +120,7 @@ class GraphVisualizerTest {
                 "sub:c" to emptyList()
             ),
             startModule = "moduleB",
-            groupThreshold = 3
+            groupingThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -148,7 +148,7 @@ class GraphVisualizerTest {
                 "util:design" to emptyList()
             ),
             startModule = "feature:products",
-            groupThreshold = 3
+            groupingThreshold = 3
         )
 
         assertThat(graph).isEqualTo(
@@ -176,7 +176,7 @@ class GraphVisualizerTest {
                 "util:d" to emptyList(),
                 "util:e" to emptyList()
             ),
-            groupThreshold = 3,
+            groupingThreshold = 3,
             nodeLimit = 3
         )
 
@@ -207,7 +207,7 @@ class GraphVisualizerTest {
                     "randomExcludedFromCount"
                 )
             ),
-            groupThreshold = 3,
+            groupingThreshold = 3,
             nodeLimit = 3
         )
 
@@ -236,7 +236,7 @@ class GraphVisualizerTest {
                 "something-else:b" to emptyList(),
                 "something-else:c" to emptyList()
             ),
-            groupThreshold = 3,
+            groupingThreshold = 3,
             nodeLimit = 3,
             startModule = "util"
         )
@@ -269,7 +269,7 @@ class GraphVisualizerTest {
                 "util:d" to emptyList(),
                 "util:e" to emptyList()
             ),
-            groupThreshold = 3,
+            groupingThreshold = 3,
             nodeLimit = 3,
             startModule = "app"
         )
@@ -300,7 +300,7 @@ class GraphVisualizerTest {
                 "feature:b" to listOf("util:a"),
                 "util:a" to emptyList()
             ),
-            groupThreshold = 3,
+            groupingThreshold = 3,
             nodeLimit = 10,
             startModule = "app",
             layerDepth = 1
@@ -335,7 +335,7 @@ class GraphVisualizerTest {
                 ),
                 "module:c" to emptyList()
             ),
-            groupThreshold = 2,
+            groupingThreshold = 2,
             nodeLimit = 10,
             startModule = "module:b",
             layerDepth = 3

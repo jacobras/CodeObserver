@@ -10,7 +10,7 @@ object GraphVisualizer {
         modules: Map<String, List<String>>,
         startModule: String = "",
         startModuleColor: String = "#a5a5b2",
-        groupThreshold: Int,
+        groupingThreshold: Int,
         nodeLimit: Int = 30,
         layerDepth: Int = 30
     ): String {
@@ -22,7 +22,7 @@ object GraphVisualizer {
         }
 
         val groups = getPossibleModuleGroups(filteredModules, startModule = startModule)
-            .filter { it.value.size >= groupThreshold }
+            .filter { it.value.size >= groupingThreshold }
             .toMutableMap()
 
         val outputModules = mutableListOf<String>()

@@ -43,7 +43,7 @@ fun DependencyGraph(
     Column(modifier = modifier)
     {
         var startModule by remember { mutableStateOf("") }
-        var groupThreshold by remember { mutableStateOf(3) }
+        var groupingThreshold by remember { mutableStateOf(3) }
         var layerDepth by remember { mutableStateOf(30) }
         var modules by remember { mutableStateOf<List<String>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
@@ -65,8 +65,8 @@ fun DependencyGraph(
                 modules = modules,
                 selectedModule = startModule,
                 onSelectModule = { startModule = it },
-                groupThreshold = groupThreshold,
-                onGroupThresholdChange = { groupThreshold = it },
+                groupingThreshold = groupingThreshold,
+                onGroupingThresholdChange = { groupingThreshold = it },
                 layerDepth = layerDepth,
                 onLayerDepthChange = { layerDepth = it },
                 modifier = Modifier.width(350.dp).padding(end = 16.dp)
@@ -77,8 +77,8 @@ fun DependencyGraph(
                 append(projectId)
                 append("&startModule=")
                 append(startModule)
-                append("&groupThreshold=")
-                append(groupThreshold)
+                append("&groupingThreshold=")
+                append(groupingThreshold)
                 append("&layerDepth=")
                 append(layerDepth)
             }
@@ -102,8 +102,8 @@ private fun ModuleList(
     modules: List<String>,
     selectedModule: String,
     onSelectModule: (String) -> Unit,
-    groupThreshold: Int,
-    onGroupThresholdChange: (Int) -> Unit,
+    groupingThreshold: Int,
+    onGroupingThresholdChange: (Int) -> Unit,
     layerDepth: Int,
     onLayerDepthChange: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -114,9 +114,9 @@ private fun ModuleList(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             IntSelector(
-                label = "Group threshold",
-                value = groupThreshold,
-                onValueChanged = onGroupThresholdChange,
+                label = "Grouping threshold",
+                value = groupingThreshold,
+                onValueChanged = onGroupingThresholdChange,
                 values = listOf(2, 3, 5, 10, 20, 30)
             )
             Spacer(Modifier.width(16.dp))
