@@ -100,8 +100,7 @@ class GraphVisualizerTest {
                 put("large:c", emptyList())
             },
             groupThreshold = 2,
-            nodeLimit = 2,
-            alwaysGroup = true
+            nodeLimit = 2
         )
 
         assertThat(graph).isEqualTo(
@@ -291,34 +290,31 @@ class GraphVisualizerTest {
     }
 
     @Test
-    fun `do not group if not needed`() {
+    fun `show only n layers deep`() {
         val graph = GraphVisualizer.build(
             modules = mapOf(
-                "app" to listOf("util:a", "util:b", "util:c"),
-                "util:a" to emptyList(),
-                "util:b" to emptyList(),
-                "util:c" to emptyList(),
-                "util:d" to emptyList(),
-                "util:e" to emptyList()
+                "app" to listOf("feature:a", "feature:b"),
+                "feature:a" to listOf("util:a"),
+                "feature:b" to listOf("util:a"),
+                "util:a" to emptyList()
             ),
             groupThreshold = 3,
             nodeLimit = 10,
-            startModule = "app"
+            startModule = "app",
+            layerDepth = 1
         )
 
         assertThat(graph).isEqualTo(
             """
             graph TD
                 app
-                util:a
-                util:b
-                util:c
+                feature:a
+                feature:b
             
             %% Dependencies
-                app --> util:a
-                app --> util:b
-                app --> util:c
-
+                app --> feature:a
+                app --> feature:b
+            
             class app start
             classDef start fill:#a5a5b2;
         """.trimIndent()

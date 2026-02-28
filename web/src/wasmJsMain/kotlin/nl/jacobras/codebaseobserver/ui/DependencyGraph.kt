@@ -2,6 +2,7 @@ package nl.jacobras.codebaseobserver.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,11 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.WebElementView
 import com.gabrieldrn.carbon.Carbon
-import com.gabrieldrn.carbon.checkbox.Checkbox
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.browser.document
+import nl.jacobras.codebaseobserver.ui.carbon.IntSelector
 import org.w3c.dom.HTMLIFrameElement
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -42,7 +43,8 @@ fun DependencyGraph(
     Column(modifier = modifier)
     {
         var startModule by remember { mutableStateOf("") }
-        var alwaysGroup by remember { mutableStateOf(false) }
+        var groupThreshold by remember { mutableStateOf(3) }
+        var layerDepth by remember { mutableStateOf(30) }
         var modules by remember { mutableStateOf<List<String>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
 
@@ -63,9 +65,11 @@ fun DependencyGraph(
                 modules = modules,
                 selectedModule = startModule,
                 onSelectModule = { startModule = it },
-                alwaysGroup = alwaysGroup,
-                onAlwaysGroupChange = { alwaysGroup = it },
-                modifier = Modifier.width(300.dp)
+                groupThreshold = groupThreshold,
+                onGroupThresholdChange = { groupThreshold = it },
+                layerDepth = layerDepth,
+                onLayerDepthChange = { layerDepth = it },
+                modifier = Modifier.width(350.dp).padding(end = 16.dp)
             )
 
             val graphSrc = buildString {
@@ -73,9 +77,10 @@ fun DependencyGraph(
                 append(projectId)
                 append("&startModule=")
                 append(startModule)
-                append("&groupThreshold=3")
-                append("&alwaysGroup=")
-                append(alwaysGroup)
+                append("&groupThreshold=")
+                append(groupThreshold)
+                append("&layerDepth=")
+                append(layerDepth)
             }
             WebElementView(
                 factory = {
@@ -97,22 +102,38 @@ private fun ModuleList(
     modules: List<String>,
     selectedModule: String,
     onSelectModule: (String) -> Unit,
-    alwaysGroup: Boolean,
-    onAlwaysGroupChange: (Boolean) -> Unit,
+    groupThreshold: Int,
+    onGroupThresholdChange: (Int) -> Unit,
+    layerDepth: Int,
+    onLayerDepthChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier) {
-        Checkbox(
-            label = "Always group",
-            checked = alwaysGroup,
-            onClick = { onAlwaysGroupChange(!alwaysGroup) }
-        )
-        Spacer(Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IntSelector(
+                label = "Group threshold",
+                value = groupThreshold,
+                onValueChanged = onGroupThresholdChange,
+                values = (2..10).toList()
+            )
+            Spacer(Modifier.width(16.dp))
+            IntSelector(
+                label = "Layer depth",
+                value = layerDepth,
+                onValueChanged = onLayerDepthChange,
+                values = listOf(1, 2, 3, 5, 10, 20, 30)
+            )
+        }
+        Spacer(Modifier.height(32.dp))
 
         BasicText(
             text = "Start module",
             style = Carbon.typography.heading03
         )
+        Spacer(Modifier.height(8.dp))
 
         LazyColumn {
             item {

@@ -1,5 +1,9 @@
 package nl.jacobras.codebaseobserver.server.graph
 
+import nl.jacobras.codebaseobserver.server.graph.FilterUtil.filterByLayerDepth
+import nl.jacobras.codebaseobserver.server.graph.FilterUtil.filterByStartModule
+import nl.jacobras.codebaseobserver.server.graph.FilterUtil.getPossibleModuleGroups
+
 object GraphVisualizer {
 
     fun build(
@@ -7,22 +11,19 @@ object GraphVisualizer {
         startModule: String = "",
         startModuleColor: String = "#a5a5b2",
         groupThreshold: Int,
-        alwaysGroup: Boolean = false,
-        nodeLimit: Int = 30
+        nodeLimit: Int = 30,
+        layerDepth: Int = 30
     ): String {
         val filteredModules = if (startModule.isNotEmpty()) {
-            filterModules(modules = modules, startModule = startModule)
+            val res = filterByStartModule(modules = modules, startModule = startModule)
+            filterByLayerDepth(res, layerDepth, startModule)
         } else {
             modules
         }
 
-        val groups = if (filteredModules.size > nodeLimit || alwaysGroup) {
-            getPossibleModuleGroups(filteredModules)
-                .filter { it.value.size >= groupThreshold }
-                .toMutableMap()
-        } else {
-            emptyMap()
-        }
+        val groups = getPossibleModuleGroups(filteredModules)
+            .filter { it.value.size >= groupThreshold }
+            .toMutableMap()
 
         val outputModules = mutableListOf<String>()
         val outputGroups = mutableListOf<String>()
@@ -99,48 +100,5 @@ object GraphVisualizer {
                 appendLine("classDef start fill:$startModuleColor;")
             }
         }.trim()
-    }
-
-    /**
-     * Filters [modules] to only include modules that are reachable from [startModule].
-     */
-    private fun filterModules(
-        modules: Map<String, List<String>>,
-        startModule: String
-    ): Map<String, List<String>> {
-        val reachable = mutableSetOf<String>()
-        val stack = ArrayDeque<String>()
-        stack.add(startModule)
-
-        // Collect all reachable modules
-        while (stack.isNotEmpty()) {
-            val module = stack.removeLast()
-            if (module !in reachable) {
-                reachable.add(module)
-                modules[module]?.let { stack.addAll(it) }
-            }
-        }
-
-        // Build filtered map
-        return modules
-            .filterKeys { it in reachable }
-            .mapValues { (_, deps) -> deps.filter { it in reachable } }
-    }
-
-    private fun getPossibleModuleGroups(modules: Map<String, List<String>>): Map<String, List<String>> {
-        val possibleModuleGroups = mutableMapOf<String, MutableList<String>>()
-
-        for (module in modules.keys) {
-            val parts = module.split(":").filter { it.isNotEmpty() }
-            for (i in 1 until parts.size) {
-                val prefix = parts.take(i).joinToString(":")
-                possibleModuleGroups.getOrPut(prefix) { mutableListOf() }.add(module)
-            }
-        }
-
-        // Sort groups by size descending (largest first)
-        return possibleModuleGroups.toList()
-            .sortedByDescending { (_, group) -> group.size }
-            .toMap()
     }
 }
