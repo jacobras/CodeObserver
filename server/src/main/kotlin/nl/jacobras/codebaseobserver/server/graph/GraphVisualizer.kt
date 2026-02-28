@@ -46,7 +46,9 @@ object GraphVisualizer {
             }
 
             for (dep in dependencies) {
-                val groupForThisDep = groups.filter { dep.startsWith(it.key) }.keys.firstOrNull()
+                val groupForThisDep = groups
+                    .filter { dep.startsWith(it.key) }
+                    .keys.maxOrNull() // Take the longest group, so we get the most specific one.
                 val bNameToUse = if (groupForThisDep != null) {
                     "group$groupForThisDep"
                 } else {

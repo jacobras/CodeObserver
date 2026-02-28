@@ -357,4 +357,51 @@ class GraphVisualizerTest {
         """.trimIndent()
         )
     }
+
+    @Test
+    fun `longest group takes preference when pointing dependencies to groups`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf(
+                "framework:common:language" to listOf(
+                    "framework:data:concurrency"
+                ),
+                "framework:common:util:kotlin" to emptyList(),
+                "framework:common:util:time" to listOf(
+                    "framework:common:language"
+                ),
+                "framework:data:concurrency" to emptyList(),
+                "framework:ui:accessibility" to emptyList(),
+                "util" to listOf(
+                    "framework:common:util:time",
+                    "framework:common:util:kotlin",
+                    "framework:ui:accessibility",
+                    "framework:data:concurrency"
+                ),
+            ),
+            groupingThreshold = 2,
+            nodeLimit = 10,
+            startModule = "util",
+            layerDepth = 3
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                util
+                subgraph groupframework ["framework"]
+                    GROUPframework["5 modules"]
+                end
+                subgraph groupframework:common:util ["framework:common:util"]
+                    GROUPframework:common:util["2 modules"]
+                end
+            
+            %% Dependencies
+                util --> groupframework:common:util
+                util --> groupframework
+            
+            class util start
+            classDef start fill:#a5a5b2;
+        """.trimIndent()
+        )
+    }
 }
