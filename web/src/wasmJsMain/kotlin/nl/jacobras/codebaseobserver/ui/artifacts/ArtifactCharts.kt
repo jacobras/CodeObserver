@@ -1,4 +1,4 @@
-package nl.jacobras.codebaseobserver.ui
+package nl.jacobras.codebaseobserver.ui.artifacts
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

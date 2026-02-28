@@ -1,4 +1,4 @@
-package nl.jacobras.codebaseobserver.ui
+package nl.jacobras.codebaseobserver.ui.modulegraph
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

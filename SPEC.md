@@ -47,7 +47,7 @@
     - Module graph:
         - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> raw graph string.
     - Modules:
-      - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
+        - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
     - Projects:
         - `GET /projects` -> list of distinct `projectId` values from `metrics`, sorted asc.
 
@@ -114,13 +114,17 @@
     - Switcher at the top of the dashboard to choose between all projects.
     - Options sourced from `GET /projects`.
     - Selected `projectId` is required for all fetches and CRUD operations.
-- Edit records
-    - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
-- Artifact size chart
-    - Version chart showing artifact sizes across versions.
-    - X-axis: versions (sorted using semver).
-    - Y-axis: artifact size in bytes.
-- Module graph
-    - Shows the module graph using the `DependencyGraph()` composable.
-    - List to select a start module.
-    - Tweakable grouping threshold and layer depth.
+- Tabs for the main screens of Dashboard:
+    - `Trends`
+        - Charts of LoC, module count and module tree height.
+        - Edit records
+            - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
+    - `Artifacts`
+        - Artifact size chart
+            - Version chart showing artifact sizes across versions.
+            - X-axis: versions (sorted using semver).
+            - Y-axis: artifact size in bytes.
+    - `Module graph`
+        - Shows the module graph using the `DependencyGraph()` composable.
+        - List to select a start module.
+        - Tweakable grouping threshold and layer depth.
