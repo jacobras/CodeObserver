@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.WebElementView
 import com.gabrieldrn.carbon.Carbon
+import com.gabrieldrn.carbon.loading.SmallLoading
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -35,7 +36,7 @@ import org.w3c.dom.HTMLIFrameElement
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun DependencyGraph(
+internal fun DependencyGraph(
     projectId: String,
     client: HttpClient,
     modifier: Modifier = Modifier
@@ -58,6 +59,10 @@ fun DependencyGraph(
                 isLoading = false
                 modules = emptyList()
             }
+        }
+
+        if (isLoading) {
+            SmallLoading()
         }
 
         Row {
