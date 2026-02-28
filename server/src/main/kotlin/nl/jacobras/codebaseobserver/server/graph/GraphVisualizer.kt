@@ -38,7 +38,9 @@ object GraphVisualizer {
                 outputModules += module
             }
 
-            val groupForThisModule = groups.filter { module.startsWith(it.key) }.keys.firstOrNull()
+            val groupForThisModule = groups
+                .filter { module.startsWith(it.key) }
+                .keys.maxOrNull() // Take the longest group, so we get the most specific one.
             val aNameToUse = if (module != startModule && groupForThisModule != null) {
                 "group$groupForThisModule"
             } else {

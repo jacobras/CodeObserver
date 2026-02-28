@@ -396,6 +396,7 @@ class GraphVisualizerTest {
                 end
             
             %% Dependencies
+                groupframework:common:util --> groupframework
                 util --> groupframework:common:util
                 util --> groupframework
             
