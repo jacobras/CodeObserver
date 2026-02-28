@@ -26,10 +26,10 @@ internal fun IntSelector(
     value: Int,
     values: List<Int>,
     onValueChanged: (Int) -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-
         BasicText(
             text = label,
             style = Carbon.typography.label01.copy(color = Carbon.theme.textSecondary),
@@ -53,14 +53,14 @@ internal fun IntSelector(
                     val previous = values.getOrNull(current - 1) ?: values.first()
                     onValueChanged(previous)
                 },
-                isEnabled = lessButtonEnabled
+                isEnabled = enabled && lessButtonEnabled
             )
 
             BasicText(
                 text = value.toString(),
                 style = Carbon.typography.body01
                     .copy(
-                        color = Carbon.theme.textPrimary,
+                        color = if (enabled) Carbon.theme.textPrimary else Carbon.theme.textDisabled,
                         textAlign = TextAlign.Center
                     ),
                 modifier = Modifier.width(SpacingScale.spacing09)
@@ -73,7 +73,7 @@ internal fun IntSelector(
                     val next = values.getOrNull(current + 1) ?: values.last()
                     onValueChanged(next)
                 },
-                isEnabled = moreButtonEnabled
+                isEnabled = enabled && moreButtonEnabled
             )
         }
     }

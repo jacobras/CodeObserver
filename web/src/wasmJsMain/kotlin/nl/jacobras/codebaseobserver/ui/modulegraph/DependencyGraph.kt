@@ -63,7 +63,7 @@ fun DependencyGraph(
         Row {
             ModuleList(
                 modules = modules,
-                selectedModule = startModule,
+                startModule = startModule,
                 onSelectModule = { startModule = it },
                 groupingThreshold = groupingThreshold,
                 onGroupingThresholdChange = { groupingThreshold = it },
@@ -100,7 +100,7 @@ fun DependencyGraph(
 @Composable
 private fun ModuleList(
     modules: List<String>,
-    selectedModule: String,
+    startModule: String,
     onSelectModule: (String) -> Unit,
     groupingThreshold: Int,
     onGroupingThresholdChange: (Int) -> Unit,
@@ -123,6 +123,7 @@ private fun ModuleList(
             IntSelector(
                 label = "Layer depth",
                 value = layerDepth,
+                enabled = startModule.isNotEmpty(),
                 onValueChanged = onLayerDepthChange,
                 values = listOf(1, 2, 3, 5, 10, 20, 30)
             )
@@ -140,7 +141,7 @@ private fun ModuleList(
                 BasicText(
                     text = "None",
                     style = Carbon.typography.body02.copy(
-                        fontWeight = if (selectedModule == "") FontWeight.Bold else FontWeight.Normal
+                        fontWeight = if (startModule == "") FontWeight.Bold else FontWeight.Normal
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -161,7 +162,7 @@ private fun ModuleList(
                 BasicText(
                     text = module,
                     style = Carbon.typography.body02.copy(
-                        fontWeight = if (module == selectedModule) FontWeight.Bold else FontWeight.Normal
+                        fontWeight = if (module == startModule) FontWeight.Bold else FontWeight.Normal
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
