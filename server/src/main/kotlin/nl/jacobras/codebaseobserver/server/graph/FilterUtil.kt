@@ -2,10 +2,15 @@ package nl.jacobras.codebaseobserver.server.graph
 
 internal object FilterUtil {
 
-    fun getPossibleModuleGroups(modules: Map<String, List<String>>): Map<String, List<String>> {
+    fun getPossibleModuleGroups(
+        modules: Map<String, List<String>>,
+        startModule: String
+    ): Map<String, List<String>> {
         val possibleModuleGroups = mutableMapOf<String, MutableList<String>>()
 
         for (module in modules.keys) {
+            if (module == startModule) continue // startModule stays separate, never grouped
+
             val parts = module.split(":").filter { it.isNotEmpty() }
             for (i in 1 until parts.size) {
                 val prefix = parts.take(i).joinToString(":")

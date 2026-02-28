@@ -21,7 +21,7 @@ object GraphVisualizer {
             modules
         }
 
-        val groups = getPossibleModuleGroups(filteredModules)
+        val groups = getPossibleModuleGroups(filteredModules, startModule = startModule)
             .filter { it.value.size >= groupThreshold }
             .toMutableMap()
 
@@ -34,12 +34,12 @@ object GraphVisualizer {
         }
 
         for ((module, dependencies) in filteredModules) {
-            if (outputGroups.none { module.startsWith(it) }) {
+            if (module == startModule || outputGroups.none { module.startsWith(it) }) {
                 outputModules += module
             }
 
             val groupForThisModule = groups.filter { module.startsWith(it.key) }.keys.firstOrNull()
-            val aNameToUse = if (groupForThisModule != null) {
+            val aNameToUse = if (module != startModule && groupForThisModule != null) {
                 "group$groupForThisModule"
             } else {
                 module

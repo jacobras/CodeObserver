@@ -21,7 +21,7 @@ class FilterUtilTest {
             "module:some-thing:theme" to emptyList()
         )
 
-        val groups = FilterUtil.getPossibleModuleGroups(input)
+        val groups = FilterUtil.getPossibleModuleGroups(input, startModule = "")
 
         assertThat(groups).hasSize(1)
         assertThat(groups.toList()[0].first).isEqualTo("module:some-thing")
@@ -42,9 +42,28 @@ class FilterUtilTest {
             "util:design" to emptyList()
         )
 
-        val groups = FilterUtil.getPossibleModuleGroups(input)
+        val groups = FilterUtil.getPossibleModuleGroups(input, startModule = "")
 
         assertThat(groups).hasSize(1)
         assertThat(groups.toList()[0].first).isEqualTo("component")
+    }
+
+    @Test
+    fun `startModule should never be grouped`() {
+        val input = mapOf(
+            "module:a" to emptyList(),
+            "module:b" to listOf(
+                "module:a",
+                "module:b",
+                "module:c"
+            ),
+            "module:c" to emptyList()
+        )
+
+        val groups = FilterUtil.getPossibleModuleGroups(input, startModule = "module:b")
+
+        assertThat(groups).hasSize(1)
+        assertThat(groups.toList()[0].first).isEqualTo("module")
+        assertThat(groups.toList()[0].second).isEqualTo(listOf("module:a", "module:c"))
     }
 }

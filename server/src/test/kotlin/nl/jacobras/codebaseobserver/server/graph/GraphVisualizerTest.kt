@@ -244,11 +244,13 @@ class GraphVisualizerTest {
         assertThat(graph).isEqualTo(
             """
             graph TD
+                util
                 subgraph grouputil ["util"]
                     GROUPutil["4 modules"]
                 end
             
             %% Dependencies
+                util --> grouputil
 
             class util start
             classDef start fill:#a5a5b2;
@@ -316,6 +318,41 @@ class GraphVisualizerTest {
                 app --> feature:b
             
             class app start
+            classDef start fill:#a5a5b2;
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `startModule should never be grouped`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf(
+                "module:a" to emptyList(),
+                "module:b" to listOf(
+                    "module:a",
+                    "module:b",
+                    "module:c"
+                ),
+                "module:c" to emptyList()
+            ),
+            groupThreshold = 2,
+            nodeLimit = 10,
+            startModule = "module:b",
+            layerDepth = 3
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                module:b
+                subgraph groupmodule ["module"]
+                    GROUPmodule["3 modules"]
+                end
+            
+            %% Dependencies
+                module:b --> groupmodule
+            
+            class module:b start
             classDef start fill:#a5a5b2;
         """.trimIndent()
         )
