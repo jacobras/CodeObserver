@@ -58,8 +58,9 @@ object GraphVisualizer {
             }
         }
 
-        if (outputModules.size > nodeLimit) {
-            return "graph TD\n    A[Too large: ${outputModules.size} modules.]"
+        val nodeCount = outputModules.size + outputGroups.size
+        if (nodeCount > nodeLimit) {
+            return "graph TD\n    A[\"Too large: $nodeCount nodes (limit $nodeLimit).\"]"
         }
 
         return buildString {

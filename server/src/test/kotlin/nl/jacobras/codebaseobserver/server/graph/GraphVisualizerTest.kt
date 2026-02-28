@@ -71,7 +71,7 @@ class GraphVisualizerTest {
     }
 
     @Test
-    fun `very wide graph`() {
+    fun `too many modules`() {
         val graph = GraphVisualizer.build(
             modules = List(300) { "module$it" to emptyList<String>() }.toMap(),
             groupThreshold = 3
@@ -80,7 +80,34 @@ class GraphVisualizerTest {
         assertThat(graph).isEqualTo(
             """
             graph TD
-                A[Too large: 300 modules.]
+                A["Too large: 300 nodes (limit 30)."]
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `too many groups`() {
+        val graph = GraphVisualizer.build(
+            modules = buildMap {
+                put("module:a", emptyList())
+                put("module:b", emptyList())
+                put("module:c", emptyList())
+                put("group:a", emptyList())
+                put("group:b", emptyList())
+                put("group:c", emptyList())
+                put("large:a", emptyList())
+                put("large:b", emptyList())
+                put("large:c", emptyList())
+            },
+            groupThreshold = 2,
+            nodeLimit = 2,
+            alwaysGroup = true
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                A["Too large: 3 nodes (limit 2)."]
         """.trimIndent()
         )
     }
