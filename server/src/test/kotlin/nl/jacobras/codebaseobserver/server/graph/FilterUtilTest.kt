@@ -66,4 +66,26 @@ class FilterUtilTest {
         assertThat(groups.toList()[0].first).isEqualTo("module")
         assertThat(groups.toList()[0].second).isEqualTo(listOf("module:a", "module:c"))
     }
+
+    @Test
+    fun `group api-impl modules`() {
+        val input = mapOf<String, List<String>>(
+            "feature:foryou:api" to emptyList(),
+            "feature:foryou:impl" to emptyList(),
+            "feature:interests:api" to emptyList(),
+            "feature:interests:impl" to emptyList(),
+            "feature:bookmarks:api" to emptyList(),
+            "feature:bookmarks:impl" to emptyList(),
+            "feature:topic:api" to emptyList(),
+            "feature:topic:impl" to emptyList(),
+            "feature:search:api" to emptyList(),
+            "feature:search:impl" to emptyList()
+        )
+
+        val groups = FilterUtil.getPossibleModuleGroups(input, startModule = "")
+
+        assertThat(groups).hasSize(1)
+        assertThat(groups.toList()[0].first).isEqualTo("feature")
+        assertThat(groups.toList()[0].second).isEqualTo(listOf("module:a", "module:c"))
+    }
 }
