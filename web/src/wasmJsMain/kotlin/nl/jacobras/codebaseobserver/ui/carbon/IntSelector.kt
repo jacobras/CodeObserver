@@ -67,7 +67,7 @@ internal fun IntSelector(
             )
 
             Button(
-                label = "-",
+                label = "+",
                 onClick = {
                     val current = values.indexOf(value)
                     val next = values.getOrNull(current + 1) ?: values.last()
