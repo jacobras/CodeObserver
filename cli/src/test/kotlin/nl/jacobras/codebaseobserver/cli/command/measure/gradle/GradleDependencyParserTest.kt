@@ -64,4 +64,26 @@ class GradleDependencyParserTest {
             )
         )
     }
+
+    @Test
+    fun `ignore test dependencies`() {
+        val file = """
+            dependencies {
+                implementation(projects.a)
+                testImplementation(projects.b.sub)
+                androidTestImplementation(projects.c.subWithDashes)
+            }
+        """.trimIndent()
+
+        val dependencies = GradleDependencyParser.parse(
+            text = file,
+            accessorMapping = emptyMap()
+        )
+
+        assertThat(dependencies).isEqualTo(
+            listOf(
+                "a"
+            )
+        )
+    }
 }
