@@ -37,6 +37,9 @@ dependencies {
     implementation(libs.sqlite.jdbc)
 
     implementation(projects.serverDto)
+
+    testImplementation(kotlin("test"))
+    testImplementation(libs.assertK)
 }
 
 tasks.named<ShadowJar>("shadowJar") {

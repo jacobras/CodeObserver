@@ -151,7 +151,8 @@ fun App() {
                                         error = e.message ?: "Failed to delete"
                                     }
                                 }
-                            }
+                            },
+                            client = client
                         )
                     }
                     Screen.Settings -> {

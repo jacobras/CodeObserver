@@ -12,6 +12,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -19,11 +20,13 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeRequest
+import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
-import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
+import nl.jacobras.codebaseobserver.server.entity.ModuleGraphTable
+import nl.jacobras.codebaseobserver.server.graph.GraphVisualizer
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -63,7 +66,7 @@ fun Application.module() {
     val dbFile = File(dbPath)
     dbFile.parentFile?.mkdirs()
     Database.connect("jdbc:sqlite:${dbFile.absolutePath}", driver = "org.sqlite.JDBC")
-    transaction { SchemaUtils.create(MetricsTable, ArtifactSizesTable) }
+    transaction { SchemaUtils.create(MetricsTable, ArtifactSizesTable, ModuleGraphTable) }
 
     routing {
         staticFiles("/", File("app/web")) {
@@ -151,6 +154,15 @@ fun Application.module() {
                     it[moduleCount] = request.moduleCount
                     it[moduleTreeHeight] = request.moduleTreeHeight
                 }
+                ModuleGraphTable.upsert(
+                    onUpdateExclude = listOf(ModuleGraphTable.createdAt)
+                ) {
+                    it[projectId] = request.projectId
+                    it[createdAt] = Clock.System.now().epochSeconds
+                    it[gitHash] = request.gitHash
+                    it[gitDate] = request.gitDate.epochSeconds
+                    it[graph] = Json.encodeToString(request.graph)
+                }
             }
             call.respond(HttpStatusCode.Created)
         }
@@ -222,6 +234,66 @@ fun Application.module() {
                 }
             }
             call.respond(HttpStatusCode.Created)
+        }
+        get("/moduleGraph") {
+            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@get
+            }
+            val startModule = call.request.queryParameters["startModule"]?.trim().orEmpty()
+            val groupingThreshold = call.request.queryParameters["groupingThreshold"]?.trim()?.toIntOrNull()
+            if (groupingThreshold == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing groupingThreshold"))
+                return@get
+            }
+            val layerDepth = call.request.queryParameters["layerDepth"]?.trim()?.toIntOrNull() ?: 30
+
+            val graphRecord = transaction {
+                ModuleGraphTable
+                    .selectAll()
+                    .where { ModuleGraphTable.projectId eq projectId }
+                    .orderBy(ModuleGraphTable.gitDate to SortOrder.DESC)
+                    .limit(1)
+                    .singleOrNull()
+            }
+            if (graphRecord == null) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
+                return@get
+            }
+
+            val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
+            val graph = GraphVisualizer.build(
+                modules = graphMap,
+                startModule = startModule,
+                groupingThreshold = groupingThreshold,
+                layerDepth = layerDepth
+            )
+            call.respondText(graph)
+        }
+        get("/modules") {
+            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@get
+            }
+
+            val graphRecord = transaction {
+                ModuleGraphTable
+                    .selectAll()
+                    .where { ModuleGraphTable.projectId eq projectId }
+                    .orderBy(ModuleGraphTable.gitDate to SortOrder.DESC)
+                    .limit(1)
+                    .singleOrNull()
+            }
+            if (graphRecord == null) {
+                call.respond(emptyList<String>())
+                return@get
+            }
+
+            val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
+            val modules = (graphMap.keys + graphMap.values.flatten()).distinct().sorted()
+            call.respond(modules)
         }
     }
 }

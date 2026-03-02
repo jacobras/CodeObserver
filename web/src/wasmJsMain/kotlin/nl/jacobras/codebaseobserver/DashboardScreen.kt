@@ -21,11 +21,12 @@ import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import com.gabrieldrn.carbon.tab.TabVariant
+import io.ktor.client.HttpClient
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
-import nl.jacobras.codebaseobserver.ui.ArtifactCharts
-import nl.jacobras.codebaseobserver.ui.CodeCharts
-import nl.jacobras.codebaseobserver.ui.CodeTable
+import nl.jacobras.codebaseobserver.ui.artifacts.ArtifactCharts
+import nl.jacobras.codebaseobserver.ui.modulegraph.DependencyGraph
+import nl.jacobras.codebaseobserver.ui.trends.Trends
 
 @Composable
 internal fun DashboardScreen(
@@ -35,7 +36,8 @@ internal fun DashboardScreen(
     projectIds: List<String>,
     selectedProjectId: String,
     onSelectProject: (String) -> Unit,
-    onDelete: (CodeMetricsDto) -> Unit
+    onDelete: (CodeMetricsDto) -> Unit,
+    client: HttpClient
 ) {
     Column {
         BasicText(
@@ -57,7 +59,7 @@ internal fun DashboardScreen(
         )
         Spacer(Modifier.height(16.dp))
 
-        var selectedTab by remember { mutableStateOf(DashboardTab.Code) }
+        var selectedTab by remember { mutableStateOf(DashboardTab.Trends) }
         val tabs = DashboardTab.entries.map { TabItem(label = it.displayName) }
         TabList(
             tabs = tabs,
@@ -87,15 +89,16 @@ internal fun DashboardScreen(
                     )
                 } else {
                     when (selectedTab) {
-                        DashboardTab.Code -> CodeCharts(
-                            metrics = metrics
-                        )
-                        DashboardTab.CodeData -> CodeTable(
+                        DashboardTab.Trends -> Trends(
                             metrics = metrics,
                             onDelete = onDelete
                         )
                         DashboardTab.Artifacts -> ArtifactCharts(
                             artifactSizes = artifactSizes
+                        )
+                        DashboardTab.ModuleGraph -> DependencyGraph(
+                            projectId = selectedProjectId,
+                            client = client
                         )
                     }
                 }

@@ -10,34 +10,46 @@
 
 - Ktor server with JSON API.
 - DB: SQLite (embedded).
-- Table `metrics`:
-    - `createdAt` (TEXT)
-    - `projectId` (TEXT)
-    - `gitHash` (TEXT)
-    - `gitDate` (TEXT)
-    - `linesOfCode` (INTEGER)
-    - `moduleCount` (INTEGER)
-    - `moduleTreeHeight` (INTEGER)
-        - Endpoints:
-            - `GET /metrics?projectId=...` -> list of records ordered by `gitDate` asc.
-            - `POST /metrics/code` -> stores code metrics.
-                - body `{ projectId, gitHash, gitDate, linesOfCode }`
-            - `POST /metrics/gradle` -> stores gradle metrics.
-                - body `{ projectId, gitHash, gitDate, moduleCount, moduleTreeHeight }`
-            - `PUT /metrics/{gitHash}` -> updates matching record by `projectId` + `gitHash`.
-                - body `{ projectId, gitDate, linesOfCode, moduleCount, moduleTreeHeight }`
-            - `DELETE /metrics/{gitHash}` -> deletes matching record
-- Table `artifactSizes`:
-    - `projectId` (TEXT)
-    - `name` (TEXT)
-    - `semVer` (TEXT)
-    - `size` (INTEGER)
-        - Endpoints:
-            - `GET /artifactSizes?projectId=...` -> list of records.
-            - `POST /artifactSizes` -> stores artifact size.
-                - body `{ projectId, name, semVer, size }`
-- Projects:
-    - `GET /projects` -> list of distinct `projectId` values from `metrics`, sorted asc.
+- Tables:
+    - `metrics`
+        - `createdAt` (TEXT)
+        - `projectId` (TEXT)
+        - `gitHash` (TEXT)
+        - `gitDate` (TEXT)
+        - `linesOfCode` (INTEGER)
+        - `moduleCount` (INTEGER)
+        - `moduleTreeHeight` (INTEGER)
+    - `artifactSizes`
+        - `projectId` (TEXT)
+        - `name` (TEXT)
+        - `semVer` (TEXT)
+        - `size` (INTEGER)
+    - `moduleGraph` (always holds one recorded per project)
+        - `projectId` (TEXT)
+        - `gitHash` (TEXT)
+        - `gitDate` (TEXT)
+        - `graph` (TEXT) (serialized as `{ "moduleA": ["dep1", "dep2"] }`)
+- Endpoints:
+    - Metrics:
+        - `GET /metrics?projectId=...` -> list of `CodeMetricsDto` records.
+        - `DELETE /metrics/{gitHash}` -> deletes matching record
+    - Code metrics:
+        - `POST /metrics/code` -> stores code metrics.
+            - body `{ projectId, gitHash, gitDate, linesOfCode }`
+    - Gradle metrics:
+        - `POST /metrics/gradle` -> stores gradle metrics.
+            - body `{ projectId, gitHash, gitDate, moduleCount, moduleTreeHeight, graph }`
+            - graph is Map<String, List<String>>
+    - Artifact sizes:
+        - `GET /artifactSizes?projectId=...` -> list of records.
+        - `POST /artifactSizes` -> stores artifact size.
+            - body `{ projectId, name, semVer, size }`
+    - Module graph:
+        - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> raw graph string.
+    - Modules:
+        - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
+    - Projects:
+        - `GET /projects` -> list of distinct `projectId` values from `metrics`, sorted asc.
 
 ## CLI
 
@@ -98,13 +110,21 @@
     - Top nav bar with main screens:
         - `Dashboard`
         - `Settings`.
-- Dashboard app switcher:
+- Dashboard app switcher
     - Switcher at the top of the dashboard to choose between all projects.
     - Options sourced from `GET /projects`.
     - Selected `projectId` is required for all fetches and CRUD operations.
-- Edit records:
-    - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
-- Artifact size chart:
-    - Version chart showing artifact sizes across versions.
-    - X-axis: versions (sorted using semver).
-    - Y-axis: artifact size in bytes.
+- Tabs for the main screens of Dashboard:
+    - `Trends`
+        - Charts of LoC, module count and module tree height.
+        - Edit records
+            - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
+    - `Artifacts`
+        - Artifact size chart
+            - Version chart showing artifact sizes across versions.
+            - X-axis: versions (sorted using semver).
+            - Y-axis: artifact size in bytes.
+    - `Module graph`
+        - Shows the module graph using the `DependencyGraph()` composable.
+        - List to select a start module.
+        - Tweakable grouping threshold and layer depth.

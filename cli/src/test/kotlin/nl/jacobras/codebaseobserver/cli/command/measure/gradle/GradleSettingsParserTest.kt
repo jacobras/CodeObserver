@@ -33,4 +33,28 @@ class GradleSettingsParserTest {
             )
         )
     }
+
+    @Test
+    fun `parse accessor mapping`() {
+        val modules = listOf(
+            "a:sub",
+            "b:deeper:sub",
+            "component:with_underscore",
+            "component:with-hyphen",
+            "root-hyphen:a-module",
+            "root-hyphen:b"
+        )
+
+        val accessorMapping = GradleSettingsParser.parseAccessorMapping(modules)
+        assertThat(accessorMapping).isEqualTo(
+            mapOf(
+                "a.sub" to "a:sub",
+                "b.deeper.sub" to "b:deeper:sub",
+                "component.withUnderscore" to "component:with-underscore",
+                "component.withHyphen" to "component:with-hyphen",
+                "rootHyphen.aModule" to "root-hyphen:a-module",
+                "rootHyphen.b" to "root-hyphen:b"
+            )
+        )
+    }
 }
