@@ -39,11 +39,17 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.settings.SettingsScreen
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
@@ -52,7 +58,7 @@ import nl.jacobras.codebaseobserver.web.BuildConfig
 fun App() {
     var metrics by remember { mutableStateOf<List<CodeMetricsDto>>(emptyList()) }
     var artifactSizes by remember { mutableStateOf<List<ArtifactSizeDto>>(emptyList()) }
-    var projectIds by remember { mutableStateOf<List<String>>(emptyList()) }
+    var projects by remember { mutableStateOf<List<ProjectDto>>(emptyList()) }
     var selectedProjectId by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
@@ -70,15 +76,20 @@ fun App() {
     val scope = rememberCoroutineScope()
 
     suspend fun reloadProjects() {
-        projectIds = client.get("/projects").body()
-        if (selectedProjectId.isBlank() && projectIds.isNotEmpty()) {
-            selectedProjectId = projectIds.first()
+        val latestProjects: List<ProjectDto> = client.get("/projects").body()
+        projects = latestProjects
+        selectedProjectId = when {
+            latestProjects.isEmpty() -> ""
+            selectedProjectId.isBlank() -> latestProjects.first().projectId
+            latestProjects.any { it.projectId == selectedProjectId } -> selectedProjectId
+            else -> latestProjects.first().projectId
         }
     }
 
     suspend fun reloadMetrics() {
         if (selectedProjectId.isBlank()) {
             metrics = emptyList()
+            artifactSizes = emptyList()
             return
         }
         metrics = client.get("/metrics") {
@@ -102,7 +113,6 @@ fun App() {
     }
 
     LaunchedEffect(selectedProjectId) {
-        if (selectedProjectId.isBlank()) return@LaunchedEffect
         try {
             reloadMetrics()
         } catch (e: Throwable) {
@@ -149,7 +159,7 @@ fun App() {
                                 metrics = metrics,
                                 artifactSizes = artifactSizes,
                                 error = error,
-                                projectIds = projectIds,
+                                projects = projects,
                                 selectedProjectId = selectedProjectId,
                                 onSelectProject = { selectedProjectId = it.trim() },
                                 onDelete = { record ->
@@ -170,7 +180,42 @@ fun App() {
                             )
                         }
                         Screen.Settings -> {
-                            SettingsScreen()
+                            SettingsScreen(
+                                projects = projects,
+                                error = error,
+                                onSaveProject = { projectId, name ->
+                                    scope.launch {
+                                        error = null
+                                        try {
+                                            client.post("/projects") {
+                                                contentType(ContentType.Application.Json)
+                                                setBody(
+                                                    ProjectRequest(
+                                                        projectId = projectId.trim(),
+                                                        name = name.trim()
+                                                    )
+                                                )
+                                            }
+                                            reloadProjects()
+                                            reloadMetrics()
+                                        } catch (e: Throwable) {
+                                            error = e.message ?: "Failed to save project"
+                                        }
+                                    }
+                                },
+                                onDeleteProject = { projectId ->
+                                    scope.launch {
+                                        error = null
+                                        try {
+                                            client.delete("/projects/${projectId.trim()}")
+                                            reloadProjects()
+                                            reloadMetrics()
+                                        } catch (e: Throwable) {
+                                            error = e.message ?: "Failed to delete project"
+                                        }
+                                    }
+                                }
+                            )
                         }
                     }
                 }

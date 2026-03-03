@@ -24,6 +24,7 @@ import com.gabrieldrn.carbon.tab.TabVariant
 import io.ktor.client.HttpClient
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
 import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
 import nl.jacobras.codebaseobserver.trends.Trends
@@ -33,7 +34,7 @@ internal fun DashboardScreen(
     metrics: List<CodeMetricsDto>,
     artifactSizes: List<ArtifactSizeDto>,
     error: String?,
-    projectIds: List<String>,
+    projects: List<ProjectDto>,
     selectedProjectId: String,
     onSelectProject: (String) -> Unit,
     onDelete: (CodeMetricsDto) -> Unit,
@@ -47,15 +48,19 @@ internal fun DashboardScreen(
         Dropdown(
             label = "Project",
             placeholder = "Select a project",
-            options = projectIds.associateWith {
-                DropdownOption(it)
-            },
+            options = projects
+                .sortedBy { it.name }
+                .associate { project ->
+                    project.projectId to DropdownOption("${project.name} (${project.projectId})")
+                },
             selectedOption = selectedProjectId,
             onOptionSelected = { onSelectProject(it) },
             isInlined = true,
-            state = if (projectIds.isNotEmpty()) DropdownInteractiveState.Enabled else DropdownInteractiveState.Warning(
-                "No projects yet. Create one by submitting data via the CLI."
-            )
+            state = if (projects.isNotEmpty()) {
+                DropdownInteractiveState.Enabled
+            } else {
+                DropdownInteractiveState.Warning("No projects yet. Create one in Settings.")
+            }
         )
         Spacer(Modifier.height(16.dp))
 

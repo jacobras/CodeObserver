@@ -25,9 +25,12 @@ import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
+import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphTable
+import nl.jacobras.codebaseobserver.server.entity.ProjectsTable
 import nl.jacobras.codebaseobserver.server.graph.GraphUtil
 import nl.jacobras.codebaseobserver.server.graph.GraphVisualizer
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -36,7 +39,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.upsert
@@ -69,7 +71,7 @@ fun Application.module() {
     val dbFile = File(dbPath)
     dbFile.parentFile?.mkdirs()
     Database.connect("jdbc:sqlite:${dbFile.absolutePath}", driver = "org.sqlite.JDBC")
-    transaction { SchemaUtils.create(MetricsTable, ArtifactSizesTable, ModuleGraphTable) }
+    transaction { SchemaUtils.create(MetricsTable, ArtifactSizesTable, ModuleGraphTable, ProjectsTable) }
 
     routing {
         staticFiles("/", File("app/web")) {
@@ -80,13 +82,57 @@ fun Application.module() {
         }
         get("/projects") {
             val projects = transaction {
-                MetricsTable
-                    .select(MetricsTable.projectId)
-                    .withDistinct()
-                    .map { it[MetricsTable.projectId] }
-                    .sorted()
+                ProjectsTable
+                    .selectAll()
+                    .orderBy(ProjectsTable.projectId to SortOrder.ASC)
+                    .map {
+                        ProjectDto(
+                            projectId = it[ProjectsTable.projectId],
+                            name = it[ProjectsTable.name]
+                        )
+                    }
             }
             call.respond(projects)
+        }
+        post("/projects") {
+            val request = call.receive<ProjectRequest>()
+            val projectId = request.projectId.trim()
+            val name = request.name.trim()
+            if (projectId.isEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@post
+            }
+            if (name.isEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
+                return@post
+            }
+
+            transaction {
+                ProjectsTable.upsert {
+                    it[ProjectsTable.projectId] = projectId
+                    it[ProjectsTable.name] = name
+                }
+            }
+            call.respond(HttpStatusCode.Created)
+        }
+        delete("/projects/{projectId}") {
+            val projectId = call.parameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@delete
+            }
+
+            val deleted = transaction {
+                MetricsTable.deleteWhere { MetricsTable.projectId eq projectId }
+                ArtifactSizesTable.deleteWhere { ArtifactSizesTable.projectId eq projectId }
+                ModuleGraphTable.deleteWhere { ModuleGraphTable.projectId eq projectId }
+                ProjectsTable.deleteWhere { ProjectsTable.projectId eq projectId }
+            }
+            if (deleted == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Project not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
+            }
         }
         get("/metrics") {
             val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()

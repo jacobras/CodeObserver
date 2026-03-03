@@ -29,6 +29,9 @@
         - `gitHash` (TEXT)
         - `gitDate` (TEXT)
         - `graph` (TEXT) (serialized as `{ "moduleA": ["dep1", "dep2"] }`)
+    - `projects`
+        - `projectId` (TEXT)
+        - `name` (TEXT)
 - Endpoints:
     - Metrics:
         - `GET /metrics?projectId=...` -> list of `CodeMetricsDto` records.
@@ -128,3 +131,4 @@
         - Shows the module graph using the `DependencyGraph()` composable.
         - List to select a start module.
         - Tweakable grouping threshold and layer depth.
+- Settings screen allows editing projects.
