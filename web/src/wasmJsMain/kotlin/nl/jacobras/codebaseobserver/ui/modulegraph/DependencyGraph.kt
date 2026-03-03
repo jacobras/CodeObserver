@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.WebElementView
+import co.touchlab.kermit.Logger
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
 import com.gabrieldrn.carbon.loading.SmallLoading
@@ -55,6 +56,8 @@ internal fun DependencyGraph(
         var isLoading by remember { mutableStateOf(true) }
 
         LaunchedEffect(projectId, sortOrder) {
+            isLoading = true
+
             try {
                 modules = client.get("/modules") {
                     url {
@@ -64,6 +67,7 @@ internal fun DependencyGraph(
                 }.body()
                 isLoading = false
             } catch (e: Throwable) {
+                Logger.e(e) { "Failed to load modules" }
                 isLoading = false
                 modules = emptyList()
             }
