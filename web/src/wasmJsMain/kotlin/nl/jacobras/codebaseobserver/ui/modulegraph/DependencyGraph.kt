@@ -186,7 +186,10 @@ private fun ModuleList(
                 Spacer(Modifier.height(4.dp))
             }
 
-            items(modules.sortedBy { it.name }.sortedByDescending { it.score }) { module ->
+            items(
+                modules.sortedWith(
+                    compareByDescending<GraphModuleDto> { it.score }.thenBy { it.name }
+                )) { module ->
                 ModuleRow(
                     module = module,
                     selected = module.name == startModule,
