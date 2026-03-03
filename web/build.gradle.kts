@@ -21,7 +21,6 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.ui)
             implementation(libs.carbon)
-            implementation(libs.compose.charts)
             implementation(libs.humanReadable)
             implementation(libs.kermit)
             implementation(libs.kotlinx.serialization.json)
@@ -30,6 +29,7 @@ kotlin {
             implementation(libs.ktor.client.js)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.semver)
+            implementation(libs.vico)
 
             implementation(projects.serverDto)
         }

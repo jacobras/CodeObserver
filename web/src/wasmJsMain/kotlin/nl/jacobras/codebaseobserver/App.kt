@@ -28,6 +28,10 @@ import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.WhiteTheme
+import com.patrykandpatrick.vico.compose.common.DefaultColors
+import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
+import com.patrykandpatrick.vico.compose.common.VicoTheme
+import com.patrykandpatrick.vico.compose.common.VicoTheme.CandlestickCartesianLayerColors
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.js.Js
@@ -116,48 +120,58 @@ fun App() {
             layerSelectedInverse = Color(0xFF1F3D4D)
         )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundBrush)
-        ) {
-            TopNav(
-                active = activeScreen,
-                onSelect = { activeScreen = it }
+        ProvideVicoTheme(
+            theme = VicoTheme(
+                candlestickCartesianLayerColors =
+                    CandlestickCartesianLayerColors.fromDefaultColors(DefaultColors.Light),
+                columnCartesianLayerColors = DefaultColors.Light.cartesianLayerColors.map(::Color),
+                lineColor = Color(DefaultColors.Light.lineColor),
+                textColor = Color(DefaultColors.Light.textColor),
             )
-            Box(
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 20.dp)
+                    .background(backgroundBrush)
             ) {
-                when (activeScreen) {
-                    Screen.Dashboard -> {
-                        DashboardScreen(
-                            metrics = metrics,
-                            artifactSizes = artifactSizes,
-                            error = error,
-                            projectIds = projectIds,
-                            selectedProjectId = selectedProjectId,
-                            onSelectProject = { selectedProjectId = it.trim() },
-                            onDelete = { record ->
-                                scope.launch {
-                                    error = null
-                                    try {
-                                        client.delete("/metrics/${record.gitHash}") {
-                                            url { parameters.append("projectId", selectedProjectId) }
+                TopNav(
+                    active = activeScreen,
+                    onSelect = { activeScreen = it }
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp, vertical = 20.dp)
+                ) {
+                    when (activeScreen) {
+                        Screen.Dashboard -> {
+                            DashboardScreen(
+                                metrics = metrics,
+                                artifactSizes = artifactSizes,
+                                error = error,
+                                projectIds = projectIds,
+                                selectedProjectId = selectedProjectId,
+                                onSelectProject = { selectedProjectId = it.trim() },
+                                onDelete = { record ->
+                                    scope.launch {
+                                        error = null
+                                        try {
+                                            client.delete("/metrics/${record.gitHash}") {
+                                                url { parameters.append("projectId", selectedProjectId) }
+                                            }
+                                            reloadProjects()
+                                            reloadMetrics()
+                                        } catch (e: Throwable) {
+                                            error = e.message ?: "Failed to delete"
                                         }
-                                        reloadProjects()
-                                        reloadMetrics()
-                                    } catch (e: Throwable) {
-                                        error = e.message ?: "Failed to delete"
                                     }
-                                }
-                            },
-                            client = client
-                        )
-                    }
-                    Screen.Settings -> {
-                        SettingsScreen()
+                                },
+                                client = client
+                            )
+                        }
+                        Screen.Settings -> {
+                            SettingsScreen()
+                        }
                     }
                 }
             }
