@@ -1,4 +1,4 @@
-package nl.jacobras.codebaseobserver.ui.trends
+package nl.jacobras.codebaseobserver.trends
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

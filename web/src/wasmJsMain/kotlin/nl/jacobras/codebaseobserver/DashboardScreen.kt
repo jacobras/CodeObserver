@@ -24,9 +24,9 @@ import com.gabrieldrn.carbon.tab.TabVariant
 import io.ktor.client.HttpClient
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
-import nl.jacobras.codebaseobserver.ui.artifacts.ArtifactCharts
-import nl.jacobras.codebaseobserver.ui.modulegraph.DependencyGraph
-import nl.jacobras.codebaseobserver.ui.trends.Trends
+import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
+import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
+import nl.jacobras.codebaseobserver.trends.Trends
 
 @Composable
 internal fun DashboardScreen(

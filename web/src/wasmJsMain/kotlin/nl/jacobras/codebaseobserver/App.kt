@@ -40,6 +40,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import nl.jacobras.codebaseobserver.settings.SettingsScreen
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
 @OptIn(ExperimentalCarbonApi::class)
