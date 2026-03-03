@@ -15,20 +15,27 @@ internal object GradleDependencyParser {
     ): List<String> {
         val result = mutableListOf<String>()
 
-        // projects.a.b
-        val projectsRegex = Regex("""projects\.([A-Za-z0-9_.-]+)""")
+        // Match only `implementation(projects.a.b)`, not testImplementation/androidTestImplementation
+        val projectsRegex = Regex(
+            """(?<!test)(?<!androidTest)implementation\s*\(\s*projects\.([A-Za-z0-9_.-]+)\s*\)""",
+            RegexOption.IGNORE_CASE
+        )
         projectsRegex.findAll(text).forEach { match ->
             val path = match.groupValues[1]
             val pathOriginal = accessorMapping[path] ?: path
             result.add(dotPathToColon(pathOriginal))
         }
 
-        // project(":module:sub")
-        val projectStringRegex = Regex("""project\("(:[^"]+)"\)""")
+        // Match only `implementation(project(":module:sub"))`, not testImplementation/androidTestImplementation
+        val projectStringRegex = Regex(
+            """(?<!test)(?<!androidTest)implementation\s*\(\s*project\s*\(\s*"(:[^"]+)"\s*\)\s*\)""",
+            RegexOption.IGNORE_CASE
+        )
         projectStringRegex.findAll(text).forEach { match ->
             val path = match.groupValues[1].removePrefix(":")
             result.add(path)
         }
+
         return result
     }
 

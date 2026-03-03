@@ -17,16 +17,17 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
             implementation(compose.foundation)
+            implementation(compose.runtime)
             implementation(compose.ui)
             implementation(libs.carbon)
             implementation(libs.compose.charts)
             implementation(libs.humanReadable)
+            implementation(libs.kermit)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.js)
-            implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.semver)
 

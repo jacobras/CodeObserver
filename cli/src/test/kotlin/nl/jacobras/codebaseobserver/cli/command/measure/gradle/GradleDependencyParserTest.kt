@@ -43,7 +43,7 @@ class GradleDependencyParserTest {
     fun `typesafe accessor`() {
         val file = """
             dependencies {
-                implementation(projects.a)
+                implementation( projects.a )
                 implementation(projects.b.sub)
                 implementation(projects.c.subWithDashes)
             }
@@ -61,6 +61,28 @@ class GradleDependencyParserTest {
                 "a",
                 "b:sub",
                 "c:sub-with-dashes"
+            )
+        )
+    }
+
+    @Test
+    fun `ignore test dependencies`() {
+        val file = """
+            dependencies {
+                implementation(projects.a)
+                testImplementation(projects.b.sub)
+                androidTestImplementation(projects.c.subWithDashes)
+            }
+        """.trimIndent()
+
+        val dependencies = GradleDependencyParser.parse(
+            text = file,
+            accessorMapping = emptyMap()
+        )
+
+        assertThat(dependencies).isEqualTo(
+            listOf(
+                "a"
             )
         )
     }

@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
+    implementation(libs.jgrapht.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.serialization.json)
     implementation(libs.ktor.server.content.negotiation)
