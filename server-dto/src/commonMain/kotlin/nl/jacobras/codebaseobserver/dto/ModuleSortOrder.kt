@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class ModuleSortOrder(val id: String, val displayName: String) {
     Alphabetical("alphabetical", "Alphabetical"),
-    BetweennessCentrality("betweennessCentrality", "Betweenness Centrality"), ;
+    BetweennessCentrality("betweennessCentrality", "Betweenness Centrality");
 
     companion object {
         fun fromId(value: String): ModuleSortOrder? {

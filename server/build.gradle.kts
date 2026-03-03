@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
+    implementation(libs.jgrapht.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.serialization.json)
     implementation(libs.ktor.server.content.negotiation)
@@ -35,7 +36,6 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.semver)
     implementation(libs.sqlite.jdbc)
-    implementation("org.jgrapht:jgrapht-core:1.5.2")
 
     implementation(projects.serverDto)
 
