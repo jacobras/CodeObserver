@@ -43,7 +43,7 @@ class GradleDependencyParserTest {
     fun `typesafe accessor`() {
         val file = """
             dependencies {
-                implementation(projects.a)
+                implementation( projects.a )
                 implementation(projects.b.sub)
                 implementation(projects.c.subWithDashes)
             }
