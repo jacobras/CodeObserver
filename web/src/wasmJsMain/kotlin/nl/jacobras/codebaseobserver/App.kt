@@ -19,7 +19,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
@@ -120,10 +119,6 @@ fun App() {
         }
     }
 
-    val backgroundBrush = Brush.verticalGradient(
-        colors = listOf(Color(0xFFF4F1EA), Color(0xFFE9F0F2))
-    )
-
     CarbonDesignSystem(
         theme = WhiteTheme.copy(
             borderInteractive = Color(0xFF1F3D4D),
@@ -142,7 +137,7 @@ fun App() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(backgroundBrush)
+                    .background(Carbon.theme.background)
             ) {
                 TopNav(
                     active = activeScreen,
