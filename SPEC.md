@@ -32,6 +32,19 @@
     - `projects`
         - `projectId` (TEXT)
         - `name` (TEXT)
+    - `migrations`
+        - `id` (INTEGER) (auto-incremented)
+        - `createdAt` (TEXT)
+        - `projectId` (TEXT)
+        - `type` (TEXT) (one of `moduleUsage`, `importUsage`)
+        - `rule` (TEXT)
+            - in case of `moduleUsage` rule is a module name.
+            - in case of `importUsage` rule is an import, e.g. `com.example.lib.Foo`.
+    - `migrationProgress`
+        - `migrationId` (INTEGER) (points to `migrations` table)
+        - `gitHash` (TEXT)
+        - `gitDate` (TEXT)
+        - `count` (INT) (number of times the rule was matched)
 - Endpoints:
     - Metrics:
         - `GET /metrics?projectId=...` -> list of `CodeMetricsDto` records.
@@ -47,12 +60,23 @@
         - `GET /artifactSizes?projectId=...` -> list of records.
         - `POST /artifactSizes` -> stores artifact size.
             - body `{ projectId, name, semVer, size }`
+    - Migrations:
+        - `GET /migrations?projectId=...` -> list of all migrations.
+        - `POST /migrations` -> stores a new migration.
+            - body `{ projectId, type, rule }`
+        - `DELETE /migrations/{id}` -> deletes the migration and all its progress records.
+    - Migration progress:
+        - `GET /migrationProgress?migrationId=...` -> list of migration progress records.
+        - `POST /migrationProgress` -> stores migration progress.
+            - body `{ migrationId, gitHash, gitDate, count }`
+        - `DELETE /migrationProgress/{migrationId}/{gitHash}` -> deletes a single progress record.
     - Module graph:
         - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> raw graph string.
     - Modules:
         - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
     - Projects:
         - `GET /projects` -> list of distinct `projectId` values from `metrics`, sorted asc.
+        - `DELETE /projects/{projectId}` -> deletes the project and all associated data.
 
 ## CLI
 

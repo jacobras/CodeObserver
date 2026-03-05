@@ -4,3 +4,4 @@
 build/
 kotlin-js-store/
 server/data
+/.claude/settings.local.json

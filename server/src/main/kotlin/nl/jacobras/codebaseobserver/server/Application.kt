@@ -24,11 +24,17 @@ import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
+import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
+import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
+import nl.jacobras.codebaseobserver.dto.MigrationRequest
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
+import nl.jacobras.codebaseobserver.server.entity.MigrationProgressTable
+import nl.jacobras.codebaseobserver.server.entity.MigrationsTable
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphTable
 import nl.jacobras.codebaseobserver.server.entity.ProjectsTable
 import nl.jacobras.codebaseobserver.server.graph.GraphUtil
@@ -41,6 +47,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.upsert
 import java.io.File
 import kotlin.time.Clock
@@ -71,7 +78,16 @@ fun Application.module() {
     val dbFile = File(dbPath)
     dbFile.parentFile?.mkdirs()
     Database.connect("jdbc:sqlite:${dbFile.absolutePath}", driver = "org.sqlite.JDBC")
-    transaction { SchemaUtils.create(MetricsTable, ArtifactSizesTable, ModuleGraphTable, ProjectsTable) }
+    transaction {
+        SchemaUtils.create(
+            ArtifactSizesTable,
+            MetricsTable,
+            MigrationProgressTable,
+            MigrationsTable,
+            ModuleGraphTable,
+            ProjectsTable,
+        )
+    }
 
     routing {
         staticFiles("/", File("app/web")) {
@@ -126,6 +142,14 @@ fun Application.module() {
                 MetricsTable.deleteWhere { MetricsTable.projectId eq projectId }
                 ArtifactSizesTable.deleteWhere { ArtifactSizesTable.projectId eq projectId }
                 ModuleGraphTable.deleteWhere { ModuleGraphTable.projectId eq projectId }
+                val migrationIds = MigrationsTable
+                    .selectAll()
+                    .where { MigrationsTable.projectId eq projectId }
+                    .map { it[MigrationsTable.id] }
+                migrationIds.forEach { mid ->
+                    MigrationProgressTable.deleteWhere { MigrationProgressTable.migrationId eq mid }
+                }
+                MigrationsTable.deleteWhere { MigrationsTable.projectId eq projectId }
                 ProjectsTable.deleteWhere { ProjectsTable.projectId eq projectId }
             }
             if (deleted == 0) {
@@ -359,6 +383,130 @@ fun Application.module() {
                     val modules = (graphMap.keys + graphMap.values.flatten()).distinct().sorted()
                     call.respond(modules.map { GraphModuleDto(it, 0) })
                 }
+            }
+        }
+        get("/migrations") {
+            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@get
+            }
+            val records = transaction {
+                MigrationsTable.selectAll()
+                    .where { MigrationsTable.projectId eq projectId }
+                    .map {
+                        MigrationDto(
+                            id = it[MigrationsTable.id],
+                            createdAt = Instant.fromEpochSeconds(it[MigrationsTable.createdAt]),
+                            projectId = it[MigrationsTable.projectId],
+                            type = it[MigrationsTable.type],
+                            rule = it[MigrationsTable.rule]
+                        )
+                    }
+            }
+            call.respond(records)
+        }
+        post("/migrations") {
+            val request = call.receive<MigrationRequest>()
+            val projectId = request.projectId.trim()
+            val type = request.type.trim()
+            val rule = request.rule.trim()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@post
+            }
+            if (type !in listOf("moduleUsage", "importUsage")) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid type: $type"))
+                return@post
+            }
+            if (rule.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing rule"))
+                return@post
+            }
+            transaction {
+                MigrationsTable.insert {
+                    it[MigrationsTable.createdAt] = Clock.System.now().epochSeconds
+                    it[MigrationsTable.projectId] = projectId
+                    it[MigrationsTable.type] = type
+                    it[MigrationsTable.rule] = rule
+                }
+            }
+            call.respond(HttpStatusCode.Created)
+        }
+        delete("/migrations/{id}") {
+            val id = call.parameters["id"]?.trim()?.toIntOrNull()
+            if (id == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))
+                return@delete
+            }
+            val deleted = transaction {
+                MigrationProgressTable.deleteWhere { MigrationProgressTable.migrationId eq id }
+                MigrationsTable.deleteWhere { MigrationsTable.id eq id }
+            }
+            if (deleted == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Migration not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
+            }
+        }
+        get("/migrationProgress") {
+            val migrationId = call.request.queryParameters["migrationId"]?.trim()?.toIntOrNull()
+            if (migrationId == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid migrationId"))
+                return@get
+            }
+            val records = transaction {
+                MigrationProgressTable.selectAll()
+                    .where { MigrationProgressTable.migrationId eq migrationId }
+                    .orderBy(MigrationProgressTable.gitDate to SortOrder.ASC)
+                    .map {
+                        MigrationProgressDto(
+                            migrationId = it[MigrationProgressTable.migrationId],
+                            gitHash = it[MigrationProgressTable.gitHash],
+                            gitDate = Instant.fromEpochSeconds(it[MigrationProgressTable.gitDate]),
+                            count = it[MigrationProgressTable.count]
+                        )
+                    }
+            }
+            call.respond(records)
+        }
+        post("/migrationProgress") {
+            val request = call.receive<MigrationProgressRequest>()
+            val gitHash = request.gitHash.trim()
+            if (gitHash.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
+                return@post
+            }
+            transaction {
+                MigrationProgressTable.upsert {
+                    it[MigrationProgressTable.migrationId] = request.migrationId
+                    it[MigrationProgressTable.gitHash] = gitHash
+                    it[MigrationProgressTable.gitDate] = request.gitDate.epochSeconds
+                    it[MigrationProgressTable.count] = request.count
+                }
+            }
+            call.respond(HttpStatusCode.Created)
+        }
+        delete("/migrationProgress/{migrationId}/{gitHash}") {
+            val migrationId = call.parameters["migrationId"]?.trim()?.toIntOrNull()
+            val gitHash = call.parameters["gitHash"]?.trim().orEmpty()
+            if (migrationId == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid migrationId"))
+                return@delete
+            }
+            if (gitHash.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
+                return@delete
+            }
+            val deleted = transaction {
+                MigrationProgressTable.deleteWhere {
+                    (MigrationProgressTable.migrationId eq migrationId) and (MigrationProgressTable.gitHash eq gitHash)
+                }
+            }
+            if (deleted == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Record not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
             }
         }
     }
