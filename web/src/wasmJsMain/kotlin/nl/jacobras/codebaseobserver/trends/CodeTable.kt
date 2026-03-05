@@ -3,6 +3,7 @@ package nl.jacobras.codebaseobserver.trends
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
@@ -32,31 +33,36 @@ internal fun CodeTable(
             val record = metrics[rowIndex]
 
             when (columnIndex) {
-                0 -> BasicText(
-                    text = record.gitDate.toString(),
-                    style = Carbon.typography.bodyCompact01,
-                    modifier = modifier
-                )
-                1 -> BasicText(
-                    text = record.gitHash.take(7),
-                    style = Carbon.typography.code01,
-                    modifier = modifier
-                )
-                2 -> BasicText(
-                    text = HumanReadable.abbreviation(record.linesOfCode, decimals = 1),
-                    style = Carbon.typography.bodyCompact01,
-                    modifier = modifier
-                )
-                3 -> BasicText(
-                    text = record.moduleCount.toString(),
-                    style = Carbon.typography.bodyCompact01,
-                    modifier = modifier
-                )
-                4 -> BasicText(
-                    text = record.moduleTreeHeight.toString(),
-                    style = Carbon.typography.bodyCompact01,
-                    modifier = modifier
-                )
+                0 -> SelectionContainer(modifier) {
+                    BasicText(
+                        text = record.gitDate.toString(),
+                        style = Carbon.typography.bodyCompact01
+                    )
+                }
+                1 -> SelectionContainer(modifier) {
+                    BasicText(
+                        text = record.gitHash.take(7),
+                        style = Carbon.typography.code01
+                    )
+                }
+                2 -> SelectionContainer(modifier) {
+                    BasicText(
+                        text = HumanReadable.abbreviation(record.linesOfCode, decimals = 1),
+                        style = Carbon.typography.bodyCompact01
+                    )
+                }
+                3 -> SelectionContainer(modifier) {
+                    BasicText(
+                        text = record.moduleCount.toString(),
+                        style = Carbon.typography.bodyCompact01
+                    )
+                }
+                4 -> SelectionContainer(modifier) {
+                    BasicText(
+                        text = record.moduleTreeHeight.toString(),
+                        style = Carbon.typography.bodyCompact01
+                    )
+                }
                 5 -> Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = modifier

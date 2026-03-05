@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -127,16 +128,18 @@ private fun ProjectsTable(
         cellContent = { rowIndex, columnIndex, modifier ->
             val project = projects[rowIndex]
             when (columnIndex) {
-                0 -> BasicText(
-                    text = project.projectId,
-                    style = Carbon.typography.code01,
-                    modifier = modifier
-                )
-                1 -> BasicText(
-                    text = project.name,
-                    style = Carbon.typography.bodyCompact01,
-                    modifier = modifier
-                )
+                0 -> SelectionContainer(modifier) {
+                    BasicText(
+                        text = project.projectId,
+                        style = Carbon.typography.code01
+                    )
+                }
+                1 -> SelectionContainer(modifier) {
+                    BasicText(
+                        text = project.name,
+                        style = Carbon.typography.bodyCompact01
+                    )
+                }
                 2 -> Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = modifier
