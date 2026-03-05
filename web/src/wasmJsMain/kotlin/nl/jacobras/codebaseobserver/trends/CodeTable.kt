@@ -28,32 +28,32 @@ internal fun CodeTable(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             BasicText(
                 text = "Git date",
-                style = Carbon.typography.body02,
+                style = Carbon.typography.heading02,
                 modifier = Modifier.weight(1f)
             )
             BasicText(
                 text = "Git hash",
-                style = Carbon.typography.body02,
+                style = Carbon.typography.heading02,
                 modifier = Modifier.weight(1f)
             )
             BasicText(
                 text = "Lines of code",
-                style = Carbon.typography.body02,
+                style = Carbon.typography.heading02,
                 modifier = Modifier.weight(1f)
             )
             BasicText(
                 text = "Module count",
-                style = Carbon.typography.body02,
+                style = Carbon.typography.heading02,
                 modifier = Modifier.weight(1f)
             )
             BasicText(
                 text = "Module tree height",
-                style = Carbon.typography.body02,
+                style = Carbon.typography.heading02,
                 modifier = Modifier.weight(1f)
             )
             BasicText(
                 text = "Actions",
-                style = Carbon.typography.body02,
+                style = Carbon.typography.heading02,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -71,7 +71,7 @@ internal fun CodeTable(
                     )
                     BasicText(
                         text = record.gitHash.take(7),
-                        style = Carbon.typography.body02,
+                        style = Carbon.typography.code02,
                         modifier = Modifier.weight(1f)
                     )
                     BasicText(
