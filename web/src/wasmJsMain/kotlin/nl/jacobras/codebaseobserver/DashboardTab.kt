@@ -1,7 +1,7 @@
 package nl.jacobras.codebaseobserver
 
 internal enum class DashboardTab(val displayName: String) {
-    Trends("Trends"),
-    Artifacts("Artifacts"),
+    CodeTrends("Code trends"),
+    Artifacts("Artifact sizes"),
     ModuleGraph("Module graph")
 }

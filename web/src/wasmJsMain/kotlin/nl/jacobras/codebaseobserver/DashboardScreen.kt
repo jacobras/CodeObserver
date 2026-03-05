@@ -64,7 +64,7 @@ internal fun DashboardScreen(
         )
         Spacer(Modifier.height(16.dp))
 
-        var selectedTab by remember { mutableStateOf(DashboardTab.Trends) }
+        var selectedTab by remember { mutableStateOf(DashboardTab.CodeTrends) }
         val tabs = DashboardTab.entries.map { TabItem(label = it.displayName) }
         TabList(
             tabs = tabs,
@@ -94,7 +94,7 @@ internal fun DashboardScreen(
                     )
                 } else {
                     when (selectedTab) {
-                        DashboardTab.Trends -> Trends(
+                        DashboardTab.CodeTrends -> Trends(
                             metrics = metrics,
                             onDelete = onDelete
                         )
