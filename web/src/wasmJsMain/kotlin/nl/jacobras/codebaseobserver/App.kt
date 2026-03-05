@@ -137,7 +137,7 @@ fun App() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Carbon.theme.background)
+                    .background(Carbon.theme.skeletonBackground)
             ) {
                 TopNav(
                     active = activeScreen,
