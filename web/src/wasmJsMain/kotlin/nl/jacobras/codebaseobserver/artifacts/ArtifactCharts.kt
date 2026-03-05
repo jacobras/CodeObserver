@@ -47,7 +47,7 @@ internal fun ArtifactCharts(
                     val b = b.semVer.toVersion()
                     a.compareTo(b)
                 },
-            versionField = { it.semVer },
+            versionField = { it.semVer.toVersion() },
             metricField = { it.size },
             color = Color(0xFFE9C46A),
             modifier = Modifier
