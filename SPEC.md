@@ -35,6 +35,7 @@
     - `migrations`
         - `id` (INTEGER) (auto-incremented)
         - `createdAt` (TEXT)
+        - `name` (TEXT)
         - `projectId` (TEXT)
         - `type` (TEXT) (one of `moduleUsage`, `importUsage`)
         - `rule` (TEXT)
@@ -63,7 +64,9 @@
     - Migrations:
         - `GET /migrations?projectId=...` -> list of all migrations.
         - `POST /migrations` -> stores a new migration.
-            - body `{ projectId, type, rule }`
+            - body `{ projectId, name, type, rule }`
+        - `PATCH /migrations/{id}` -> updates the migration name.
+            - body `{ name }`
         - `DELETE /migrations/{id}` -> deletes the migration and all its progress records.
     - Migration progress:
         - `GET /migrationProgress?migrationId=...` -> list of migration progress records.

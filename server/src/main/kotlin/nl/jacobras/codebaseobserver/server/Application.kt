@@ -15,6 +15,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
@@ -25,6 +26,7 @@ import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
 import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationNameRequest
 import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
 import nl.jacobras.codebaseobserver.dto.MigrationRequest
@@ -48,6 +50,7 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.upsert
 import java.io.File
 import kotlin.time.Clock
@@ -398,6 +401,7 @@ fun Application.module() {
                         MigrationDto(
                             id = it[MigrationsTable.id],
                             createdAt = Instant.fromEpochSeconds(it[MigrationsTable.createdAt]),
+                            name = it[MigrationsTable.name],
                             projectId = it[MigrationsTable.projectId],
                             type = it[MigrationsTable.type],
                             rule = it[MigrationsTable.rule]
@@ -409,10 +413,15 @@ fun Application.module() {
         post("/migrations") {
             val request = call.receive<MigrationRequest>()
             val projectId = request.projectId.trim()
+            val name = request.name.trim()
             val type = request.type.trim()
             val rule = request.rule.trim()
             if (projectId.isBlank()) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@post
+            }
+            if (name.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
                 return@post
             }
             if (type !in listOf("moduleUsage", "importUsage")) {
@@ -426,12 +435,36 @@ fun Application.module() {
             transaction {
                 MigrationsTable.insert {
                     it[MigrationsTable.createdAt] = Clock.System.now().epochSeconds
+                    it[MigrationsTable.name] = name
                     it[MigrationsTable.projectId] = projectId
                     it[MigrationsTable.type] = type
                     it[MigrationsTable.rule] = rule
                 }
             }
             call.respond(HttpStatusCode.Created)
+        }
+        patch("/migrations/{id}") {
+            val id = call.parameters["id"]?.trim()?.toIntOrNull()
+            if (id == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))
+                return@patch
+            }
+            val request = call.receive<MigrationNameRequest>()
+            val name = request.name.trim()
+            if (name.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
+                return@patch
+            }
+            val updated = transaction {
+                MigrationsTable.update({ MigrationsTable.id eq id }) {
+                    it[MigrationsTable.name] = name
+                }
+            }
+            if (updated == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Migration not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "updated"))
+            }
         }
         delete("/migrations/{id}") {
             val id = call.parameters["id"]?.trim()?.toIntOrNull()

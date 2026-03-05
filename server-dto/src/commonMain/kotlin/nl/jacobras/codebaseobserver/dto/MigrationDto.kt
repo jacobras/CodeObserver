@@ -7,6 +7,7 @@ import kotlin.time.Instant
 data class MigrationDto(
     val id: Int,
     val createdAt: Instant,
+    val name: String,
     val projectId: String,
     val type: String,
     val rule: String
