@@ -8,7 +8,7 @@ ktor = "3.4.1"
 
 [libraries]
 assertK = { module = "com.willowtreeapps.assertk:assertk", version = "0.28.1" }
-carbon = { module = "io.github.gabrieldrn:carbon", version = "0.7.0" }
+carbon = { module = "io.github.gabrieldrn:carbon", version = "0.7.1" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version = "5.1.0" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
