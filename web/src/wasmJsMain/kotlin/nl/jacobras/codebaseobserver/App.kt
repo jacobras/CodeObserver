@@ -131,13 +131,13 @@ fun App() {
                     CandlestickCartesianLayerColors.fromDefaultColors(DefaultColors.Light),
                 columnCartesianLayerColors = DefaultColors.Light.cartesianLayerColors.map(::Color),
                 lineColor = Color(DefaultColors.Light.lineColor),
-                textColor = Color(DefaultColors.Light.textColor),
+                textColor = Carbon.theme.textPrimary,
             )
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Carbon.theme.skeletonBackground)
+                    .background(Carbon.theme.background)
             ) {
                 TopNav(
                     active = activeScreen,

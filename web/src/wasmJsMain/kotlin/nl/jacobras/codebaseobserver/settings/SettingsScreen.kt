@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
@@ -23,6 +22,7 @@ import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.ui.table.DataTable
 
 @Composable
 internal fun SettingsScreen(
@@ -113,56 +113,33 @@ private fun ProjectsTable(
     onEdit: (ProjectDto) -> Unit,
     onDelete: (projectId: String) -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(Modifier.fillMaxWidth()) {
-            BasicText(
-                text = "Project ID",
-                style = Carbon.typography.label01,
-                modifier = Modifier.weight(1f)
-            )
-            BasicText(
-                text = "Name",
-                style = Carbon.typography.label01,
-                modifier = Modifier.weight(2f)
-            )
-            BasicText(
-                modifier = Modifier.weight(1f),
-                text = "Actions",
-                style = Carbon.typography.label01
-            )
-        }
-        Spacer(Modifier.height(8.dp))
+    if (projects.isEmpty()) {
+        BasicText(
+            text = "No projects yet. Add one above.",
+            style = Carbon.typography.body02
+        )
+        return
+    }
 
-        if (projects.isEmpty()) {
-            BasicText(
-                text = "No projects yet. Add one above.",
-                style = Carbon.typography.body02
-            )
-            return
-        }
-
-        projects.forEach { project ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                BasicText(
+    DataTable(
+        columnHeadings = listOf("Project ID", "Name", "Actions"),
+        rowCount = projects.size,
+        cellContent = { rowIndex, columnIndex, modifier ->
+            val project = projects[rowIndex]
+            when (columnIndex) {
+                0 -> BasicText(
                     text = project.projectId,
-                    style = Carbon.typography.body02,
-                    modifier = Modifier.weight(1f)
+                    style = Carbon.typography.code01,
+                    modifier = modifier
                 )
-                BasicText(
+                1 -> BasicText(
                     text = project.name,
-                    style = Carbon.typography.body02,
-                    modifier = Modifier.weight(2f)
+                    style = Carbon.typography.bodyCompact01,
+                    modifier = modifier
                 )
-                Row(
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                2 -> Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = modifier
                 ) {
                     Button(
                         label = "Edit",
@@ -172,12 +149,12 @@ private fun ProjectsTable(
                     )
                     Button(
                         label = "Delete",
-                        buttonType = ButtonType.Ghost,
+                        buttonType = ButtonType.GhostDanger,
                         buttonSize = ButtonSize.Small,
                         onClick = { onDelete(project.projectId) }
                     )
                 }
             }
         }
-    }
+    )
 }
