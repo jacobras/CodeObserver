@@ -108,8 +108,7 @@ private fun ArtifactDetail(
                     0 -> SelectionContainer(modifier) {
                         BasicText(
                             text = item.name,
-                            style = Carbon.typography.body02,
-                            modifier = modifier
+                            style = Carbon.typography.body02
                         )
                     }
                     1 -> SelectionContainer(modifier) {

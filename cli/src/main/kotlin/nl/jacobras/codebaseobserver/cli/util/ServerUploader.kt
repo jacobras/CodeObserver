@@ -18,17 +18,17 @@ import kotlinx.serialization.json.Json
 internal class ServerUploader {
 
     private val json = Json { ignoreUnknownKeys = true }
+    private val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(json)
+        }
+    }
 
     suspend fun upload(
         serverUrl: String,
         endpoint: String,
         payload: Any
     ) {
-        val client = HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(json)
-            }
-        }
         val response = client.post("${serverUrl.trimEnd('/')}/$endpoint") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
             contentType(ContentType.Application.Json)
@@ -47,11 +47,6 @@ internal class ServerUploader {
         serverUrl: String,
         endpoint: String
     ): T {
-        val client = HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(json)
-            }
-        }
         val response = client.get("${serverUrl.trimEnd('/')}/$endpoint")
         client.close()
         val statusCode = response.status.value
