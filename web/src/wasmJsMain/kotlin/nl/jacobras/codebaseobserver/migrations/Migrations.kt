@@ -37,35 +37,38 @@ internal fun Migrations(
     client: HttpClient,
     projectId: String
 ) {
-    val migrations by produceState(emptyList<MigrationDto>(), projectId) {
+    var refreshKey by remember { mutableStateOf(0) }
+    val migrations by produceState(emptyList<MigrationDto>(), projectId, refreshKey) {
         value = client.get("/migrations") {
             url { parameters.append("projectId", projectId) }
         }.body()
     }
 
-    if (migrations.isEmpty()) {
-        BasicText(
-            modifier = Modifier.fillMaxWidth(),
-            text = "No migrations found",
-            style = Carbon.typography.body02
-        )
-        return
-    }
-
     Column(Modifier.fillMaxWidth()) {
-        val tabs = migrations.map { TabItem(label = it.name) }
-        var selectedMigration by remember { mutableStateOf(migrations.first()) }
+        val overviewTab = TabItem("Overview")
+        val tabs = listOf(overviewTab) + migrations.map { TabItem(label = it.name) }
+        var selectedTab by remember { mutableStateOf(overviewTab) }
 
         TabList(
             tabs = tabs,
-            selectedTab = tabs.first { it.label == selectedMigration.name },
+            selectedTab = selectedTab,
             onTabSelected = { tab ->
-                selectedMigration = migrations.first { it.name == tab.label }
+                selectedTab = tab
             }
         )
         Spacer(Modifier.height(16.dp))
 
-        MigrationDetail(client = client, migration = selectedMigration)
+        if (selectedTab == overviewTab) {
+            MigrationsOverview(
+                client = client,
+                projectId = projectId,
+                migrations = migrations,
+                onRefresh = { refreshKey++ }
+            )
+        } else {
+            val selectedMigration = migrations.first { it.name == selectedTab.label }
+            MigrationDetail(client = client, migration = selectedMigration)
+        }
     }
 }
 
