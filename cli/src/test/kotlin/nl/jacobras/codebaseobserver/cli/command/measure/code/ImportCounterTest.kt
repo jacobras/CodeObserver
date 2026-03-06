@@ -118,6 +118,34 @@ class ImportCounterTest {
     }
 
     @Test
+    fun `wildcard rule matches code reference`() {
+        val text = "@ColorRes backgroundColorId: Int = R.color.snackbar_background_color"
+        val counts = ImportCounter.count(text, listOf("R.color.*"))
+        assertThat(counts).isEqualTo(mapOf("R.color.*" to 1))
+    }
+
+    @Test
+    fun `wildcard rule counts multiple code references on same line`() {
+        val text = "return if (x) R.color.primary else R.color.secondary"
+        val counts = ImportCounter.count(text, listOf("R.color.*"))
+        assertThat(counts).isEqualTo(mapOf("R.color.*" to 2))
+    }
+
+    @Test
+    fun `wildcard rule is case sensitive for code references`() {
+        val text = "val x = R.Color.primary"
+        val counts = ImportCounter.count(text, listOf("R.color.*"))
+        assertThat(counts).isEqualTo(mapOf("R.color.*" to 0))
+    }
+
+    @Test
+    fun `wildcard rule does not match code reference without trailing identifier`() {
+        val text = "val x = R.color."
+        val counts = ImportCounter.count(text, listOf("R.color.*"))
+        assertThat(counts).isEqualTo(mapOf("R.color.*" to 0))
+    }
+
+    @Test
     fun `extractImportPath returns null for non-import line`() {
         assertThat(ImportCounter.extractImportPath("class Foo")).isNull()
         assertThat(ImportCounter.extractImportPath("")).isNull()

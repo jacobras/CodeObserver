@@ -8,10 +8,20 @@ internal object ImportCounter {
      */
     fun count(text: String, rules: List<String>): Map<String, Int> {
         val counts = rules.associateWith { 0 }.toMutableMap()
+        val wildcardRules = rules.filter { it.endsWith(".*") }
         text.lineSequence().forEach { line ->
-            val importPath = extractImportPath(line.trim()) ?: return@forEach
-            for (rule in rules) {
-                if (matches(rule, importPath)) counts[rule] = counts[rule]!! + 1
+            val trimmedLine = line.trim()
+            val importPath = extractImportPath(trimmedLine)
+            if (importPath != null) {
+                for (rule in rules) {
+                    if (matches(rule, importPath)) counts[rule] = counts[rule]!! + 1
+                }
+            } else {
+                for (rule in wildcardRules) {
+                    val prefix = rule.removeSuffix("*")
+                    val occurrences = Regex(Regex.escape(prefix) + "\\w").findAll(trimmedLine).count()
+                    counts[rule] = counts[rule]!! + occurrences
+                }
             }
         }
         return counts
