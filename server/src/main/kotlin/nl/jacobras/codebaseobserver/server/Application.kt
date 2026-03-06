@@ -26,10 +26,13 @@ import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
 import nl.jacobras.codebaseobserver.dto.MigrationDto
-import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
 import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
 import nl.jacobras.codebaseobserver.dto.MigrationRequest
+import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
+import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingDto
+import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingRequest
+import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingUpdateRequest
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
@@ -37,8 +40,10 @@ import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationProgressTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationsTable
+import nl.jacobras.codebaseobserver.server.entity.ModuleGraphSettingsTable
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphTable
 import nl.jacobras.codebaseobserver.server.entity.ProjectsTable
+import nl.jacobras.codebaseobserver.server.graph.GraphConfig
 import nl.jacobras.codebaseobserver.server.graph.GraphUtil
 import nl.jacobras.codebaseobserver.server.graph.GraphVisualizer
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -47,9 +52,9 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.upsert
 import java.io.File
@@ -87,6 +92,7 @@ fun Application.module() {
             MetricsTable,
             MigrationProgressTable,
             MigrationsTable,
+            ModuleGraphSettingsTable,
             ModuleGraphTable,
             ProjectsTable,
         )
@@ -145,6 +151,7 @@ fun Application.module() {
                 MetricsTable.deleteWhere { MetricsTable.projectId eq projectId }
                 ArtifactSizesTable.deleteWhere { ArtifactSizesTable.projectId eq projectId }
                 ModuleGraphTable.deleteWhere { ModuleGraphTable.projectId eq projectId }
+                ModuleGraphSettingsTable.deleteWhere { ModuleGraphSettingsTable.projectId eq projectId }
                 val migrationIds = MigrationsTable
                     .selectAll()
                     .where { MigrationsTable.projectId eq projectId }
@@ -339,11 +346,30 @@ fun Application.module() {
             }
 
             val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
+            val graphConfig = transaction {
+                ModuleGraphSettingsTable.selectAll()
+                    .where { ModuleGraphSettingsTable.projectId eq projectId }
+                    .map {
+                        when (val type = it[ModuleGraphSettingsTable.type]) {
+                            "deprecatedModule" -> GraphConfig.DeprecatedModule(it[ModuleGraphSettingsTable.data])
+                            "forbiddenDependency" -> {
+                                val parts = it[ModuleGraphSettingsTable.data].split(" -> ")
+                                if (parts.size == 2) {
+                                    GraphConfig.ForbiddenDependency(parts[0], parts[1])
+                                } else {
+                                    error("Invalid data format: ${it[ModuleGraphSettingsTable.data]}")
+                                }
+                            }
+                            else -> error("Unsupported type: $type")
+                        }
+                    }
+            }
             val graph = GraphVisualizer.build(
                 modules = graphMap,
                 startModule = startModule,
                 groupingThreshold = groupingThreshold,
-                layerDepth = layerDepth
+                layerDepth = layerDepth,
+                config = graphConfig
             )
             call.respondText(graph)
         }
@@ -524,6 +550,106 @@ fun Application.module() {
                 }
             }
             call.respond(HttpStatusCode.Created)
+        }
+        get("/moduleGraphSettings") {
+            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@get
+            }
+            val records = transaction {
+                ModuleGraphSettingsTable.selectAll()
+                    .where { ModuleGraphSettingsTable.projectId eq projectId }
+                    .map {
+                        ModuleGraphSettingDto(
+                            id = it[ModuleGraphSettingsTable.id],
+                            createdAt = Instant.fromEpochSeconds(it[ModuleGraphSettingsTable.createdAt]),
+                            projectId = it[ModuleGraphSettingsTable.projectId],
+                            type = it[ModuleGraphSettingsTable.type],
+                            data = it[ModuleGraphSettingsTable.data]
+                        )
+                    }
+            }
+            call.respond(records)
+        }
+        post("/moduleGraphSettings") {
+            val request = call.receive<ModuleGraphSettingRequest>()
+            val projectId = request.projectId.trim()
+            val type = request.type.trim()
+            val data = request.data.trim()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@post
+            }
+            if (type !in listOf("deprecatedModule", "forbiddenDependency")) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid type: $type"))
+                return@post
+            }
+            if (data.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing data"))
+                return@post
+            }
+            if (type == "deprecatedModule" && !data.contains("->")) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid data format: $data"))
+                return@post
+            }
+            transaction {
+                ModuleGraphSettingsTable.insert {
+                    it[ModuleGraphSettingsTable.createdAt] = Clock.System.now().epochSeconds
+                    it[ModuleGraphSettingsTable.projectId] = projectId
+                    it[ModuleGraphSettingsTable.type] = type
+                    it[ModuleGraphSettingsTable.data] = data
+                }
+            }
+            call.respond(HttpStatusCode.Created)
+        }
+        patch("/moduleGraphSettings/{id}") {
+            val id = call.parameters["id"]?.trim()?.toIntOrNull()
+            if (id == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))
+                return@patch
+            }
+            val request = call.receive<ModuleGraphSettingUpdateRequest>()
+            val type = request.type.trim()
+            val data = request.data.trim()
+            if (type !in listOf("deprecatedModule", "forbiddenDependency")) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid type: $type"))
+                return@patch
+            }
+            if (data.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing data"))
+                return@patch
+            }
+            if (type == "deprecatedModule" && !data.contains("->")) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid data format: $data"))
+                return@patch
+            }
+            val updated = transaction {
+                ModuleGraphSettingsTable.update({ ModuleGraphSettingsTable.id eq id }) {
+                    it[ModuleGraphSettingsTable.type] = type
+                    it[ModuleGraphSettingsTable.data] = data
+                }
+            }
+            if (updated == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Setting not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "updated"))
+            }
+        }
+        delete("/moduleGraphSettings/{id}") {
+            val id = call.parameters["id"]?.trim()?.toIntOrNull()
+            if (id == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))
+                return@delete
+            }
+            val deleted = transaction {
+                ModuleGraphSettingsTable.deleteWhere { ModuleGraphSettingsTable.id eq id }
+            }
+            if (deleted == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Setting not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
+            }
         }
         delete("/migrationProgress/{migrationId}/{gitHash}") {
             val migrationId = call.parameters["migrationId"]?.trim()?.toIntOrNull()

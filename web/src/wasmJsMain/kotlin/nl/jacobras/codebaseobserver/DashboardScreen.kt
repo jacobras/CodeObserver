@@ -27,6 +27,7 @@ import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.migrations.Migrations
 import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
+import nl.jacobras.codebaseobserver.modulegraph.ModuleRules
 import nl.jacobras.codebaseobserver.trends.Trends
 
 @Composable
@@ -107,6 +108,10 @@ internal fun DashboardScreen(
                         projectId = selectedProjectId
                     )
                     DashboardTab.ModuleGraph -> DependencyGraph(
+                        client = client,
+                        projectId = selectedProjectId
+                    )
+                    DashboardTab.ModuleRules -> ModuleRules(
                         client = client,
                         projectId = selectedProjectId
                     )
