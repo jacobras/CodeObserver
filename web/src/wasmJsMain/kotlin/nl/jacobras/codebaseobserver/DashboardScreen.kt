@@ -22,10 +22,11 @@ import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import com.gabrieldrn.carbon.tab.TabVariant
 import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.dto.ProjectDto
-import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
+import nl.jacobras.codebaseobserver.migrations.Migrations
 import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
 import nl.jacobras.codebaseobserver.trends.Trends
 
@@ -100,6 +101,10 @@ internal fun DashboardScreen(
                         )
                         DashboardTab.Artifacts -> ArtifactCharts(
                             artifactSizes = artifactSizes
+                        )
+                        DashboardTab.Migrations -> Migrations(
+                            client = client,
+                            projectId = selectedProjectId
                         )
                         DashboardTab.ModuleGraph -> DependencyGraph(
                             projectId = selectedProjectId,

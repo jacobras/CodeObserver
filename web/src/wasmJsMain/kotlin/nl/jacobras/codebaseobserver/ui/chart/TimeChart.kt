@@ -86,6 +86,7 @@ internal fun <T> TimeChart(
 
     if (filteredRecords.isEmpty()) {
         BasicText(
+            modifier = modifier,
             text = "No data",
             style = Carbon.typography.body02.copy(color = Carbon.theme.textPrimary)
         )
