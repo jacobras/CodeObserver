@@ -80,7 +80,7 @@ class ImportCounterTest {
     }
 
     @Test
-    fun `ignores indented import`() {
+    fun `counts indented import`() {
         val text = "    import com.example.Foo"
         val counts = ImportCounter.count(text, listOf("com.example.Foo"))
         assertThat(counts).isEqualTo(mapOf("com.example.Foo" to 1))
