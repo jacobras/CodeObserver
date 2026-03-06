@@ -48,41 +48,49 @@ class MeasureCodeCommand internal constructor(
         val includePatterns = include.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         val excludePatterns = exclude.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-        val lastKnownLines: Int? = serverUrl?.let { url ->
+        var lastKnownLines: Int? = null
+        var migrations: List<MigrationDto> = emptyList()
+
+        serverUrl?.let { url ->
             runBlocking {
                 try {
                     val metrics = uploader.fetch<List<CodeMetricsDto>>(
                         serverUrl = url,
                         endpoint = "metrics?projectId=$projectId"
                     )
-                    metrics.maxByOrNull { it.gitDate }?.linesOfCode
+                    lastKnownLines = metrics.maxByOrNull { it.gitDate }?.linesOfCode
                 } catch (_: Exception) {
-                    null
                 }
+                migrations = uploader.fetch<List<MigrationDto>>(
+                    serverUrl = url,
+                    endpoint = "migrations?projectId=$projectId"
+                )
             }
         }
 
-        val (linesOfCode, importCounts) = scanFiles(targetPath, includePatterns, excludePatterns, lastKnownLines)
+        val importRules = migrations.filter { it.type == "importUsage" }.map { it.rule }
+        val (linesOfCode, importCounts) = scanFiles(
+            root = targetPath,
+            includePatterns = includePatterns,
+            excludePatterns = excludePatterns,
+            importRules = importRules,
+            lastKnownLines = lastKnownLines
+        )
         println("Counted $linesOfCode lines of code in $targetPath")
 
         serverUrl?.let { url ->
             val gitHash = GitInfoCollector.getGitHash(targetPath)
             val gitDate = GitInfoCollector.getGitDate(targetPath)
-            val payload = CodeMetricsRequest(
-                projectId = projectId,
-                gitHash = gitHash,
-                gitDate = gitDate,
-                linesOfCode = linesOfCode
-            )
             runBlocking {
                 uploader.upload(
                     serverUrl = url,
                     endpoint = "metrics/code",
-                    payload = payload
-                )
-                val migrations = uploader.fetch<List<MigrationDto>>(
-                    serverUrl = url,
-                    endpoint = "migrations?projectId=$projectId"
+                    payload = CodeMetricsRequest(
+                        projectId = projectId,
+                        gitHash = gitHash,
+                        gitDate = gitDate,
+                        linesOfCode = linesOfCode
+                    )
                 )
                 migrations
                     .filter { it.type == "importUsage" }
@@ -106,6 +114,7 @@ class MeasureCodeCommand internal constructor(
         root: Path,
         includePatterns: List<String>,
         excludePatterns: List<String>,
+        importRules: List<String>,
         lastKnownLines: Int? = null
     ): ScanResult {
         if (!Files.exists(root)) return ScanResult(0, emptyMap())
@@ -115,7 +124,7 @@ class MeasureCodeCommand internal constructor(
 
         var totalLines = 0
         var filesProcessed = 0
-        val importCounts = mutableMapOf<String, Int>()
+        val importCounts = importRules.associateWith { 0 }.toMutableMap()
 
         Files.walk(root).use { stream ->
             stream.asSequence()
@@ -125,11 +134,11 @@ class MeasureCodeCommand internal constructor(
                             excludeMatchers.none { it.matches(path) }
                 }
                 .forEach { filePath ->
-                    Files.lines(filePath).use { lines ->
-                        lines.forEach { line ->
-                            totalLines++
-                            val importPath = ImportCounter.extractImportPath(line.trim()) ?: return@forEach
-                            importCounts[importPath] = (importCounts[importPath] ?: 0) + 1
+                    val text = Files.readString(filePath)
+                    totalLines += text.lines().size
+                    if (importRules.isNotEmpty()) {
+                        ImportCounter.count(text, importRules).forEach { (rule, count) ->
+                            importCounts[rule] = importCounts[rule]!! + count
                         }
                     }
                     filesProcessed++
