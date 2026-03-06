@@ -415,6 +415,7 @@ fun Application.module() {
             val request = call.receive<MigrationRequest>()
             val projectId = request.projectId.trim()
             val name = request.name.trim()
+            val description = request.description.trim()
             val type = request.type.trim()
             val rule = request.rule.trim()
             if (projectId.isBlank()) {
@@ -437,6 +438,7 @@ fun Application.module() {
                 MigrationsTable.insert {
                     it[MigrationsTable.createdAt] = Clock.System.now().epochSeconds
                     it[MigrationsTable.name] = name
+                    it[MigrationsTable.description] = description
                     it[MigrationsTable.projectId] = projectId
                     it[MigrationsTable.type] = type
                     it[MigrationsTable.rule] = rule
