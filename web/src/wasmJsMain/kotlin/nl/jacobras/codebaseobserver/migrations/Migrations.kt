@@ -46,7 +46,9 @@ internal fun Migrations(
 
     Column(Modifier.fillMaxWidth()) {
         val overviewTab = TabItem("Overview")
-        val tabs = listOf(overviewTab) + migrations.map { TabItem(label = it.name) }
+        val tabs = listOf(overviewTab) + migrations
+            .sortedBy { it.name }
+            .map { TabItem(label = it.name) }
         var selectedTab by remember { mutableStateOf(overviewTab) }
 
         TabList(
