@@ -12,7 +12,8 @@ object GraphVisualizer {
         startModuleColor: String = "#a5a5b2",
         groupingThreshold: Int,
         nodeLimit: Int = 30,
-        layerDepth: Int = 30
+        layerDepth: Int = 30,
+        config: List<GraphConfig> = emptyList()
     ): String {
         val filteredModules = if (startModule.isNotEmpty()) {
             val res = filterByStartModule(modules = modules, startModule = startModule)
@@ -32,6 +33,9 @@ object GraphVisualizer {
         for (group in groups) {
             outputGroups += group.key
         }
+
+        val deprecatedDependencyIndices = mutableListOf<Int>()
+        val forbiddenDependencyIndices = mutableListOf<Int>()
 
         for ((module, dependencies) in filteredModules) {
             if (module == startModule || outputGroups.none { module.startsWith(it) }) {
@@ -59,6 +63,18 @@ object GraphVisualizer {
 
                 if (aNameToUse != bNameToUse && !outputDependencies.contains(aNameToUse to bNameToUse)) {
                     outputDependencies += aNameToUse to bNameToUse
+
+                    val currentDependencyIndex = outputDependencies.lastIndex
+                    if (!forbiddenDependencyIndices.contains(currentDependencyIndex)
+                        && config.any { it is GraphConfig.ForbiddenDependency && it.matches(module, dep) }
+                    ) {
+                        forbiddenDependencyIndices.add(currentDependencyIndex)
+                    }
+                    if (!deprecatedDependencyIndices.contains(currentDependencyIndex)
+                        && config.any { it is GraphConfig.DeprecatedModule && it.matches(dep) }
+                    ) {
+                        deprecatedDependencyIndices.add(currentDependencyIndex)
+                    }
                 }
             }
         }
@@ -102,6 +118,17 @@ object GraphVisualizer {
                 appendLine()
                 appendLine("class $startModule start")
                 appendLine("classDef start fill:$startModuleColor;")
+            }
+
+            if (deprecatedDependencyIndices.isNotEmpty() || forbiddenDependencyIndices.isNotEmpty()) {
+                appendLine()
+
+                for (index in deprecatedDependencyIndices) {
+                    appendLine("linkStyle $index stroke:orange,stroke-width:3px;")
+                }
+                for (index in forbiddenDependencyIndices) {
+                    appendLine("linkStyle $index stroke:red,stroke-width:3px;")
+                }
             }
         }.trim()
     }

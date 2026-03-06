@@ -24,27 +24,6 @@ class GraphVisualizerTest {
     }
 
     @Test
-    fun `graph with only one module starting at that module`() {
-        val graph = GraphVisualizer.build(
-            modules = mapOf("hello" to emptyList()),
-            startModule = "hello",
-            groupingThreshold = 3
-        )
-
-        assertThat(graph).isEqualTo(
-            """
-            graph TD
-                hello
-            
-            %% Dependencies
-            
-            class hello start
-            classDef start fill:#a5a5b2;
-        """.trimIndent()
-        )
-    }
-
-    @Test
     fun `simple graph`() {
         val graph = GraphVisualizer.build(
             modules = mapOf(
@@ -66,6 +45,133 @@ class GraphVisualizerTest {
                 moduleA --> moduleB
                 moduleA --> moduleD
                 moduleB --> sub:c
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `simple graph with deprecated and forbidden configs`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf(
+                "moduleA" to listOf("moduleB", "util"),
+                "moduleB" to listOf("util"),
+                "util" to emptyList()
+            ),
+            groupingThreshold = 3,
+            config = listOf(
+                GraphConfig.DeprecatedModule("util"),
+                GraphConfig.ForbiddenDependency("moduleA", "moduleB")
+            )
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                moduleA
+                moduleB
+                util
+            
+            %% Dependencies
+                moduleA --> moduleB
+                moduleA --> util
+                moduleB --> util
+            
+            linkStyle 1 stroke:orange,stroke-width:3px;
+            linkStyle 2 stroke:orange,stroke-width:3px;
+            linkStyle 0 stroke:red,stroke-width:3px;
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `simple graph with complicated forbidden config`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf(
+                "app" to listOf("feature:a", "feature:b"),
+                "feature:a" to emptyList(),
+                "feature:b" to listOf("feature:a"), // Forbidden
+                "component:a" to listOf("component:b"), // Forbidden
+                "component:b" to listOf("feature:a") // Forbidden
+            ),
+            groupingThreshold = 3,
+            config = listOf(
+                GraphConfig.ForbiddenDependency("feature:*", "feature:*"),
+                GraphConfig.ForbiddenDependency("component:*", "component:*"),
+                GraphConfig.ForbiddenDependency("component:*", "feature:*"),
+            )
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                app
+                feature:a
+                feature:b
+                component:a
+                component:b
+            
+            %% Dependencies
+                app --> feature:a
+                app --> feature:b
+                feature:b --> feature:a
+                component:a --> component:b
+                component:b --> feature:a
+            
+            linkStyle 2 stroke:red,stroke-width:3px;
+            linkStyle 3 stroke:red,stroke-width:3px;
+            linkStyle 4 stroke:red,stroke-width:3px;
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `simple graph with forbidden dependency in group`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf(
+                "app" to listOf("feature:a"), // Forbidden
+                "feature:a" to emptyList(),
+                "feature:b" to emptyList(),
+                "feature:c" to emptyList()
+            ),
+            groupingThreshold = 3,
+            config = listOf(
+                GraphConfig.ForbiddenDependency("app", "feature:*")
+            )
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                app
+                subgraph groupfeature ["feature"]
+                    GROUPfeature["3 modules"]
+                end
+            
+            %% Dependencies
+                app --> groupfeature
+            
+            linkStyle 0 stroke:red,stroke-width:3px;
+        """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `graph with only one module starting at that module`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf("hello" to emptyList()),
+            startModule = "hello",
+            groupingThreshold = 3
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                hello
+            
+            %% Dependencies
+            
+            class hello start
+            classDef start fill:#a5a5b2;
         """.trimIndent()
         )
     }

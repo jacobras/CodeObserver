@@ -29,6 +29,13 @@
         - `gitHash` (TEXT)
         - `gitDate` (TEXT)
         - `graph` (TEXT) (serialized as `{ "moduleA": ["dep1", "dep2"] }`)
+    - `moduleGraphSettings`
+        - `createdAt` (LONG)
+        - `projectId` (TEXT)
+        - `type` (TEXT) (one of `deprecatedModule`, `forbiddenDependency`)
+        - `data` (TEXT)
+            - in case of `deprecatedModule` setting is a module name, e.g. `util:deprecated`.
+            - in case of `forbiddenDependency` setting is a dependency, e.g. `* -> moduleB` or `moduleA -> *`.
     - `projects`
         - `projectId` (TEXT)
         - `name` (TEXT)
@@ -76,7 +83,7 @@
             - body `{ migrationId, gitHash, gitDate, count }`
         - `DELETE /migrationProgress/{migrationId}/{gitHash}` -> deletes a single progress record.
     - Module graph:
-        - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> raw graph string.
+        - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> mermaid graph string.
     - Modules:
         - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
     - Projects:
@@ -113,7 +120,9 @@
                 - Upload each count via `POST /migrationProgress` with `{ migrationId, gitHash, gitDate, count }`.
             - Print summary.
             - Show progress updates for every 1000 files.
-                - If `--server` is provided, fetch the last known `linesOfCode` for the project via `GET /metrics?projectId=...` before scanning, and use it to show an estimated progress percentage in each update.
+                - If `--server` is provided, fetch the last known `linesOfCode` for the project via
+                  `GET /metrics?projectId=...` before scanning, and use it to show an estimated progress percentage in
+                  each update.
     - `measure-gradle`
         - Arguments:
             - `--path` (folder to scan, default `.`)
@@ -178,4 +187,7 @@
         - Shows the module graph using the `DependencyGraph()` composable.
         - List to select a start module.
         - Tweakable grouping threshold and layer depth.
+    - `Module rules`
+        - Shows a data table with all module graph settings.
+        - Form to add/edit/delete module graph settings.
 - Settings screen allows editing projects.
