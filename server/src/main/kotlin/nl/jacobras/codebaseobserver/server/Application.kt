@@ -26,10 +26,10 @@ import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
 import nl.jacobras.codebaseobserver.dto.MigrationDto
-import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
 import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
 import nl.jacobras.codebaseobserver.dto.MigrationRequest
+import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingDto
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingRequest
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingUpdateRequest
@@ -52,9 +52,9 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.upsert
 import java.io.File
@@ -349,14 +349,18 @@ fun Application.module() {
             val graphConfig = transaction {
                 ModuleGraphSettingsTable.selectAll()
                     .where { ModuleGraphSettingsTable.projectId eq projectId }
-                    .mapNotNull {
-                        when (it[ModuleGraphSettingsTable.type]) {
+                    .map {
+                        when (val type = it[ModuleGraphSettingsTable.type]) {
                             "deprecatedModule" -> GraphConfig.DeprecatedModule(it[ModuleGraphSettingsTable.data])
                             "forbiddenDependency" -> {
                                 val parts = it[ModuleGraphSettingsTable.data].split(" -> ")
-                                if (parts.size == 2) GraphConfig.ForbiddenDependency(parts[0], parts[1]) else null
+                                if (parts.size == 2) {
+                                    GraphConfig.ForbiddenDependency(parts[0], parts[1])
+                                } else {
+                                    error("Invalid data format: ${it[ModuleGraphSettingsTable.data]}")
+                                }
                             }
-                            else -> null
+                            else -> error("Unsupported type: $type")
                         }
                     }
             }
