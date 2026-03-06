@@ -11,8 +11,8 @@ internal fun TimeViewSelector(
     ContentSwitcher(
         options = TimeView.entries.map { it.label },
         selectedOption = selected.label,
-        onOptionSelected = { selected ->
-            onSelect(TimeView.entries.first { it.label == selected })
+        onOptionSelected = { newSelected ->
+            onSelect(TimeView.entries.first { it.label == newSelected })
         }
     )
 }
