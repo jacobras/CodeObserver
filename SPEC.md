@@ -12,7 +12,7 @@
 - DB: SQLite (embedded).
 - Tables:
     - `metrics`
-        - `createdAt` (TEXT)
+        - `createdAt` (LONG)
         - `projectId` (TEXT)
         - `gitHash` (TEXT)
         - `gitDate` (TEXT)
@@ -34,7 +34,7 @@
         - `name` (TEXT)
     - `migrations`
         - `id` (INTEGER) (auto-incremented)
-        - `createdAt` (TEXT)
+        - `createdAt` (LONG)
         - `name` (TEXT)
         - `description` (TEXT)
         - `projectId` (TEXT)
