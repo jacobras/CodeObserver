@@ -30,6 +30,7 @@
         - `gitDate` (TEXT)
         - `graph` (TEXT) (serialized as `{ "moduleA": ["dep1", "dep2"] }`)
     - `moduleGraphSettings`
+        - `id` (INTEGER) (auto-incremented)
         - `createdAt` (LONG)
         - `projectId` (TEXT)
         - `type` (TEXT) (one of `deprecatedModule`, `forbiddenDependency`)
