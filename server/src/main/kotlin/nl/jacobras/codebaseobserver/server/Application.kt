@@ -589,6 +589,10 @@ fun Application.module() {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing data"))
                 return@post
             }
+            if (type == "deprecatedModule" && !data.contains("->")) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid data format: $data"))
+                return@post
+            }
             transaction {
                 ModuleGraphSettingsTable.insert {
                     it[ModuleGraphSettingsTable.createdAt] = Clock.System.now().epochSeconds
@@ -614,6 +618,10 @@ fun Application.module() {
             }
             if (data.isBlank()) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing data"))
+                return@patch
+            }
+            if (type == "deprecatedModule" && !data.contains("->")) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid data format: $data"))
                 return@patch
             }
             val updated = transaction {
