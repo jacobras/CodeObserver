@@ -13,23 +13,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
+import nl.jacobras.codebaseobserver.ui.chart.TimeViewSelector
 
 @Composable
 internal fun CodeCharts(
     metrics: List<CodeMetricsDto>
 ) {
     var timeView by remember { mutableStateOf(TimeView.Last7Days) }
-
-    ContentSwitcher(
-        options = TimeView.entries.map { it.label },
-        selectedOption = timeView.label,
-        onOptionSelected = { selected ->
-            timeView = TimeView.entries.first { it.label == selected }
-        }
+    TimeViewSelector(
+        selected = timeView,
+        onSelect = { timeView = it }
     )
     Spacer(Modifier.height(16.dp))
 
