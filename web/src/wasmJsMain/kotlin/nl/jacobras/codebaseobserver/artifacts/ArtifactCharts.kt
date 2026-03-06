@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,8 @@ import io.ktor.client.request.get
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.ui.chart.VersionChart
+import nl.jacobras.codebaseobserver.ui.table.DataTable
+import nl.jacobras.humanreadable.HumanReadable
 
 @Composable
 internal fun ArtifactCharts(
@@ -61,25 +64,68 @@ internal fun ArtifactCharts(
         Spacer(Modifier.height(16.dp))
     }
 
+    ArtifactDetail(
+        allArtifactSizes = artifactSizes,
+        artifactName = selectedArtifact
+    )
+}
+
+@Composable
+private fun ArtifactDetail(
+    allArtifactSizes: List<ArtifactSizeDto>,
+    artifactName: String
+) {
+    val artifactSizesOldestFirst = allArtifactSizes
+        .filter { it.name == artifactName }
+        .sortedWith { a, b ->
+            val a = a.semVer.toVersion()
+            val b = b.semVer.toVersion()
+            a.compareTo(b)
+        }
+    val artifactSizesNewestFirst = artifactSizesOldestFirst.reversed()
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         VersionChart(
             title = "Artifact size",
-            records = artifactSizes
-                .filter { it.name == selectedArtifact }
-                .sortedWith { a, b ->
-                    val a = a.semVer.toVersion()
-                    val b = b.semVer.toVersion()
-                    a.compareTo(b)
-                },
+            records = artifactSizesOldestFirst,
             versionField = { it.semVer.toVersion() },
             metricField = { it.size },
             color = ChartColor.Goldenrod,
             modifier = Modifier
                 .weight(1f)
                 .height(240.dp)
+        )
+        DataTable(
+            modifier = Modifier.weight(1f),
+            columnHeadings = listOf("Artifact", "Version", "Size"),
+            rowCount = artifactSizesNewestFirst.size,
+            cellContent = { rowIndex, columnIndex, modifier ->
+                val item = artifactSizesNewestFirst[rowIndex]
+                when (columnIndex) {
+                    0 -> SelectionContainer(modifier) {
+                        BasicText(
+                            text = item.name,
+                            style = Carbon.typography.body02,
+                            modifier = modifier
+                        )
+                    }
+                    1 -> SelectionContainer(modifier) {
+                        BasicText(
+                            text = item.semVer,
+                            style = Carbon.typography.code02,
+                        )
+                    }
+                    2 -> SelectionContainer(modifier) {
+                        BasicText(
+                            text = HumanReadable.fileSize(item.size, decimals = 1),
+                            style = Carbon.typography.body02,
+                        )
+                    }
+                }
+            }
         )
     }
 }
