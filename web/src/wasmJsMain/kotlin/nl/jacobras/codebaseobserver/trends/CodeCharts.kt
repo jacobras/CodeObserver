@@ -35,7 +35,7 @@ internal fun CodeCharts(
     ) {
         TimeChart(
             title = "Lines of code",
-            records = metrics,
+            records = metrics.filter { it.linesOfCode > 0 },
             dateField = { it.gitDate },
             metricField = { it.linesOfCode },
             timeView = timeView,
@@ -46,7 +46,7 @@ internal fun CodeCharts(
         )
         TimeChart(
             title = "Module count",
-            records = metrics,
+            records = metrics.filter { it.moduleCount > 0 },
             dateField = { it.gitDate },
             metricField = { it.moduleCount },
             timeView = timeView,
@@ -57,7 +57,7 @@ internal fun CodeCharts(
         )
         TimeChart(
             title = "Module tree height",
-            records = metrics,
+            records = metrics.filter { it.moduleTreeHeight > 0 },
             dateField = { it.gitDate },
             metricField = { it.moduleTreeHeight },
             timeView = timeView,
