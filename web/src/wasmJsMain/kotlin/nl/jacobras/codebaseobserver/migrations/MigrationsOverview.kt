@@ -90,7 +90,11 @@ fun MigrationsOverview(
                 label = "Rule",
                 value = formRule,
                 onValueChange = { formRule = it },
-                placeholderText = if (formType == "moduleUsage") "util:deprecated" else "com.example.lib.Foo"
+                placeholderText = if (formType == "moduleUsage") {
+                    "util:deprecated"
+                } else {
+                    "com.example.lib.Foo or com.example.*"
+                }
             )
         }
         Spacer(Modifier.height(12.dp))
