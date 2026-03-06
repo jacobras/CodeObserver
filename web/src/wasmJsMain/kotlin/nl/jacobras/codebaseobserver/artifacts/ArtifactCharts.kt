@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,7 +14,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
+import com.gabrieldrn.carbon.Carbon
+import com.gabrieldrn.carbon.tab.TabItem
+import com.gabrieldrn.carbon.tab.TabList
 import io.github.z4kn4fein.semver.toVersion
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.ui.chart.VersionChart
@@ -22,14 +25,27 @@ import nl.jacobras.codebaseobserver.ui.chart.VersionChart
 internal fun ArtifactCharts(
     artifactSizes: List<ArtifactSizeDto>
 ) {
+    if (artifactSizes.isEmpty()) {
+        BasicText(
+            modifier = Modifier.fillMaxWidth(),
+            text = "No artifacts found",
+            style = Carbon.typography.body02
+        )
+        return
+    }
+
     val artifacts = artifactSizes.map { it.name }.distinct()
-    var selectedArtifact by remember { mutableStateOf(artifacts.firstOrNull() ?: "") }
+    var selectedArtifact by remember { mutableStateOf(artifacts.first()) }
 
     if (artifacts.size > 1) {
-        ContentSwitcher(
-            options = artifacts,
-            selectedOption = selectedArtifact,
-            onOptionSelected = { selected -> selectedArtifact = selected }
+        val tabs = artifacts.map { TabItem(label = it) }
+
+        TabList(
+            tabs = tabs,
+            selectedTab = tabs.first { it.label == selectedArtifact },
+            onTabSelected = { tab ->
+                selectedArtifact = artifacts.first { it == tab.label }
+            }
         )
         Spacer(Modifier.height(16.dp))
     }
