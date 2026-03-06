@@ -2,6 +2,7 @@ package nl.jacobras.codebaseobserver
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
@@ -22,22 +23,18 @@ import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import com.gabrieldrn.carbon.tab.TabVariant
 import io.ktor.client.HttpClient
-import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
-import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
-import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
+import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.migrations.Migrations
 import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
 import nl.jacobras.codebaseobserver.trends.Trends
 
 @Composable
 internal fun DashboardScreen(
-    metrics: List<CodeMetricsDto>,
-    artifactSizes: List<ArtifactSizeDto>,
     error: String?,
     projects: List<ProjectDto>,
     selectedProjectId: String,
     onSelectProject: (String) -> Unit,
-    onDelete: (CodeMetricsDto) -> Unit,
     client: HttpClient
 ) {
     Column {
@@ -64,7 +61,7 @@ internal fun DashboardScreen(
         )
         Spacer(Modifier.height(16.dp))
 
-        var selectedTab by remember { mutableStateOf(DashboardTab.Trends) }
+        var selectedTab by remember { mutableStateOf(DashboardTab.CodeTrends) }
         val tabs = DashboardTab.entries.map { TabItem(label = it.displayName) }
         TabList(
             tabs = tabs,
@@ -87,25 +84,32 @@ internal fun DashboardScreen(
                         style = Carbon.typography.body02.copy(color = Carbon.theme.supportError)
                     )
                 }
-                if (metrics.isEmpty() && artifactSizes.isEmpty()) {
+                if (selectedProjectId.isEmpty()) {
                     BasicText(
-                        text = "No data yet. Submit via the CLI.",
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Select a project to see the dashboard",
                         style = Carbon.typography.body02
                     )
-                } else {
-                    when (selectedTab) {
-                        DashboardTab.Trends -> Trends(
-                            metrics = metrics,
-                            onDelete = onDelete
-                        )
-                        DashboardTab.Artifacts -> ArtifactCharts(
-                            artifactSizes = artifactSizes
-                        )
-                        DashboardTab.ModuleGraph -> DependencyGraph(
-                            projectId = selectedProjectId,
-                            client = client
-                        )
-                    }
+                    return@Column
+                }
+
+                when (selectedTab) {
+                    DashboardTab.CodeTrends -> Trends(
+                        client = client,
+                        projectId = selectedProjectId
+                    )
+                    DashboardTab.Artifacts -> ArtifactCharts(
+                        client = client,
+                        projectId = selectedProjectId
+                    )
+                    DashboardTab.Migrations -> Migrations(
+                        client = client,
+                        projectId = selectedProjectId
+                    )
+                    DashboardTab.ModuleGraph -> DependencyGraph(
+                        client = client,
+                        projectId = selectedProjectId
+                    )
                 }
             }
         }

@@ -12,7 +12,7 @@
 - DB: SQLite (embedded).
 - Tables:
     - `metrics`
-        - `createdAt` (TEXT)
+        - `createdAt` (LONG)
         - `projectId` (TEXT)
         - `gitHash` (TEXT)
         - `gitDate` (TEXT)
@@ -32,6 +32,22 @@
     - `projects`
         - `projectId` (TEXT)
         - `name` (TEXT)
+    - `migrations`
+        - `id` (INTEGER) (auto-incremented)
+        - `createdAt` (LONG)
+        - `name` (TEXT)
+        - `description` (TEXT)
+        - `projectId` (TEXT)
+        - `type` (TEXT) (one of `moduleUsage`, `importUsage`)
+        - `rule` (TEXT)
+            - in case of `moduleUsage` rule is a module name, e.g. `util:deprecated`.
+            - in case of `importUsage` rule is an import, e.g. `com.example.lib.Foo`.
+                - or a wildcard, e.g. `com.example.lib.*` (matches any import under that package).
+    - `migrationProgress`
+        - `migrationId` (INTEGER) (points to `migrations` table)
+        - `gitHash` (TEXT)
+        - `gitDate` (TEXT)
+        - `count` (INT) (number of times the rule was matched)
 - Endpoints:
     - Metrics:
         - `GET /metrics?projectId=...` -> list of `CodeMetricsDto` records.
@@ -47,12 +63,25 @@
         - `GET /artifactSizes?projectId=...` -> list of records.
         - `POST /artifactSizes` -> stores artifact size.
             - body `{ projectId, name, semVer, size }`
+    - Migrations:
+        - `GET /migrations?projectId=...` -> list of all migrations.
+        - `POST /migrations` -> stores a new migration.
+            - body `{ projectId, name, description, type, rule }`
+        - `PATCH /migrations/{id}` -> updates the migration name.
+            - body `{ name, description }`
+        - `DELETE /migrations/{id}` -> deletes the migration and all its progress records.
+    - Migration progress:
+        - `GET /migrationProgress?migrationId=...` -> list of migration progress records.
+        - `POST /migrationProgress` -> stores migration progress.
+            - body `{ migrationId, gitHash, gitDate, count }`
+        - `DELETE /migrationProgress/{migrationId}/{gitHash}` -> deletes a single progress record.
     - Module graph:
         - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> raw graph string.
     - Modules:
         - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
     - Projects:
         - `GET /projects` -> list of distinct `projectId` values from `metrics`, sorted asc.
+        - `DELETE /projects/{projectId}` -> deletes the project and all associated data.
 
 ## CLI
 
@@ -78,7 +107,13 @@
             - Count lines of code in regular files under the given `path` (recursive).
             - Exclude files and folders matching the glob patterns specified in `--exclude`.
             - Send `POST /metrics/code` to server with JSON payload including `projectId`.
+            - If `--server` is provided:
+                - Fetch all `importUsage` migrations for the project via `GET /migrations?projectId=...`.
+                - For each migration, count the number of `import {rule}` statements across all scanned files.
+                - Upload each count via `POST /migrationProgress` with `{ migrationId, gitHash, gitDate, count }`.
             - Print summary.
+            - Show progress updates for every 1000 files.
+                - If `--server` is provided, fetch the last known `linesOfCode` for the project via `GET /metrics?projectId=...` before scanning, and use it to show an estimated progress percentage in each update.
     - `measure-gradle`
         - Arguments:
             - `--path` (folder to scan, default `.`)
@@ -88,6 +123,11 @@
             - Find `settings.gradle.kts` under the given `path`.
             - Count the number of Gradle modules in the project.
             - Send `POST /metrics/gradle` to server with JSON payload including `projectId`.
+            - If `--server` is provided:
+                - Fetch all `moduleUsage` migrations for the project via `GET /migrations?projectId=...`.
+                - For each migration, count the number of dependencies in the module graph that point to the migration's
+                  `rule` module.
+                - Upload each count via `POST /migrationProgress` with `{ migrationId, gitHash, gitDate, count }`.
             - Print summary.
     - `measure-artifact-size`
         - Arguments:
@@ -118,15 +158,22 @@
     - Options sourced from `GET /projects`.
     - Selected `projectId` is required for all fetches and CRUD operations.
 - Tabs for the main screens of Dashboard:
-    - `Trends`
+    - `Code trends`
         - Charts of LoC, module count and module tree height.
         - Edit records
             - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
-    - `Artifacts`
+    - `Artifact sizes`
         - Artifact size chart
             - Version chart showing artifact sizes across versions.
             - X-axis: versions (sorted using semver).
             - Y-axis: artifact size in bytes.
+    - `Migrations`
+        - Tab for each migration
+            - Chart of migration progress.
+            - Data table of migration progress.
+        - Tab "Overview" that shows all migration configurations.
+            - Data table with edit/delete functionality.
+            - Form to add new migration.
     - `Module graph`
         - Shows the module graph using the `DependencyGraph()` composable.
         - List to select a start module.

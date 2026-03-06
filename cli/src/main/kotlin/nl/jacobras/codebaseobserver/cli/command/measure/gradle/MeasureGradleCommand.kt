@@ -8,6 +8,8 @@ import kotlinx.coroutines.runBlocking
 import nl.jacobras.codebaseobserver.cli.util.GitInfoCollector
 import nl.jacobras.codebaseobserver.cli.util.ServerUploader
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
+import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -43,10 +45,12 @@ class MeasureGradleCommand internal constructor(
         }
 
         serverUrl?.let { url ->
+            val gitHash = GitInfoCollector.getGitHash(targetPath)
+            val gitDate = GitInfoCollector.getGitDate(targetPath)
             val payload = GradleMetricsRequest(
                 projectId = projectId,
-                gitHash = GitInfoCollector.getGitHash(targetPath),
-                gitDate = GitInfoCollector.getGitDate(targetPath),
+                gitHash = gitHash,
+                gitDate = gitDate,
                 moduleCount = moduleCount,
                 moduleTreeHeight = moduleTreeHeight,
                 graph = graphInfo.graph
@@ -57,6 +61,25 @@ class MeasureGradleCommand internal constructor(
                     endpoint = "metrics/gradle",
                     payload = payload
                 )
+                val migrations = uploader.fetch<List<MigrationDto>>(
+                    serverUrl = url,
+                    endpoint = "migrations?projectId=$projectId"
+                )
+                migrations
+                    .filter { it.type == "moduleUsage" }
+                    .forEach { migration ->
+                        val count = graphInfo.graph.values.count { deps -> migration.rule in deps }
+                        uploader.upload(
+                            serverUrl = url,
+                            endpoint = "migrationProgress",
+                            payload = MigrationProgressRequest(
+                                migrationId = migration.id,
+                                gitHash = gitHash,
+                                gitDate = gitDate,
+                                count = count
+                            )
+                        )
+                    }
             }
         }
     }

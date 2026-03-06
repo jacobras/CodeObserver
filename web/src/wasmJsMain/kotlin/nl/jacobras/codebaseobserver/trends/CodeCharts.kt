@@ -11,25 +11,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import nl.jacobras.codebaseobserver.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
+import nl.jacobras.codebaseobserver.ui.chart.TimeViewSelector
 
 @Composable
 internal fun CodeCharts(
     metrics: List<CodeMetricsDto>
 ) {
     var timeView by remember { mutableStateOf(TimeView.Last7Days) }
-
-    ContentSwitcher(
-        options = TimeView.entries.map { it.label },
-        selectedOption = timeView.label,
-        onOptionSelected = { selected ->
-            timeView = TimeView.entries.first { it.label == selected }
-        }
+    TimeViewSelector(
+        selected = timeView,
+        onSelect = { timeView = it }
     )
     Spacer(Modifier.height(16.dp))
 
@@ -39,33 +35,33 @@ internal fun CodeCharts(
     ) {
         TimeChart(
             title = "Lines of code",
-            records = metrics,
+            records = metrics.filter { it.linesOfCode > 0 },
             dateField = { it.gitDate },
             metricField = { it.linesOfCode },
             timeView = timeView,
-            color = Color(0xFF2A9D8F),
+            color = ChartColor.PersianGreen,
             modifier = Modifier
                 .weight(1f)
                 .height(240.dp)
         )
         TimeChart(
             title = "Module count",
-            records = metrics,
+            records = metrics.filter { it.moduleCount > 0 },
             dateField = { it.gitDate },
             metricField = { it.moduleCount },
             timeView = timeView,
-            color = Color(0xFFE76F51),
+            color = ChartColor.BurntSienna,
             modifier = Modifier
                 .weight(1f)
                 .height(240.dp)
         )
         TimeChart(
             title = "Module tree height",
-            records = metrics,
+            records = metrics.filter { it.moduleTreeHeight > 0 },
             dateField = { it.gitDate },
             metricField = { it.moduleTreeHeight },
             timeView = timeView,
-            color = Color(0xFF264653),
+            color = ChartColor.Charcoal,
             modifier = Modifier
                 .weight(1f)
                 .height(240.dp)

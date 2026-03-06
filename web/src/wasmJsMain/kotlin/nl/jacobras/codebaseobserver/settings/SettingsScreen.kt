@@ -57,14 +57,14 @@ internal fun SettingsScreen(
                 label = "Project ID",
                 value = editProjectId,
                 onValueChange = { editProjectId = it },
-                placeholderText = "example: my-app"
+                placeholderText = "my-app"
             )
             Spacer(Modifier.height(8.dp))
             TextInput(
                 label = "Display name",
                 value = editName,
                 onValueChange = { editName = it },
-                placeholderText = "example: My App"
+                placeholderText = "My App"
             )
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

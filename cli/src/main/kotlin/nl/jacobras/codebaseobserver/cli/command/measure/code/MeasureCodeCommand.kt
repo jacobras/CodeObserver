@@ -7,7 +7,10 @@ import com.github.ajalt.clikt.parameters.options.required
 import kotlinx.coroutines.runBlocking
 import nl.jacobras.codebaseobserver.cli.util.GitInfoCollector
 import nl.jacobras.codebaseobserver.cli.util.ServerUploader
+import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
+import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -45,42 +48,83 @@ class MeasureCodeCommand internal constructor(
         val includePatterns = include.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         val excludePatterns = exclude.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-        val linesOfCode = countLinesOfCode(targetPath, includePatterns, excludePatterns)
+        var lastKnownLines: Int? = null
+        var migrations: List<MigrationDto> = emptyList()
+
+        serverUrl?.let { url ->
+            runBlocking {
+                try {
+                    val metrics = uploader.fetch<List<CodeMetricsDto>>(
+                        serverUrl = url,
+                        endpoint = "metrics?projectId=$projectId"
+                    )
+                    lastKnownLines = metrics.maxByOrNull { it.gitDate }?.linesOfCode
+                } catch (_: Exception) {
+                }
+                migrations = uploader.fetch<List<MigrationDto>>(
+                    serverUrl = url,
+                    endpoint = "migrations?projectId=$projectId"
+                )
+            }
+        }
+
+        val importRules = migrations.filter { it.type == "importUsage" }.map { it.rule }
+        val (linesOfCode, importCounts) = scanFiles(
+            root = targetPath,
+            includePatterns = includePatterns,
+            excludePatterns = excludePatterns,
+            importRules = importRules,
+            lastKnownLines = lastKnownLines
+        )
         println("Counted $linesOfCode lines of code in $targetPath")
 
         serverUrl?.let { url ->
-            val payload = CodeMetricsRequest(
-                projectId = projectId,
-                gitHash = GitInfoCollector.getGitHash(targetPath),
-                gitDate = GitInfoCollector.getGitDate(targetPath),
-                linesOfCode = linesOfCode
-            )
+            val gitHash = GitInfoCollector.getGitHash(targetPath)
+            val gitDate = GitInfoCollector.getGitDate(targetPath)
             runBlocking {
                 uploader.upload(
                     serverUrl = url,
                     endpoint = "metrics/code",
-                    payload = payload
+                    payload = CodeMetricsRequest(
+                        projectId = projectId,
+                        gitHash = gitHash,
+                        gitDate = gitDate,
+                        linesOfCode = linesOfCode
+                    )
                 )
+                migrations
+                    .filter { it.type == "importUsage" }
+                    .forEach { migration ->
+                        uploader.upload(
+                            serverUrl = url,
+                            endpoint = "migrationProgress",
+                            payload = MigrationProgressRequest(
+                                migrationId = migration.id,
+                                gitHash = gitHash,
+                                gitDate = gitDate,
+                                count = importCounts[migration.rule] ?: 0
+                            )
+                        )
+                    }
             }
         }
     }
 
-    private fun countLinesOfCode(
+    private fun scanFiles(
         root: Path,
         includePatterns: List<String>,
-        excludePatterns: List<String>
-    ): Int {
-        if (!Files.exists(root)) return 0
+        excludePatterns: List<String>,
+        importRules: List<String>,
+        lastKnownLines: Int? = null
+    ): ScanResult {
+        if (!Files.exists(root)) return ScanResult(0, emptyMap())
 
-        val includeMatchers = includePatterns.map { pattern ->
-            FileSystems.getDefault().getPathMatcher("glob:$pattern")
-        }
-        val excludeMatchers = excludePatterns.map { pattern ->
-            FileSystems.getDefault().getPathMatcher("glob:$pattern")
-        }
+        val includeMatchers = includePatterns.map { FileSystems.getDefault().getPathMatcher("glob:$it") }
+        val excludeMatchers = excludePatterns.map { FileSystems.getDefault().getPathMatcher("glob:$it") }
 
         var totalLines = 0
         var filesProcessed = 0
+        val importCounts = importRules.associateWith { 0 }.toMutableMap()
 
         Files.walk(root).use { stream ->
             stream.asSequence()
@@ -90,17 +134,28 @@ class MeasureCodeCommand internal constructor(
                             excludeMatchers.none { it.matches(path) }
                 }
                 .forEach { filePath ->
-                    val lines = Files.lines(filePath).use { it.count().toInt() }
-                    totalLines += lines
+                    val text = Files.readString(filePath)
+                    totalLines += text.lines().size
+                    if (importRules.isNotEmpty()) {
+                        ImportCounter.count(text, importRules).forEach { (rule, count) ->
+                            importCounts[rule] = importCounts[rule]!! + count
+                        }
+                    }
                     filesProcessed++
 
-                    if (filesProcessed % 1000 == 0) {
-                        println("Processed $filesProcessed files...")
+                    if (filesProcessed % 1_000 == 0) {
+                        val progressSuffix = if (lastKnownLines != null && lastKnownLines > 0) {
+                            val pct = (totalLines * 100 / lastKnownLines).coerceAtMost(99)
+                            " (~$pct%)"
+                        } else ""
+                        println("Processed $filesProcessed files...$progressSuffix")
                     }
                 }
         }
 
         println("Finished processing $filesProcessed files.")
-        return totalLines
+        return ScanResult(totalLines, importCounts)
     }
 }
+
+private data class ScanResult(val linesOfCode: Int, val importCounts: Map<String, Int>)

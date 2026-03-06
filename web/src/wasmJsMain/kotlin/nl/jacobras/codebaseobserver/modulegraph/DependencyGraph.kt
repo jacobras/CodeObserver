@@ -42,11 +42,10 @@ import org.w3c.dom.HTMLIFrameElement
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DependencyGraph(
-    projectId: String,
     client: HttpClient,
-    modifier: Modifier = Modifier
+    projectId: String
 ) {
-    Column(modifier = modifier)
+    Column(modifier = Modifier)
     {
         var startModule by remember { mutableStateOf("") }
         var groupingThreshold by remember { mutableStateOf(3) }
