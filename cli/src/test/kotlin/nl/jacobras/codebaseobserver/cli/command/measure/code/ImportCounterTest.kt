@@ -87,6 +87,37 @@ class ImportCounterTest {
     }
 
     @Test
+    fun `wildcard rule matches import under that package`() {
+        val text = "import androidx.compose.material3.Card"
+        val counts = ImportCounter.count(text, listOf("androidx.compose.material3.*"))
+        assertThat(counts).isEqualTo(mapOf("androidx.compose.material3.*" to 1))
+    }
+
+    @Test
+    fun `wildcard rule matches multiple imports under that package`() {
+        val text = """
+            import androidx.compose.material3.Card
+            import androidx.compose.material3.Button
+        """.trimIndent()
+        val counts = ImportCounter.count(text, listOf("androidx.compose.material3.*"))
+        assertThat(counts).isEqualTo(mapOf("androidx.compose.material3.*" to 2))
+    }
+
+    @Test
+    fun `wildcard rule does not match import from sibling package`() {
+        val text = "import androidx.compose.material3extra.Card"
+        val counts = ImportCounter.count(text, listOf("androidx.compose.material3.*"))
+        assertThat(counts).isEqualTo(mapOf("androidx.compose.material3.*" to 0))
+    }
+
+    @Test
+    fun `wildcard rule does not match parent package`() {
+        val text = "import androidx.compose.material3"
+        val counts = ImportCounter.count(text, listOf("androidx.compose.material3.*"))
+        assertThat(counts).isEqualTo(mapOf("androidx.compose.material3.*" to 0))
+    }
+
+    @Test
     fun `extractImportPath returns null for non-import line`() {
         assertThat(ImportCounter.extractImportPath("class Foo")).isNull()
         assertThat(ImportCounter.extractImportPath("")).isNull()

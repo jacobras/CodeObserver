@@ -42,6 +42,7 @@
         - `rule` (TEXT)
             - in case of `moduleUsage` rule is a module name, e.g. `util:deprecated`.
             - in case of `importUsage` rule is an import, e.g. `com.example.lib.Foo`.
+                - or a wildcard, e.g. `com.example.lib.*` (matches any import under that package).
     - `migrationProgress`
         - `migrationId` (INTEGER) (points to `migrations` table)
         - `gitHash` (TEXT)

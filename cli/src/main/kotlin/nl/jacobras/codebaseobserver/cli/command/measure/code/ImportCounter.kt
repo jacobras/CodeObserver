@@ -10,9 +10,19 @@ internal object ImportCounter {
         val counts = rules.associateWith { 0 }.toMutableMap()
         text.lineSequence().forEach { line ->
             val importPath = extractImportPath(line.trim()) ?: return@forEach
-            if (importPath in counts) counts[importPath] = counts[importPath]!! + 1
+            for (rule in rules) {
+                if (matches(rule, importPath)) counts[rule] = counts[rule]!! + 1
+            }
         }
         return counts
+    }
+
+    private fun matches(rule: String, importPath: String): Boolean {
+        return if (rule.endsWith(".*")) {
+            importPath.startsWith(rule.removeSuffix("*"))
+        } else {
+            importPath == rule
+        }
     }
 
     /**
