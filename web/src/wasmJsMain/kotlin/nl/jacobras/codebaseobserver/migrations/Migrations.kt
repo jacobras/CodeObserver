@@ -106,6 +106,8 @@ private fun MigrationDetail(
             url { parameters.append("migrationId", migration.id.toString()) }
         }.body()
     }
+    val progressOldestFirst = progress.sortedBy { it.gitDate }
+    val progressNewestFirst = progressOldestFirst.reversed()
 
     if (progress.isEmpty()) {
         BasicText(
@@ -130,7 +132,7 @@ private fun MigrationDetail(
         TimeChart(
             modifier = Modifier.weight(1f),
             title = "Usages",
-            records = progress,
+            records = progressOldestFirst,
             dateField = { it.gitDate },
             metricField = { it.count },
             timeView = timeView,
@@ -139,9 +141,9 @@ private fun MigrationDetail(
         DataTable(
             modifier = Modifier.weight(1f),
             columnHeadings = listOf("Git hash", "Date", "Count"),
-            rowCount = progress.size,
+            rowCount = progressNewestFirst.size,
             cellContent = { rowIndex, columnIndex, modifier ->
-                val item = progress[rowIndex]
+                val item = progressNewestFirst[rowIndex]
                 when (columnIndex) {
                     0 -> SelectionContainer(modifier) {
                         BasicText(

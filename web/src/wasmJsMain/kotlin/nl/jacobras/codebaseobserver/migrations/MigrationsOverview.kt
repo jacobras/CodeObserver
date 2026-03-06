@@ -38,7 +38,7 @@ import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
 import nl.jacobras.codebaseobserver.ui.table.DataTable
 
 @Composable
-fun MigrationsOverview(
+internal fun MigrationsOverview(
     client: HttpClient,
     projectId: String,
     migrations: List<MigrationDto>,

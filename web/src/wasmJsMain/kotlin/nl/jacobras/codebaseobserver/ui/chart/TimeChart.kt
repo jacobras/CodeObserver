@@ -178,6 +178,7 @@ private fun <T> List<T>.filter(
     val rangeStart: Instant = when (timeView) {
         TimeView.Last7Days -> now.minus(7.days)
         TimeView.Last30Days -> now.minus(30.days)
+        TimeView.Last3Months -> now.minus(90.days)
         TimeView.Last6Months -> now.minus(180.days)
         TimeView.Last12Months -> now.minus(365.days)
     }
@@ -199,6 +200,7 @@ private fun TimeView.getRange(): Pair<Instant, Instant> {
     val start = when (this) {
         TimeView.Last7Days -> now.minus(7.days)
         TimeView.Last30Days -> now.minus(30.days)
+        TimeView.Last3Months -> now.minus(90.days)
         TimeView.Last6Months -> now.minus(180.days)
         TimeView.Last12Months -> now.minus(365.days)
     }.plus(1.days)
