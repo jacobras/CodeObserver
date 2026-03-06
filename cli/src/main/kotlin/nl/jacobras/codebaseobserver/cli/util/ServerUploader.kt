@@ -3,6 +3,7 @@ package nl.jacobras.codebaseobserver.cli.util
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -16,6 +17,8 @@ import kotlinx.serialization.json.Json
 
 internal class ServerUploader {
 
+    private val json = Json { ignoreUnknownKeys = true }
+
     suspend fun upload(
         serverUrl: String,
         endpoint: String,
@@ -23,7 +26,7 @@ internal class ServerUploader {
     ) {
         val client = HttpClient(CIO) {
             install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
+                json(json)
             }
         }
         val response = client.post("${serverUrl.trimEnd('/')}/$endpoint") {
@@ -38,5 +41,24 @@ internal class ServerUploader {
             "Error uploading: $statusCode - $responseBody"
         }
         println("Server response: $statusCode - $responseBody")
+    }
+
+    suspend inline fun <reified T> fetch(
+        serverUrl: String,
+        endpoint: String
+    ): T {
+        val client = HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json(json)
+            }
+        }
+        val response = client.get("${serverUrl.trimEnd('/')}/$endpoint")
+        client.close()
+        val statusCode = response.status.value
+        val responseBody = response.bodyAsText()
+        require(response.status.isSuccess()) {
+            "Error fetching: $statusCode - $responseBody"
+        }
+        return json.decodeFromString(responseBody)
     }
 }

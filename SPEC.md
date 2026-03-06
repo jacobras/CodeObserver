@@ -39,7 +39,7 @@
         - `projectId` (TEXT)
         - `type` (TEXT) (one of `moduleUsage`, `importUsage`)
         - `rule` (TEXT)
-            - in case of `moduleUsage` rule is a module name.
+            - in case of `moduleUsage` rule is a module name, e.g. `util:deprecated`.
             - in case of `importUsage` rule is an import, e.g. `com.example.lib.Foo`.
     - `migrationProgress`
         - `migrationId` (INTEGER) (points to `migrations` table)
@@ -115,6 +115,10 @@
             - Find `settings.gradle.kts` under the given `path`.
             - Count the number of Gradle modules in the project.
             - Send `POST /metrics/gradle` to server with JSON payload including `projectId`.
+            - If `--server` is provided:
+                - Fetch all `moduleUsage` migrations for the project via `GET /migrations?projectId=...`.
+                - For each migration, count the number of dependencies in the module graph that point to the migration's `rule` module.
+                - Upload each count via `POST /migrationProgress` with `{ migrationId, gitHash, gitDate, count }`.
             - Print summary.
     - `measure-artifact-size`
         - Arguments:
