@@ -112,6 +112,8 @@
                 - For each migration, count the number of `import {rule}` statements across all scanned files.
                 - Upload each count via `POST /migrationProgress` with `{ migrationId, gitHash, gitDate, count }`.
             - Print summary.
+            - Show progress updates for every 1000 files.
+                - If `--server` is provided, fetch the last known `linesOfCode` for the project via `GET /metrics?projectId=...` before scanning, and use it to show an estimated progress percentage in each update.
     - `measure-gradle`
         - Arguments:
             - `--path` (folder to scan, default `.`)

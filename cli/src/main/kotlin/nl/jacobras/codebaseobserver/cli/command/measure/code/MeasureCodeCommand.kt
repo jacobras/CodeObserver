@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.required
 import kotlinx.coroutines.runBlocking
 import nl.jacobras.codebaseobserver.cli.util.GitInfoCollector
 import nl.jacobras.codebaseobserver.cli.util.ServerUploader
+import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.MigrationDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
@@ -47,7 +48,21 @@ class MeasureCodeCommand internal constructor(
         val includePatterns = include.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         val excludePatterns = exclude.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-        val (linesOfCode, importCounts) = scanFiles(targetPath, includePatterns, excludePatterns)
+        val lastKnownLines: Int? = serverUrl?.let { url ->
+            runBlocking {
+                try {
+                    val metrics = uploader.fetch<List<CodeMetricsDto>>(
+                        serverUrl = url,
+                        endpoint = "metrics?projectId=$projectId"
+                    )
+                    metrics.maxByOrNull { it.gitDate }?.linesOfCode
+                } catch (_: Exception) {
+                    null
+                }
+            }
+        }
+
+        val (linesOfCode, importCounts) = scanFiles(targetPath, includePatterns, excludePatterns, lastKnownLines)
         println("Counted $linesOfCode lines of code in $targetPath")
 
         serverUrl?.let { url ->
@@ -90,7 +105,8 @@ class MeasureCodeCommand internal constructor(
     private fun scanFiles(
         root: Path,
         includePatterns: List<String>,
-        excludePatterns: List<String>
+        excludePatterns: List<String>,
+        lastKnownLines: Int? = null
     ): ScanResult {
         if (!Files.exists(root)) return ScanResult(0, emptyMap())
 
@@ -119,7 +135,11 @@ class MeasureCodeCommand internal constructor(
                     filesProcessed++
 
                     if (filesProcessed % 1_000 == 0) {
-                        println("Processed $filesProcessed files...")
+                        val progressSuffix = if (lastKnownLines != null && lastKnownLines > 0) {
+                            val pct = (totalLines * 100 / lastKnownLines).coerceAtMost(99)
+                            " (~$pct%)"
+                        } else ""
+                        println("Processed $filesProcessed files...$progressSuffix")
                     }
                 }
         }
