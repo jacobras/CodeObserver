@@ -121,7 +121,8 @@
             - Send `POST /metrics/gradle` to server with JSON payload including `projectId`.
             - If `--server` is provided:
                 - Fetch all `moduleUsage` migrations for the project via `GET /migrations?projectId=...`.
-                - For each migration, count the number of dependencies in the module graph that point to the migration's `rule` module.
+                - For each migration, count the number of dependencies in the module graph that point to the migration's
+                  `rule` module.
                 - Upload each count via `POST /migrationProgress` with `{ migrationId, gitHash, gitDate, count }`.
             - Print summary.
     - `measure-artifact-size`
@@ -153,15 +154,22 @@
     - Options sourced from `GET /projects`.
     - Selected `projectId` is required for all fetches and CRUD operations.
 - Tabs for the main screens of Dashboard:
-    - `Trends`
+    - `Code trends`
         - Charts of LoC, module count and module tree height.
         - Edit records
             - Delete: remove row by `projectId` + `gitHash` -> `DELETE /metrics/{gitHash}`.
-    - `Artifacts`
+    - `Artifact sizes`
         - Artifact size chart
             - Version chart showing artifact sizes across versions.
             - X-axis: versions (sorted using semver).
             - Y-axis: artifact size in bytes.
+    - `Migrations`
+        - Tab for each migration
+            - Chart of migration progress.
+            - Data table of migration progress.
+        - Tab "Overview" that shows all migration configurations.
+            - Data table with edit/delete functionality.
+            - Form to add new migration.
     - `Module graph`
         - Shows the module graph using the `DependencyGraph()` composable.
         - List to select a start module.
