@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
@@ -24,7 +27,8 @@ internal fun Trends(
     client: HttpClient,
     projectId: String
 ) {
-    val metrics by produceState(emptyList<CodeMetricsDto>(), projectId) {
+    var refreshKey by remember { mutableIntStateOf(0) }
+    val metrics by produceState(emptyList<CodeMetricsDto>(), projectId, refreshKey) {
         value = client.get("/metrics") {
             url { parameters.append("projectId", projectId) }
         }.body()
@@ -50,6 +54,7 @@ internal fun Trends(
                     client.delete("/metrics/${record.gitHash}") {
                         url { parameters.append("projectId", projectId) }
                     }
+                    refreshKey++
                 }
             }
         )
