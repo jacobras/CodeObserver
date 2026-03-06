@@ -26,7 +26,7 @@ import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
 import nl.jacobras.codebaseobserver.dto.MigrationDto
-import nl.jacobras.codebaseobserver.dto.MigrationNameRequest
+import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
 import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
 import nl.jacobras.codebaseobserver.dto.MigrationRequest
@@ -402,6 +402,7 @@ fun Application.module() {
                             id = it[MigrationsTable.id],
                             createdAt = Instant.fromEpochSeconds(it[MigrationsTable.createdAt]),
                             name = it[MigrationsTable.name],
+                            description = it[MigrationsTable.description],
                             projectId = it[MigrationsTable.projectId],
                             type = it[MigrationsTable.type],
                             rule = it[MigrationsTable.rule]
@@ -449,8 +450,9 @@ fun Application.module() {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))
                 return@patch
             }
-            val request = call.receive<MigrationNameRequest>()
+            val request = call.receive<MigrationUpdateRequest>()
             val name = request.name.trim()
+            val description = request.description.trim()
             if (name.isBlank()) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
                 return@patch
@@ -458,6 +460,7 @@ fun Application.module() {
             val updated = transaction {
                 MigrationsTable.update({ MigrationsTable.id eq id }) {
                     it[MigrationsTable.name] = name
+                    it[MigrationsTable.description] = description
                 }
             }
             if (updated == 0) {

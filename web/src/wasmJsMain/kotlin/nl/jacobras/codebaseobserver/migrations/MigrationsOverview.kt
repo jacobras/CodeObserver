@@ -33,14 +33,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.MigrationDto
-import nl.jacobras.codebaseobserver.dto.MigrationNameRequest
 import nl.jacobras.codebaseobserver.dto.MigrationRequest
+import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
 import nl.jacobras.codebaseobserver.ui.table.DataTable
-
-private val migrationTypes = linkedMapOf(
-    "moduleUsage" to DropdownOption("moduleUsage"),
-    "importUsage" to DropdownOption("importUsage")
-)
 
 @Composable
 fun MigrationsOverview(
@@ -52,6 +47,7 @@ fun MigrationsOverview(
     val scope = rememberCoroutineScope()
     var editingId by remember { mutableStateOf<Int?>(null) }
     var formName by remember { mutableStateOf("") }
+    var formDescription by remember { mutableStateOf("") }
     var formType by remember { mutableStateOf("moduleUsage") }
     var formRule by remember { mutableStateOf("") }
 
@@ -60,6 +56,7 @@ fun MigrationsOverview(
     fun clearForm() {
         editingId = null
         formName = ""
+        formDescription = ""
         formType = "moduleUsage"
         formRule = ""
     }
@@ -70,6 +67,13 @@ fun MigrationsOverview(
             value = formName,
             onValueChange = { formName = it },
             placeholderText = "Remove deprecated module"
+        )
+        Spacer(Modifier.height(8.dp))
+        TextInput(
+            label = "Description",
+            value = formDescription,
+            onValueChange = { formDescription = it },
+            placeholderText = "Optional description"
         )
         if (!isEditing) {
             Spacer(Modifier.height(8.dp))
@@ -92,7 +96,7 @@ fun MigrationsOverview(
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
-                label = if (isEditing) "Update name" else "Add migration",
+                label = if (isEditing) "Update" else "Add migration",
                 buttonType = ButtonType.Primary,
                 buttonSize = ButtonSize.Small,
                 isEnabled = formName.trim().isNotEmpty() && (isEditing || formRule.trim().isNotEmpty()),
@@ -102,7 +106,12 @@ fun MigrationsOverview(
                         if (id != null) {
                             client.patch("/migrations/$id") {
                                 contentType(ContentType.Application.Json)
-                                setBody(MigrationNameRequest(name = formName.trim()))
+                                setBody(
+                                    MigrationUpdateRequest(
+                                        name = formName.trim(),
+                                        description = formDescription.trim()
+                                    )
+                                )
                             }
                         } else {
                             client.post("/migrations") {
@@ -111,6 +120,7 @@ fun MigrationsOverview(
                                     MigrationRequest(
                                         projectId = projectId,
                                         name = formName.trim(),
+                                        description = formDescription.trim(),
                                         type = formType,
                                         rule = formRule.trim()
                                     )
@@ -126,7 +136,7 @@ fun MigrationsOverview(
                 label = "Clear",
                 buttonType = ButtonType.Tertiary,
                 buttonSize = ButtonSize.Small,
-                isEnabled = formName.isNotEmpty() || formRule.isNotEmpty() || isEditing,
+                isEnabled = formName.isNotEmpty() || formDescription.isNotEmpty() || formRule.isNotEmpty() || isEditing,
                 onClick = { clearForm() }
             )
         }
@@ -173,6 +183,7 @@ fun MigrationsOverview(
                                 onClick = {
                                     editingId = migration.id
                                     formName = migration.name
+                                    formDescription = migration.description
                                     formType = migration.type
                                     formRule = migration.rule
                                 }
@@ -195,3 +206,8 @@ fun MigrationsOverview(
         }
     }
 }
+
+private val migrationTypes = linkedMapOf(
+    "moduleUsage" to DropdownOption("moduleUsage"),
+    "importUsage" to DropdownOption("importUsage")
+)

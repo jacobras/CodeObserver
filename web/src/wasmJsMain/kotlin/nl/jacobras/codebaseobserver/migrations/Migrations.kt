@@ -89,6 +89,14 @@ private fun MigrationDetail(
             }
         }
     )
+    if (migration.description.isNotBlank()) {
+        Spacer(Modifier.height(8.dp))
+        BasicText(
+            modifier = Modifier.fillMaxWidth(),
+            text = migration.description,
+            style = Carbon.typography.body01
+        )
+    }
     Spacer(Modifier.height(32.dp))
 
     val progress by produceState(emptyList<MigrationProgressDto>(), migration.id) {

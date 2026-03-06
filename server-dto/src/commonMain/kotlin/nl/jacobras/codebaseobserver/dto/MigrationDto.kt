@@ -8,6 +8,7 @@ data class MigrationDto(
     val id: Int,
     val createdAt: Instant,
     val name: String,
+    val description: String,
     val projectId: String,
     val type: String,
     val rule: String
