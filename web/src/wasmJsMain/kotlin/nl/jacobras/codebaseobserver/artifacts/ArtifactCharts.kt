@@ -12,13 +12,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import io.github.z4kn4fein.semver.toVersion
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
+import nl.jacobras.codebaseobserver.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.ui.chart.VersionChart
 
 @Composable
@@ -65,7 +65,7 @@ internal fun ArtifactCharts(
                 },
             versionField = { it.semVer.toVersion() },
             metricField = { it.size },
-            color = Color(0xFFE9C46A),
+            color = ChartColor.Goldenrod,
             modifier = Modifier
                 .weight(1f)
                 .height(240.dp)
