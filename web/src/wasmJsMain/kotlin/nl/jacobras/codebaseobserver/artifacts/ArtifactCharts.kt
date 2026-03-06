@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -17,14 +18,24 @@ import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import io.github.z4kn4fein.semver.toVersion
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.ui.chart.VersionChart
 
 @Composable
 internal fun ArtifactCharts(
-    artifactSizes: List<ArtifactSizeDto>
+    client: HttpClient,
+    projectId: String
 ) {
+    val artifactSizes by produceState(emptyList<ArtifactSizeDto>(), projectId) {
+        value = client.get("/artifactSizes") {
+            url { parameters.append("projectId", projectId) }
+        }.body()
+    }
+
     if (artifactSizes.isEmpty()) {
         BasicText(
             modifier = Modifier.fillMaxWidth(),
@@ -34,7 +45,7 @@ internal fun ArtifactCharts(
         return
     }
 
-    val artifacts = artifactSizes.map { it.name }.distinct()
+    val artifacts = artifactSizes.map { it.name }.distinct().sortedBy { it }
     var selectedArtifact by remember { mutableStateOf(artifacts.first()) }
 
     if (artifacts.size > 1) {
