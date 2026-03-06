@@ -105,6 +105,10 @@
             - Count lines of code in regular files under the given `path` (recursive).
             - Exclude files and folders matching the glob patterns specified in `--exclude`.
             - Send `POST /metrics/code` to server with JSON payload including `projectId`.
+            - If `--server` is provided:
+                - Fetch all `importUsage` migrations for the project via `GET /migrations?projectId=...`.
+                - For each migration, count the number of `import {rule}` statements across all scanned files.
+                - Upload each count via `POST /migrationProgress` with `{ migrationId, gitHash, gitDate, count }`.
             - Print summary.
     - `measure-gradle`
         - Arguments:

@@ -8,6 +8,8 @@ import kotlinx.coroutines.runBlocking
 import nl.jacobras.codebaseobserver.cli.util.GitInfoCollector
 import nl.jacobras.codebaseobserver.cli.util.ServerUploader
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
+import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -45,14 +47,16 @@ class MeasureCodeCommand internal constructor(
         val includePatterns = include.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         val excludePatterns = exclude.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-        val linesOfCode = countLinesOfCode(targetPath, includePatterns, excludePatterns)
+        val (linesOfCode, importCounts) = scanFiles(targetPath, includePatterns, excludePatterns)
         println("Counted $linesOfCode lines of code in $targetPath")
 
         serverUrl?.let { url ->
+            val gitHash = GitInfoCollector.getGitHash(targetPath)
+            val gitDate = GitInfoCollector.getGitDate(targetPath)
             val payload = CodeMetricsRequest(
                 projectId = projectId,
-                gitHash = GitInfoCollector.getGitHash(targetPath),
-                gitDate = GitInfoCollector.getGitDate(targetPath),
+                gitHash = gitHash,
+                gitDate = gitDate,
                 linesOfCode = linesOfCode
             )
             runBlocking {
@@ -61,26 +65,41 @@ class MeasureCodeCommand internal constructor(
                     endpoint = "metrics/code",
                     payload = payload
                 )
+                val migrations = uploader.fetch<List<MigrationDto>>(
+                    serverUrl = url,
+                    endpoint = "migrations?projectId=$projectId"
+                )
+                migrations
+                    .filter { it.type == "importUsage" }
+                    .forEach { migration ->
+                        uploader.upload(
+                            serverUrl = url,
+                            endpoint = "migrationProgress",
+                            payload = MigrationProgressRequest(
+                                migrationId = migration.id,
+                                gitHash = gitHash,
+                                gitDate = gitDate,
+                                count = importCounts[migration.rule] ?: 0
+                            )
+                        )
+                    }
             }
         }
     }
 
-    private fun countLinesOfCode(
+    private fun scanFiles(
         root: Path,
         includePatterns: List<String>,
         excludePatterns: List<String>
-    ): Int {
-        if (!Files.exists(root)) return 0
+    ): ScanResult {
+        if (!Files.exists(root)) return ScanResult(0, emptyMap())
 
-        val includeMatchers = includePatterns.map { pattern ->
-            FileSystems.getDefault().getPathMatcher("glob:$pattern")
-        }
-        val excludeMatchers = excludePatterns.map { pattern ->
-            FileSystems.getDefault().getPathMatcher("glob:$pattern")
-        }
+        val includeMatchers = includePatterns.map { FileSystems.getDefault().getPathMatcher("glob:$it") }
+        val excludeMatchers = excludePatterns.map { FileSystems.getDefault().getPathMatcher("glob:$it") }
 
         var totalLines = 0
         var filesProcessed = 0
+        val importCounts = mutableMapOf<String, Int>()
 
         Files.walk(root).use { stream ->
             stream.asSequence()
@@ -90,17 +109,24 @@ class MeasureCodeCommand internal constructor(
                             excludeMatchers.none { it.matches(path) }
                 }
                 .forEach { filePath ->
-                    val lines = Files.lines(filePath).use { it.count().toInt() }
-                    totalLines += lines
+                    Files.lines(filePath).use { lines ->
+                        lines.forEach { line ->
+                            totalLines++
+                            val importPath = ImportCounter.extractImportPath(line.trim()) ?: return@forEach
+                            importCounts[importPath] = (importCounts[importPath] ?: 0) + 1
+                        }
+                    }
                     filesProcessed++
 
-                    if (filesProcessed % 1000 == 0) {
+                    if (filesProcessed % 1_000 == 0) {
                         println("Processed $filesProcessed files...")
                     }
                 }
         }
 
         println("Finished processing $filesProcessed files.")
-        return totalLines
+        return ScanResult(totalLines, importCounts)
     }
 }
+
+private data class ScanResult(val linesOfCode: Int, val importCounts: Map<String, Int>)
