@@ -34,7 +34,6 @@ internal class ServerUploader {
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
-        client.close()
         val statusCode = response.status.value
         val responseBody = response.bodyAsText()
         require(response.status.isSuccess()) {
@@ -48,7 +47,6 @@ internal class ServerUploader {
         endpoint: String
     ): T {
         val response = client.get("${serverUrl.trimEnd('/')}/$endpoint")
-        client.close()
         val statusCode = response.status.value
         val responseBody = response.bodyAsText()
         require(response.status.isSuccess()) {
