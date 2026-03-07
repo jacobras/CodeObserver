@@ -19,6 +19,8 @@ internal fun CodeTable(
     metrics: List<CodeMetricsDto>,
     onDelete: (CodeMetricsDto) -> Unit
 ) {
+    val sortedMetrics = metrics.sortedByDescending { it.gitDate }
+
     DataTable(
         columnHeadings = listOf(
             "Git date",
@@ -28,9 +30,9 @@ internal fun CodeTable(
             "Module tree height",
             "Actions"
         ),
-        rowCount = metrics.size,
+        rowCount = sortedMetrics.size,
         cellContent = { rowIndex, columnIndex, modifier ->
-            val record = metrics[rowIndex]
+            val record = sortedMetrics[rowIndex]
 
             when (columnIndex) {
                 0 -> SelectionContainer(modifier) {
