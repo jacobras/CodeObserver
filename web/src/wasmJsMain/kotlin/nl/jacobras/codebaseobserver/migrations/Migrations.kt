@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
@@ -38,7 +39,7 @@ internal fun Migrations(
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = remember { MigrationsViewModel(client) }
+    val viewModel = viewModel { MigrationsViewModel(client) }
     val migrations by viewModel.migrations.collectAsState(emptyList())
     val isLoading by viewModel.isLoading.collectAsState(false)
     val loadingError by viewModel.loadingError.collectAsState("")
@@ -105,7 +106,7 @@ private fun MigrationDetail(
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = remember { MigrationDetailViewModel(client) }
+    val viewModel = viewModel { MigrationDetailViewModel(client) }
     val progress by viewModel.progress.collectAsState(emptyList())
     val isLoading by viewModel.isLoading.collectAsState(false)
     val loadingError by viewModel.loadingError.collectAsState("")

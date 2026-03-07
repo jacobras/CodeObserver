@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.WebElementView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
 import io.ktor.client.HttpClient
@@ -43,7 +44,7 @@ internal fun DependencyGraph(
     client: HttpClient,
     projectId: String
 ) {
-    val viewModel = remember { DependencyGraphViewModel(client) }
+    val viewModel = viewModel { DependencyGraphViewModel(client) }
     val modules by viewModel.modules.collectAsState(emptyList())
     val isLoading by viewModel.isLoading.collectAsState(false)
     val loadingError by viewModel.loadingError.collectAsState("")

@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.CarbonDesignSystem
 import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
@@ -54,7 +55,7 @@ fun App() {
             }
         }
     }
-    val viewModel = remember { AppViewModel(client) }
+    val viewModel = viewModel { AppViewModel(client) }
     val projects by viewModel.projects.collectAsState(emptyList())
     val selectedProjectId by viewModel.selectedProjectId.collectAsState("")
     val loadingError by viewModel.loadingError.collectAsState("")

@@ -9,9 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import io.ktor.client.HttpClient
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
@@ -24,7 +24,7 @@ internal fun Trends(
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = remember { TrendsViewModel(client) }
+    val viewModel = viewModel { TrendsViewModel(client) }
     val metrics by viewModel.metrics.collectAsState(emptyList())
     val isLoading by viewModel.isLoading.collectAsState(false)
     val loadingError by viewModel.loadingError.collectAsState("")

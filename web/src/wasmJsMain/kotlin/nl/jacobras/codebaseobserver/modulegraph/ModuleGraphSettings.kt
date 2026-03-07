@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
@@ -34,7 +35,7 @@ internal fun ModuleRules(
     client: HttpClient,
     projectId: String
 ) {
-    val viewModel = remember { ModuleRulesViewModel(client) }
+    val viewModel = viewModel { ModuleRulesViewModel(client) }
     val settings by viewModel.settings.collectAsState(emptyList())
     val isLoading by viewModel.isLoading.collectAsState(false)
     val loadingError by viewModel.loadingError.collectAsState("")

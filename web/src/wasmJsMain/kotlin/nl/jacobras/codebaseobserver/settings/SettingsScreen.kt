@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
@@ -31,7 +32,7 @@ import nl.jacobras.codebaseobserver.ui.table.DataTable
 
 @Composable
 internal fun SettingsScreen(client: HttpClient) {
-    val viewModel = remember { SettingsScreenViewModel(client) }
+    val viewModel = viewModel { SettingsScreenViewModel(client) }
     val projects by viewModel.projects.collectAsState(emptyList())
     val isLoading by viewModel.isLoading.collectAsState(false)
     val loadingError by viewModel.loadingError.collectAsState("")

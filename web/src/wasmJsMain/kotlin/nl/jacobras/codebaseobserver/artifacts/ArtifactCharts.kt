@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
@@ -33,7 +34,7 @@ internal fun ArtifactCharts(
     client: HttpClient,
     projectId: String
 ) {
-    val viewModel = remember { ArtifactChartsViewModel(client) }
+    val viewModel = viewModel { ArtifactChartsViewModel(client) }
     val artifactSizes by viewModel.artifactSizes.collectAsState(emptyList())
     val isLoading by viewModel.isLoading.collectAsState(false)
     val loadingError by viewModel.loadingError.collectAsState("")
