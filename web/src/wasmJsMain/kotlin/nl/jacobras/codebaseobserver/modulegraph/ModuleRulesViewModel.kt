@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingDto
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingRequest
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingUpdateRequest
+import kotlin.coroutines.cancellation.CancellationException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ModuleRulesViewModel(
@@ -46,6 +47,8 @@ internal class ModuleRulesViewModel(
                 isLoading.value = false
                 loadingError.value = ""
                 flowOf(list)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Throwable) {
                 Logger.e(e) { "Failed to fetch module rules" }
                 isLoading.value = false
@@ -77,6 +80,8 @@ internal class ModuleRulesViewModel(
                 }
             }
             refresh()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             Logger.e(e) { "Failed to save setting" }
             updateError.value = "Failed to save setting: ${e.message}"
@@ -88,6 +93,8 @@ internal class ModuleRulesViewModel(
             updateError.value = ""
             client.delete("/moduleGraphSettings/$id")
             refresh()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             Logger.e(e) { "Failed to delete setting" }
             updateError.value = "Failed to delete setting: ${e.message}"

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
+import kotlin.coroutines.cancellation.CancellationException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ArtifactChartsViewModel(
@@ -35,6 +36,8 @@ internal class ArtifactChartsViewModel(
                 isLoading.value = false
                 loadingError.value = ""
                 flowOf(list)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Throwable) {
                 Logger.e(e) { "Failed to fetch artifact sizes" }
                 isLoading.value = false

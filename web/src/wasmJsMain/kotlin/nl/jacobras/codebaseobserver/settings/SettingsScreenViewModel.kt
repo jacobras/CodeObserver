@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
+import kotlin.coroutines.cancellation.CancellationException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SettingsScreenViewModel(
@@ -38,6 +39,8 @@ internal class SettingsScreenViewModel(
                 isLoading.value = false
                 loadingError.value = ""
                 flowOf(list)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Throwable) {
                 Logger.e(e) { "Failed to fetch projects" }
                 isLoading.value = false
@@ -58,6 +61,8 @@ internal class SettingsScreenViewModel(
                 setBody(ProjectRequest(projectId = projectId, name = name))
             }
             refresh()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             Logger.e(e) { "Failed to save project" }
             updateError.value = "Failed to save project: ${e.message}"
@@ -69,6 +74,8 @@ internal class SettingsScreenViewModel(
             updateError.value = ""
             client.delete("/projects/$projectId")
             refresh()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             Logger.e(e) { "Failed to delete project" }
             updateError.value = "Failed to delete project: ${e.message}"

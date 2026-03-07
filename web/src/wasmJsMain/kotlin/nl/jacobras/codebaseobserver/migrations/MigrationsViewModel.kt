@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.MigrationDto
 import nl.jacobras.codebaseobserver.dto.MigrationRequest
 import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
+import kotlin.coroutines.cancellation.CancellationException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class MigrationsViewModel(
@@ -46,6 +47,8 @@ internal class MigrationsViewModel(
                 isLoading.value = false
                 loadingError.value = ""
                 flowOf(list)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Throwable) {
                 Logger.e(e) { "Failed to fetch migrations" }
                 isLoading.value = false
@@ -85,6 +88,8 @@ internal class MigrationsViewModel(
                 }
             }
             refresh()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             Logger.e(e) { "Failed to save migration" }
             updateError.value = "Failed to save migration: ${e.message}"
@@ -96,6 +101,8 @@ internal class MigrationsViewModel(
             updateError.value = ""
             client.delete("/migrations/$id")
             refresh()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             Logger.e(e) { "Failed to delete migration" }
             updateError.value = "Failed to delete migration: ${e.message}"

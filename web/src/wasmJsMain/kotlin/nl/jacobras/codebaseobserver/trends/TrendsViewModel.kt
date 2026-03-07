@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import kotlin.coroutines.cancellation.CancellationException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class TrendsViewModel(
@@ -40,6 +41,8 @@ internal class TrendsViewModel(
                 isLoading.value = false
                 loadingError.value = ""
                 flowOf(list)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Throwable) {
                 Logger.e(e) { "Failed to fetch metrics" }
                 isLoading.value = false
@@ -59,6 +62,8 @@ internal class TrendsViewModel(
                 url { parameters.append("projectId", projectId.value) }
             }
             refresh()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             Logger.e(e) { "Failed to delete metrics" }
             updateError.value = "Failed to delete metrics: ${e.message}"
