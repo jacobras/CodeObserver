@@ -9,6 +9,6 @@
 
 ## Building
 
-- CLI: `gradlew :cli:compileKotlin`
-- Server: `gradlew :server:compileKotlin`
+- CLI: `gradlew :cli:build`
+- Server: `gradlew :server:build`
 - Web: `gradlew :web:compileKotlinWasmJs`
