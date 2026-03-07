@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
 import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 
 @Composable
 internal fun Trends(
@@ -22,12 +23,27 @@ internal fun Trends(
 ) {
     val viewModel = remember { TrendsViewModel(client) }
     val metrics by viewModel.metrics.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+    val updateError by viewModel.updateError.collectAsState("")
 
     LaunchedEffect(projectId) {
         viewModel.setProjectId(projectId)
     }
 
-    if (metrics.isEmpty()) {
+    if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
+        ProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            loading = isLoading,
+            error = updateError.ifEmpty { loadingError },
+            onRetry = if (loadingError.isNotEmpty()) {
+                { viewModel.refresh() }
+            } else {
+                null
+            }
+        )
+        return
+    } else if (metrics.isEmpty()) {
         BasicText(
             modifier = Modifier.fillMaxWidth(),
             text = "No metrics found",
