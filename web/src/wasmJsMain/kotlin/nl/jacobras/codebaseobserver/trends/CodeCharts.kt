@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
@@ -20,12 +16,13 @@ import nl.jacobras.codebaseobserver.ui.chart.TimeViewSelector
 
 @Composable
 internal fun CodeCharts(
-    metrics: List<CodeMetricsDto>
+    metrics: List<CodeMetricsDto>,
+    timeView: TimeView,
+    onSelectTimeView: (TimeView) -> Unit
 ) {
-    var timeView by remember { mutableStateOf(TimeView.Last7Days) }
     TimeViewSelector(
         selected = timeView,
-        onSelect = { timeView = it }
+        onSelect = { onSelectTimeView(it) }
     )
     Spacer(Modifier.height(16.dp))
 

@@ -29,6 +29,7 @@ import nl.jacobras.codebaseobserver.migrations.Migrations
 import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
 import nl.jacobras.codebaseobserver.modulegraph.ModuleRules
 import nl.jacobras.codebaseobserver.trends.Trends
+import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
 @Composable
 internal fun DashboardScreen(
@@ -94,10 +95,14 @@ internal fun DashboardScreen(
                     return@Column
                 }
 
+                var timeView by remember { mutableStateOf(TimeView.Last7Days) }
+
                 when (selectedTab) {
                     DashboardTab.CodeTrends -> Trends(
                         client = client,
-                        projectId = selectedProjectId
+                        projectId = selectedProjectId,
+                        timeView = timeView,
+                        onSelectTimeView = { timeView = it }
                     )
                     DashboardTab.Artifacts -> ArtifactCharts(
                         client = client,
@@ -105,7 +110,9 @@ internal fun DashboardScreen(
                     )
                     DashboardTab.Migrations -> Migrations(
                         client = client,
-                        projectId = selectedProjectId
+                        projectId = selectedProjectId,
+                        timeView = timeView,
+                        onSelectTimeView = { timeView = it }
                     )
                     DashboardTab.ModuleGraph -> DependencyGraph(
                         client = client,

@@ -24,7 +24,6 @@ import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import io.ktor.client.HttpClient
 import nl.jacobras.codebaseobserver.dto.MigrationDto
-import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
 import nl.jacobras.codebaseobserver.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
@@ -35,7 +34,9 @@ import nl.jacobras.codebaseobserver.ui.table.DataTable
 @Composable
 internal fun Migrations(
     client: HttpClient,
-    projectId: String
+    projectId: String,
+    timeView: TimeView,
+    onSelectTimeView: (TimeView) -> Unit
 ) {
     val viewModel = remember { MigrationsViewModel(client) }
     val migrations by viewModel.migrations.collectAsState(emptyList())
@@ -87,7 +88,12 @@ internal fun Migrations(
             )
         } else {
             val selectedMigration = migrations.first { it.name == selectedTab.label }
-            MigrationDetail(client = client, migration = selectedMigration)
+            MigrationDetail(
+                client = client,
+                migration = selectedMigration,
+                timeView = timeView,
+                onSelectTimeView = onSelectTimeView
+            )
         }
     }
 }
@@ -95,7 +101,9 @@ internal fun Migrations(
 @Composable
 private fun MigrationDetail(
     client: HttpClient,
-    migration: MigrationDto
+    migration: MigrationDto,
+    timeView: TimeView,
+    onSelectTimeView: (TimeView) -> Unit
 ) {
     val viewModel = remember { MigrationDetailViewModel(client) }
     val progress by viewModel.progress.collectAsState(emptyList())
@@ -154,10 +162,9 @@ private fun MigrationDetail(
         return
     }
 
-    var timeView by remember { mutableStateOf(TimeView.Last7Days) }
     TimeViewSelector(
         selected = timeView,
-        onSelect = { timeView = it }
+        onSelect = { onSelectTimeView(it) }
     )
     Spacer(Modifier.height(16.dp))
 

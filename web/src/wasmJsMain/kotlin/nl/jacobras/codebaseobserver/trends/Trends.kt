@@ -14,12 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
 import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.ui.chart.TimeView
 import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 
 @Composable
 internal fun Trends(
     client: HttpClient,
-    projectId: String
+    projectId: String,
+    timeView: TimeView,
+    onSelectTimeView: (TimeView) -> Unit
 ) {
     val viewModel = remember { TrendsViewModel(client) }
     val metrics by viewModel.metrics.collectAsState(emptyList())
@@ -53,7 +56,11 @@ internal fun Trends(
     }
 
     Column {
-        CodeCharts(metrics)
+        CodeCharts(
+            metrics = metrics,
+            timeView = timeView,
+            onSelectTimeView = onSelectTimeView
+        )
         Spacer(Modifier.height(32.dp))
         CodeTable(
             metrics = metrics,
