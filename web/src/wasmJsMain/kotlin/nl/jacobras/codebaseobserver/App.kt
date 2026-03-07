@@ -11,16 +11,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.CarbonDesignSystem
 import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
@@ -32,30 +32,17 @@ import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
 import com.patrykandpatrick.vico.compose.common.VicoTheme
 import com.patrykandpatrick.vico.compose.common.VicoTheme.CandlestickCartesianLayerColors
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.engine.js.Js
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import nl.jacobras.codebaseobserver.dto.ProjectDto
-import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.settings.SettingsScreen
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
 @OptIn(ExperimentalCarbonApi::class)
 @Composable
 fun App() {
-    var projects by remember { mutableStateOf<List<ProjectDto>>(emptyList()) }
-    var selectedProjectId by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
     var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
 
     val client = remember {
@@ -68,29 +55,13 @@ fun App() {
             }
         }
     }
-    val scope = rememberCoroutineScope()
-
-    suspend fun reloadProjects() {
-        val latestProjects: List<ProjectDto> = client.get("/projects").body()
-        projects = latestProjects
-        selectedProjectId = when {
-            latestProjects.isEmpty() -> ""
-            selectedProjectId.isBlank() -> latestProjects.first().projectId
-            latestProjects.any { it.projectId == selectedProjectId } -> selectedProjectId
-            else -> latestProjects.first().projectId
-        }
-    }
+    val viewModel = viewModel { AppViewModel(client) }
+    val projects by viewModel.projects.collectAsState(emptyList())
+    val selectedProjectId by viewModel.selectedProjectId.collectAsState("")
+    val loadingError by viewModel.loadingError.collectAsState("")
 
     DisposableEffect(Unit) {
         onDispose { client.close() }
-    }
-
-    LaunchedEffect(Unit) {
-        try {
-            reloadProjects()
-        } catch (e: Throwable) {
-            error = e.message ?: "Failed to load"
-        }
     }
 
     CarbonDesignSystem(
@@ -125,48 +96,15 @@ fun App() {
                     when (activeScreen) {
                         Screen.Dashboard -> {
                             DashboardScreen(
-                                error = error,
+                                error = loadingError,
                                 projects = projects,
                                 selectedProjectId = selectedProjectId,
-                                onSelectProject = { selectedProjectId = it.trim() },
+                                onSelectProject = { viewModel.selectProject(it.trim()) },
                                 client = client
                             )
                         }
                         Screen.Settings -> {
-                            SettingsScreen(
-                                projects = projects,
-                                error = error,
-                                onSaveProject = { projectId, name ->
-                                    scope.launch {
-                                        error = null
-                                        try {
-                                            client.post("/projects") {
-                                                contentType(ContentType.Application.Json)
-                                                setBody(
-                                                    ProjectRequest(
-                                                        projectId = projectId.trim(),
-                                                        name = name.trim()
-                                                    )
-                                                )
-                                            }
-                                            reloadProjects()
-                                        } catch (e: Throwable) {
-                                            error = e.message ?: "Failed to save project"
-                                        }
-                                    }
-                                },
-                                onDeleteProject = { projectId ->
-                                    scope.launch {
-                                        error = null
-                                        try {
-                                            client.delete("/projects/${projectId.trim()}")
-                                            reloadProjects()
-                                        } catch (e: Throwable) {
-                                            error = e.message ?: "Failed to delete project"
-                                        }
-                                    }
-                                }
-                            )
+                            SettingsScreen(client = client)
                         }
                     }
                 }

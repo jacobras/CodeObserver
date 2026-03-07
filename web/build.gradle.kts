@@ -21,6 +21,8 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.ui)
             implementation(libs.carbon)
+            implementation(libs.compose.viewmodel)
+            implementation(libs.coroutines)
             implementation(libs.humanReadable)
             implementation(libs.kermit)
             implementation(libs.kotlinx.serialization.json)

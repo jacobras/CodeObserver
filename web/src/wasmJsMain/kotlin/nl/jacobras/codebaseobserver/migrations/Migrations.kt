@@ -9,39 +9,58 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
 import nl.jacobras.codebaseobserver.dto.MigrationDto
-import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
 import nl.jacobras.codebaseobserver.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
 import nl.jacobras.codebaseobserver.ui.chart.TimeViewSelector
+import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.ui.table.DataTable
 
 @Composable
 internal fun Migrations(
     client: HttpClient,
-    projectId: String
+    projectId: String,
+    timeView: TimeView,
+    onSelectTimeView: (TimeView) -> Unit
 ) {
-    var refreshKey by remember { mutableStateOf(0) }
-    val migrations by produceState(emptyList<MigrationDto>(), projectId, refreshKey) {
-        value = client.get("/migrations") {
-            url { parameters.append("projectId", projectId) }
-        }.body()
+    val viewModel = viewModel { MigrationsViewModel(client) }
+    val migrations by viewModel.migrations.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+    val updateError by viewModel.updateError.collectAsState("")
+
+    LaunchedEffect(projectId) {
+        viewModel.setProjectId(projectId)
+    }
+
+    if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
+        ProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            loading = isLoading,
+            error = updateError.ifEmpty { loadingError },
+            onRetry = if (loadingError.isNotEmpty()) {
+                { viewModel.refresh() }
+            } else {
+                null
+            }
+        )
+        return
     }
 
     Column(Modifier.fillMaxWidth()) {
@@ -62,14 +81,20 @@ internal fun Migrations(
 
         if (selectedTab == overviewTab) {
             MigrationsOverview(
-                client = client,
-                projectId = projectId,
                 migrations = migrations,
-                onRefresh = { refreshKey++ }
+                onSave = { id, name, description, type, rule ->
+                    viewModel.save(id, name, description, type, rule)
+                },
+                onDelete = { viewModel.delete(it) }
             )
         } else {
             val selectedMigration = migrations.first { it.name == selectedTab.label }
-            MigrationDetail(client = client, migration = selectedMigration)
+            MigrationDetail(
+                client = client,
+                migration = selectedMigration,
+                timeView = timeView,
+                onSelectTimeView = onSelectTimeView
+            )
         }
     }
 }
@@ -77,8 +102,19 @@ internal fun Migrations(
 @Composable
 private fun MigrationDetail(
     client: HttpClient,
-    migration: MigrationDto
+    migration: MigrationDto,
+    timeView: TimeView,
+    onSelectTimeView: (TimeView) -> Unit
 ) {
+    val viewModel = viewModel { MigrationDetailViewModel(client) }
+    val progress by viewModel.progress.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+
+    LaunchedEffect(migration.id) {
+        viewModel.setMigrationId(migration.id)
+    }
+
     BasicText(
         modifier = Modifier.fillMaxWidth(),
         text = buildAnnotatedString {
@@ -101,11 +137,20 @@ private fun MigrationDetail(
     }
     Spacer(Modifier.height(32.dp))
 
-    val progress by produceState(emptyList<MigrationProgressDto>(), migration.id) {
-        value = client.get("/migrationProgress") {
-            url { parameters.append("migrationId", migration.id.toString()) }
-        }.body()
+    if (isLoading || loadingError.isNotEmpty()) {
+        ProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            loading = isLoading,
+            error = loadingError,
+            onRetry = if (loadingError.isNotEmpty()) {
+                { viewModel.refresh() }
+            } else {
+                null
+            }
+        )
+        return
     }
+
     val progressOldestFirst = progress.sortedBy { it.gitDate }
     val progressNewestFirst = progressOldestFirst.reversed()
 
@@ -118,10 +163,9 @@ private fun MigrationDetail(
         return
     }
 
-    var timeView by remember { mutableStateOf(TimeView.Last7Days) }
     TimeViewSelector(
         selected = timeView,
-        onSelect = { timeView = it }
+        onSelect = { onSelectTimeView(it) }
     )
     Spacer(Modifier.height(16.dp))
 

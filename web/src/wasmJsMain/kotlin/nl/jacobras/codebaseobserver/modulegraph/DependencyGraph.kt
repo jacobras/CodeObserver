@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,17 +27,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.WebElementView
-import co.touchlab.kermit.Logger
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
-import com.gabrieldrn.carbon.loading.SmallLoading
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
 import kotlinx.browser.document
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.ui.carbon.IntSelector
+import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 import org.w3c.dom.HTMLIFrameElement
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -45,35 +44,34 @@ internal fun DependencyGraph(
     client: HttpClient,
     projectId: String
 ) {
+    val viewModel = viewModel { DependencyGraphViewModel(client) }
+    val modules by viewModel.modules.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+    val sortOrder by viewModel.sortOrder.collectAsState()
+
+    LaunchedEffect(projectId) {
+        viewModel.setProjectId(projectId)
+    }
+
     Column(modifier = Modifier)
     {
         var startModule by remember { mutableStateOf("") }
         var groupingThreshold by remember { mutableStateOf(3) }
         var layerDepth by remember { mutableStateOf(30) }
-        var sortOrder by remember { mutableStateOf(ModuleSortOrder.Alphabetical) }
-        var modules by remember { mutableStateOf<List<GraphModuleDto>>(emptyList()) }
-        var isLoading by remember { mutableStateOf(true) }
 
-        LaunchedEffect(projectId, sortOrder) {
-            isLoading = true
-
-            try {
-                modules = client.get("/modules") {
-                    url {
-                        parameters.append("projectId", projectId)
-                        parameters.append("sort", sortOrder.id)
-                    }
-                }.body()
-                isLoading = false
-            } catch (e: Throwable) {
-                Logger.e(e) { "Failed to load modules" }
-                isLoading = false
-                modules = emptyList()
-            }
-        }
-
-        if (isLoading) {
-            SmallLoading()
+        if (isLoading || loadingError.isNotEmpty()) {
+            ProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                loading = isLoading,
+                error = loadingError,
+                onRetry = if (loadingError.isNotEmpty()) {
+                    { viewModel.refresh() }
+                } else {
+                    null
+                }
+            )
+            return@Column
         }
 
         Row {
@@ -86,7 +84,7 @@ internal fun DependencyGraph(
                 layerDepth = layerDepth,
                 onLayerDepthChange = { layerDepth = it },
                 sortOrder = sortOrder,
-                onSortOrderChange = { sortOrder = it },
+                onSortOrderChange = { viewModel.setSortOrder(it) },
                 modifier = Modifier.width(350.dp).padding(end = 16.dp)
             )
 

@@ -6,35 +6,47 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import kotlinx.coroutines.launch
-import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import nl.jacobras.codebaseobserver.ui.chart.TimeView
+import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 
 @Composable
 internal fun Trends(
     client: HttpClient,
-    projectId: String
+    projectId: String,
+    timeView: TimeView,
+    onSelectTimeView: (TimeView) -> Unit
 ) {
-    var refreshKey by remember { mutableIntStateOf(0) }
-    val metrics by produceState(emptyList<CodeMetricsDto>(), projectId, refreshKey) {
-        value = client.get("/metrics") {
-            url { parameters.append("projectId", projectId) }
-        }.body()
+    val viewModel = viewModel { TrendsViewModel(client) }
+    val metrics by viewModel.metrics.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+    val updateError by viewModel.updateError.collectAsState("")
+
+    LaunchedEffect(projectId) {
+        viewModel.setProjectId(projectId)
     }
 
-    if (metrics.isEmpty()) {
+    if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
+        ProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            loading = isLoading,
+            error = updateError.ifEmpty { loadingError },
+            onRetry = if (loadingError.isNotEmpty()) {
+                { viewModel.refresh() }
+            } else {
+                null
+            }
+        )
+        return
+    } else if (metrics.isEmpty()) {
         BasicText(
             modifier = Modifier.fillMaxWidth(),
             text = "No metrics found",
@@ -43,20 +55,16 @@ internal fun Trends(
         return
     }
 
-    val scope = rememberCoroutineScope()
     Column {
-        CodeCharts(metrics)
+        CodeCharts(
+            metrics = metrics,
+            timeView = timeView,
+            onSelectTimeView = onSelectTimeView
+        )
         Spacer(Modifier.height(32.dp))
         CodeTable(
             metrics = metrics,
-            onDelete = { record ->
-                scope.launch {
-                    client.delete("/metrics/${record.gitHash}") {
-                        url { parameters.append("projectId", projectId) }
-                    }
-                    refreshKey++
-                }
-            }
+            onDelete = { viewModel.delete(it) }
         )
     }
 }

@@ -10,13 +10,14 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
@@ -26,18 +27,7 @@ import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import io.ktor.client.request.patch
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import kotlinx.coroutines.launch
-import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingDto
-import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingRequest
-import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingUpdateRequest
+import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.ui.table.DataTable
 
 @Composable
@@ -45,21 +35,32 @@ internal fun ModuleRules(
     client: HttpClient,
     projectId: String
 ) {
-    val scope = rememberCoroutineScope()
-    var settings by remember { mutableStateOf<List<ModuleGraphSettingDto>>(emptyList()) }
+    val viewModel = viewModel { ModuleRulesViewModel(client) }
+    val settings by viewModel.settings.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+    val updateError by viewModel.updateError.collectAsState("")
     var editingId by remember { mutableStateOf<Int?>(null) }
     var formType by remember { mutableStateOf("deprecatedModule") }
     var formData by remember { mutableStateOf("") }
 
     val isEditing = editingId != null
 
-    fun refresh() {
-        scope.launch {
-            settings = client.get("/moduleGraphSettings?projectId=$projectId").body()
-        }
-    }
+    LaunchedEffect(projectId) { viewModel.setProjectId(projectId) }
 
-    LaunchedEffect(projectId) { refresh() }
+    if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
+        ProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            loading = isLoading,
+            error = updateError.ifEmpty { loadingError },
+            onRetry = if (loadingError.isNotEmpty()) {
+                { viewModel.refresh() }
+            } else {
+                null
+            }
+        )
+        return
+    }
 
     fun clearForm() {
         editingId = null
@@ -95,33 +96,8 @@ internal fun ModuleRules(
                 buttonSize = ButtonSize.Small,
                 isEnabled = formData.trim().isNotEmpty(),
                 onClick = {
-                    val id = editingId
-                    scope.launch {
-                        if (id != null) {
-                            client.patch("/moduleGraphSettings/$id") {
-                                contentType(ContentType.Application.Json)
-                                setBody(
-                                    ModuleGraphSettingUpdateRequest(
-                                        type = formType,
-                                        data = formData.trim()
-                                    )
-                                )
-                            }
-                        } else {
-                            client.post("/moduleGraphSettings") {
-                                contentType(ContentType.Application.Json)
-                                setBody(
-                                    ModuleGraphSettingRequest(
-                                        projectId = projectId,
-                                        type = formType,
-                                        data = formData.trim()
-                                    )
-                                )
-                            }
-                        }
-                        clearForm()
-                        refresh()
-                    }
+                    viewModel.save(editingId, formType, formData.trim())
+                    clearForm()
                 }
             )
             Button(
@@ -176,12 +152,7 @@ internal fun ModuleRules(
                                 label = "Delete",
                                 buttonType = ButtonType.GhostDanger,
                                 buttonSize = ButtonSize.Small,
-                                onClick = {
-                                    scope.launch {
-                                        client.delete("/moduleGraphSettings/${setting.id}")
-                                        refresh()
-                                    }
-                                }
+                                onClick = { viewModel.delete(setting.id) }
                             )
                         }
                     }
