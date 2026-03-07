@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -24,8 +23,6 @@ import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
 import nl.jacobras.codebaseobserver.dto.MigrationDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
 import nl.jacobras.codebaseobserver.ui.chart.ChartColor
@@ -100,6 +97,15 @@ private fun MigrationDetail(
     client: HttpClient,
     migration: MigrationDto
 ) {
+    val viewModel = remember { MigrationDetailViewModel(client) }
+    val progress by viewModel.progress.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+
+    LaunchedEffect(migration.id) {
+        viewModel.setMigrationId(migration.id)
+    }
+
     BasicText(
         modifier = Modifier.fillMaxWidth(),
         text = buildAnnotatedString {
@@ -122,11 +128,20 @@ private fun MigrationDetail(
     }
     Spacer(Modifier.height(32.dp))
 
-    val progress by produceState(emptyList<MigrationProgressDto>(), migration.id) {
-        value = client.get("/migrationProgress") {
-            url { parameters.append("migrationId", migration.id.toString()) }
-        }.body()
+    if (isLoading || loadingError.isNotEmpty()) {
+        ProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            loading = isLoading,
+            error = loadingError,
+            onRetry = if (loadingError.isNotEmpty()) {
+                { viewModel.refresh() }
+            } else {
+                null
+            }
+        )
+        return
     }
+
     val progressOldestFirst = progress.sortedBy { it.gitDate }
     val progressNewestFirst = progressOldestFirst.reversed()
 
