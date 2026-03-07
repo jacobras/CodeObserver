@@ -4,11 +4,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,22 +24,38 @@ import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.TextInput
+import io.ktor.client.HttpClient
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.ui.table.DataTable
 
 @Composable
-internal fun SettingsScreen(
-    projects: List<ProjectDto>,
-    error: String?,
-    onSaveProject: (projectId: String, name: String) -> Unit,
-    onDeleteProject: (projectId: String) -> Unit
-) {
+internal fun SettingsScreen(client: HttpClient) {
+    val viewModel = remember { SettingsScreenViewModel(client) }
+    val projects by viewModel.projects.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+    val updateError by viewModel.updateError.collectAsState("")
     var editProjectId by remember { mutableStateOf("") }
     var editName by remember { mutableStateOf("") }
 
     fun clearForm() {
         editProjectId = ""
         editName = ""
+    }
+
+    if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
+        ProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            loading = isLoading,
+            error = updateError.ifEmpty { loadingError },
+            onRetry = if (loadingError.isNotEmpty()) {
+                { viewModel.refresh() }
+            } else {
+                null
+            }
+        )
+        return
     }
 
     val isEditing = projects.any { it.projectId == editProjectId.trim() }
@@ -74,7 +92,7 @@ internal fun SettingsScreen(
                     buttonSize = ButtonSize.Small,
                     isEnabled = editProjectId.trim().isNotEmpty() && editName.trim().isNotEmpty(),
                     onClick = {
-                        onSaveProject(editProjectId, editName)
+                        viewModel.saveProject(editProjectId.trim(), editName.trim())
                         clearForm()
                     }
                 )
@@ -94,16 +112,8 @@ internal fun SettingsScreen(
                     editProjectId = project.projectId
                     editName = project.name
                 },
-                onDelete = onDeleteProject
+                onDelete = { viewModel.deleteProject(it) }
             )
-
-            if (error != null) {
-                Spacer(Modifier.height(12.dp))
-                BasicText(
-                    text = "Error: $error",
-                    style = Carbon.typography.body02.copy(color = Carbon.theme.supportError)
-                )
-            }
         }
     }
 }

@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -30,6 +32,7 @@ import nl.jacobras.codebaseobserver.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
 import nl.jacobras.codebaseobserver.ui.chart.TimeViewSelector
+import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.ui.table.DataTable
 
 @Composable
@@ -37,11 +40,28 @@ internal fun Migrations(
     client: HttpClient,
     projectId: String
 ) {
-    var refreshKey by remember { mutableStateOf(0) }
-    val migrations by produceState(emptyList<MigrationDto>(), projectId, refreshKey) {
-        value = client.get("/migrations") {
-            url { parameters.append("projectId", projectId) }
-        }.body()
+    val viewModel = remember { MigrationsViewModel(client) }
+    val migrations by viewModel.migrations.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+    val updateError by viewModel.updateError.collectAsState("")
+
+    LaunchedEffect(projectId) {
+        viewModel.setProjectId(projectId)
+    }
+
+    if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
+        ProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            loading = isLoading,
+            error = updateError.ifEmpty { loadingError },
+            onRetry = if (loadingError.isNotEmpty()) {
+                { viewModel.refresh() }
+            } else {
+                null
+            }
+        )
+        return
     }
 
     Column(Modifier.fillMaxWidth()) {
@@ -62,10 +82,11 @@ internal fun Migrations(
 
         if (selectedTab == overviewTab) {
             MigrationsOverview(
-                client = client,
-                projectId = projectId,
                 migrations = migrations,
-                onRefresh = { refreshKey++ }
+                onSave = { id, name, description, type, rule ->
+                    viewModel.save(id, name, description, type, rule)
+                },
+                onDelete = { viewModel.delete(it) }
             )
         } else {
             val selectedMigration = migrations.first { it.name == selectedTab.label }

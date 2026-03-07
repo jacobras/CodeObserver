@@ -32,7 +32,7 @@ import nl.jacobras.codebaseobserver.trends.Trends
 
 @Composable
 internal fun DashboardScreen(
-    error: String?,
+    error: String,
     projects: List<ProjectDto>,
     selectedProjectId: String,
     onSelectProject: (String) -> Unit,
@@ -79,7 +79,7 @@ internal fun DashboardScreen(
                     .layerBackground()
                     .padding(16.dp)
             ) {
-                if (error != null) {
+                if (error.isNotEmpty()) {
                     BasicText(
                         text = "Error: $error",
                         style = Carbon.typography.body02.copy(color = Carbon.theme.supportError)

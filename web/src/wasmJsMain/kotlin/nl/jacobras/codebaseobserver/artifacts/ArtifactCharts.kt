@@ -8,9 +8,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -20,11 +21,10 @@ import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import io.github.z4kn4fein.semver.toVersion
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.ui.chart.VersionChart
+import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.ui.table.DataTable
 import nl.jacobras.humanreadable.HumanReadable
 
@@ -33,10 +33,27 @@ internal fun ArtifactCharts(
     client: HttpClient,
     projectId: String
 ) {
-    val artifactSizes by produceState(emptyList<ArtifactSizeDto>(), projectId) {
-        value = client.get("/artifactSizes") {
-            url { parameters.append("projectId", projectId) }
-        }.body()
+    val viewModel = remember { ArtifactChartsViewModel(client) }
+    val artifactSizes by viewModel.artifactSizes.collectAsState(emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(false)
+    val loadingError by viewModel.loadingError.collectAsState("")
+
+    LaunchedEffect(projectId) {
+        viewModel.setProjectId(projectId)
+    }
+
+    if (isLoading || loadingError.isNotEmpty()) {
+        ProgressIndicator(
+            modifier = Modifier.fillMaxWidth(),
+            loading = isLoading,
+            error = loadingError,
+            onRetry = if (loadingError.isNotEmpty()) {
+                { viewModel.refresh() }
+            } else {
+                null
+            }
+        )
+        return
     }
 
     if (artifactSizes.isEmpty()) {
