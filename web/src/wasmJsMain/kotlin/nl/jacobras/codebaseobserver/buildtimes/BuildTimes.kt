@@ -1,9 +1,12 @@
 package nl.jacobras.codebaseobserver.buildtimes
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,6 +27,7 @@ import nl.jacobras.codebaseobserver.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
 import nl.jacobras.codebaseobserver.ui.chart.TimeViewSelector
 import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
+import nl.jacobras.codebaseobserver.ui.table.DataTable
 import nl.jacobras.humanreadable.HumanReadable
 import kotlin.time.Duration.Companion.seconds
 
@@ -100,16 +104,50 @@ private fun BuildDetail(
     timeView: TimeView
 ) {
     val buildName = buildTimes.first().buildName
-    TimeChart(
-        title = buildName,
-        records = buildTimes,
-        dateField = { it.gitDate },
-        metricField = { it.timeSeconds },
-        timeView = timeView,
-        color = ChartColor.Amethyst,
-        yAxisFormatter = { y -> HumanReadable.duration(y.toLong().seconds) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(300.dp)
-    )
+    val buildTimesOldestFirst = buildTimes.sortedBy { it.gitDate }
+    val buildTimesNewestFirst = buildTimesOldestFirst.reversed()
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        TimeChart(
+            modifier = Modifier.weight(1f),
+            title = buildName,
+            records = buildTimesOldestFirst,
+            dateField = { it.gitDate },
+            metricField = { it.timeSeconds },
+            timeView = timeView,
+            color = ChartColor.Amethyst,
+            yAxisFormatter = { y -> HumanReadable.duration(y.toLong().seconds) },
+        )
+        DataTable(
+            modifier = Modifier.weight(1f),
+            columnHeadings = listOf("Git hash", "Date", "Time"),
+            rowCount = buildTimesNewestFirst.size,
+            cellContent = { rowIndex, columnIndex, modifier ->
+                val item = buildTimesNewestFirst[rowIndex]
+                when (columnIndex) {
+                    0 -> SelectionContainer(modifier) {
+                        BasicText(
+                            text = item.gitHash.take(7),
+                            style = Carbon.typography.code01
+                        )
+                    }
+                    1 -> SelectionContainer(modifier) {
+                        BasicText(
+                            text = item.gitDate.toString(),
+                            style = Carbon.typography.bodyCompact01,
+                        )
+                    }
+                    2 -> SelectionContainer(modifier) {
+                        BasicText(
+                            text = HumanReadable.duration(item.timeSeconds.seconds),
+                            style = Carbon.typography.bodyCompact01,
+                        )
+                    }
+                }
+            }
+        )
+    }
 }

@@ -191,7 +191,7 @@ private fun MigrationDetail(
                 when (columnIndex) {
                     0 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = item.gitHash,
+                            text = item.gitHash.take(7),
                             style = Carbon.typography.code01
                         )
                     }
