@@ -15,7 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
+import com.gabrieldrn.carbon.tab.TabItem
+import com.gabrieldrn.carbon.tab.TabList
 import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.dto.BuildTimeDto
 import nl.jacobras.codebaseobserver.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
@@ -52,8 +55,7 @@ internal fun BuildTimes(
         return
     }
 
-    val firstBuildName = buildTimes.firstOrNull()?.buildName
-    if (firstBuildName == null) {
+    if (buildTimes.isEmpty()) {
         BasicText(
             modifier = Modifier.fillMaxWidth(),
             text = "No build times found",
@@ -62,8 +64,22 @@ internal fun BuildTimes(
         return
     }
 
-    val records = buildTimes.filter { it.buildName == firstBuildName }
+    val buildNames = buildTimes.map { it.buildName }.distinct()
+    var selectedBuild by remember { mutableStateOf(buildNames.first()) }
     var timeView by remember { mutableStateOf(TimeView.Last7Days) }
+
+    if (buildNames.size > 1) {
+        val tabs = buildNames.map { TabItem(label = it) }
+
+        TabList(
+            tabs = tabs,
+            selectedTab = tabs.first { it.label == selectedBuild },
+            onTabSelected = { tab ->
+                selectedBuild = buildNames.first { it == tab.label }
+            }
+        )
+        Spacer(Modifier.height(16.dp))
+    }
 
     TimeViewSelector(
         selected = timeView,
@@ -71,9 +87,21 @@ internal fun BuildTimes(
     )
     Spacer(Modifier.height(16.dp))
 
+    BuildDetail(
+        buildTimes = buildTimes.filter { it.buildName == selectedBuild },
+        timeView = timeView
+    )
+}
+
+@Composable
+private fun BuildDetail(
+    buildTimes: List<BuildTimeDto>,
+    timeView: TimeView
+) {
+    val buildName = buildTimes.first().buildName
     TimeChart(
-        title = firstBuildName,
-        records = records,
+        title = buildName,
+        records = buildTimes,
         dateField = { it.gitDate },
         metricField = { it.timeSeconds },
         timeView = timeView,
