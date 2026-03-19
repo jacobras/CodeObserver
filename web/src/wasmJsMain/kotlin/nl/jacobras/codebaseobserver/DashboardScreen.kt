@@ -111,7 +111,9 @@ internal fun DashboardScreen(
                     )
                     DashboardTab.BuildTimes -> BuildTimes(
                         client = client,
-                        projectId = selectedProjectId
+                        projectId = selectedProjectId,
+                        timeView = timeView,
+                        onSelectTimeView = { timeView = it }
                     )
                     DashboardTab.Migrations -> Migrations(
                         client = client,

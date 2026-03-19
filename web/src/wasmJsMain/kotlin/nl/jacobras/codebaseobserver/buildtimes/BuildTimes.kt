@@ -30,7 +30,9 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 internal fun BuildTimes(
     client: HttpClient,
-    projectId: String
+    projectId: String,
+    timeView: TimeView,
+    onSelectTimeView: (TimeView) -> Unit
 ) {
     val viewModel = viewModel { BuildTimesViewModel(client) }
     val buildTimes by viewModel.buildTimes.collectAsState(emptyList())
@@ -66,7 +68,6 @@ internal fun BuildTimes(
 
     val buildNames = buildTimes.map { it.buildName }.distinct()
     var selectedBuild by remember { mutableStateOf(buildNames.first()) }
-    var timeView by remember { mutableStateOf(TimeView.Last7Days) }
 
     if (buildNames.size > 1) {
         val tabs = buildNames.map { TabItem(label = it) }
@@ -83,7 +84,7 @@ internal fun BuildTimes(
 
     TimeViewSelector(
         selected = timeView,
-        onSelect = { timeView = it }
+        onSelect = onSelectTimeView
     )
     Spacer(Modifier.height(16.dp))
 
