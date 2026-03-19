@@ -103,7 +103,6 @@ private fun BuildDetail(
     buildTimes: List<BuildTimeDto>,
     timeView: TimeView
 ) {
-    val buildName = buildTimes.first().buildName
     val buildTimesOldestFirst = buildTimes.sortedBy { it.gitDate }
     val buildTimesNewestFirst = buildTimesOldestFirst.reversed()
 
@@ -113,7 +112,7 @@ private fun BuildDetail(
     ) {
         TimeChart(
             modifier = Modifier.weight(1f),
-            title = buildName,
+            title = "Build time",
             records = buildTimesOldestFirst,
             dateField = { it.gitDate },
             metricField = { it.timeSeconds },
