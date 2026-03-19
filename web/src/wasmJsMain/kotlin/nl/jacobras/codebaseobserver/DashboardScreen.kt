@@ -24,6 +24,7 @@ import com.gabrieldrn.carbon.tab.TabList
 import com.gabrieldrn.carbon.tab.TabVariant
 import io.ktor.client.HttpClient
 import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
+import nl.jacobras.codebaseobserver.buildtimes.BuildTimes
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.migrations.Migrations
 import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
@@ -105,6 +106,10 @@ internal fun DashboardScreen(
                         onSelectTimeView = { timeView = it }
                     )
                     DashboardTab.Artifacts -> ArtifactCharts(
+                        client = client,
+                        projectId = selectedProjectId
+                    )
+                    DashboardTab.BuildTimes -> BuildTimes(
                         client = client,
                         projectId = selectedProjectId
                     )

@@ -24,6 +24,12 @@
         - `name` (TEXT)
         - `semVer` (TEXT)
         - `size` (INTEGER)
+    - `buildTimes`
+        - `projectId` (TEXT)
+        - `buildName` (TEXT)
+        - `gitHash` (TEXT)
+        - `gitDate` (TEXT)
+        - `timeSeconds` (INTEGER)
     - `moduleGraph` (always holds one recorded per project)
         - `projectId` (TEXT)
         - `gitHash` (TEXT)
@@ -71,6 +77,10 @@
         - `GET /artifactSizes?projectId=...` -> list of records.
         - `POST /artifactSizes` -> stores artifact size.
             - body `{ projectId, name, semVer, size }`
+    - Build times:
+        - `GET /buildTimes?projectId=...` -> list of records.
+        - `POST /buildTimes` -> stores a build time record.
+            - body `{ projectId, name, gitHash, gitDate, timeSeconds }`
     - Migrations:
         - `GET /migrations?projectId=...` -> list of all migrations.
         - `POST /migrations` -> stores a new migration.
@@ -139,6 +149,15 @@
                   `rule` module.
                 - Upload each count via `POST /migrationProgress` with `{ migrationId, gitHash, gitDate, count }`.
             - Print summary.
+    - `report-build-time`
+        - Arguments:
+            - `--server` (server URL to upload results, required)
+            - `--project` (required project identifier)
+            - `--name` (build name, required)
+            - `--time` (build time in seconds, required)
+        - Behavior:
+            - Send `POST /buildTimes` to server with JSON payload `{ projectId, buildName, gitHash, gitDate, timeSeconds }`.
+            - Print summary.
     - `measure-artifact-size`
         - Arguments:
             - `--file` (path to the artifact file, required)
@@ -154,9 +173,9 @@
 - Fetch from `GET /metrics?projectId=...`.
 - Web app is built and served by the same server host (same origin).
 - Display:
-    - Line chart of `linesOfCode` vs `gitDate` (using ComposeCharts).
-    - Line chart of `moduleCount` vs `gitDate` (using ComposeCharts).
-    - Line chart of `moduleTreeHeight` vs `gitDate` (using ComposeCharts).
+    - Line chart of `linesOfCode` vs `gitDate`.
+    - Line chart of `moduleCount` vs `gitDate`.
+    - Line chart of `moduleTreeHeight` vs `gitDate`.
     - Axis labels: horizontal time, vertical values (lines of code / module count).
     - Time selection: last 7 days/last 30 days/last 6 months/last 12 months.
 - Navigation:
@@ -177,6 +196,11 @@
             - Version chart showing artifact sizes across versions.
             - X-axis: versions (sorted using semver).
             - Y-axis: artifact size in bytes.
+    - `Build times`
+        - Line chart of build time vs `gitDate`.
+        - X-axis: date.
+        - Y-axis: time, formatted using `HumanReadable.duration(time)`.
+        - Time selection.
     - `Migrations`
         - Tab for each migration
             - Chart of migration progress.

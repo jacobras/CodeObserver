@@ -53,6 +53,7 @@ internal fun <T> TimeChart(
     metricField: (T) -> Int,
     color: Color,
     timeView: TimeView,
+    yAxisFormatter: ((Double) -> String)? = null,
     modifier: Modifier = Modifier
 ) {
     val now = Clock.System.now()
@@ -142,7 +143,7 @@ internal fun <T> TimeChart(
             ),
             startAxis = VerticalAxis.rememberStart(
                 valueFormatter = CartesianValueFormatter { _, y, _ ->
-                    HumanReadable.number(y)
+                    yAxisFormatter?.invoke(y) ?: HumanReadable.number(y)
                 }
             ),
             bottomAxis = HorizontalAxis.rememberBottom(valueFormatter = formatter),

@@ -21,6 +21,8 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeRequest
+import nl.jacobras.codebaseobserver.dto.BuildTimeDto
+import nl.jacobras.codebaseobserver.dto.BuildTimeRequest
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
@@ -37,6 +39,7 @@ import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
+import nl.jacobras.codebaseobserver.server.entity.BuildTimesTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationProgressTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationsTable
@@ -89,6 +92,7 @@ fun Application.module() {
     transaction {
         SchemaUtils.create(
             ArtifactSizesTable,
+            BuildTimesTable,
             MetricsTable,
             MigrationProgressTable,
             MigrationsTable,
@@ -150,6 +154,7 @@ fun Application.module() {
             val deleted = transaction {
                 MetricsTable.deleteWhere { MetricsTable.projectId eq projectId }
                 ArtifactSizesTable.deleteWhere { ArtifactSizesTable.projectId eq projectId }
+                BuildTimesTable.deleteWhere { BuildTimesTable.projectId eq projectId }
                 ModuleGraphTable.deleteWhere { ModuleGraphTable.projectId eq projectId }
                 ModuleGraphSettingsTable.deleteWhere { ModuleGraphSettingsTable.projectId eq projectId }
                 val migrationIds = MigrationsTable
@@ -314,6 +319,50 @@ fun Application.module() {
                     it[name] = request.name
                     it[semVer] = request.semVer
                     it[size] = request.size
+                }
+            }
+            call.respond(HttpStatusCode.Created)
+        }
+        get("/buildTimes") {
+            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@get
+            }
+            val records = transaction {
+                BuildTimesTable.selectAll()
+                    .where { BuildTimesTable.projectId eq projectId }
+                    .orderBy(BuildTimesTable.gitDate to SortOrder.ASC)
+                    .map {
+                        BuildTimeDto(
+                            projectId = it[BuildTimesTable.projectId],
+                            buildName = it[BuildTimesTable.buildName],
+                            gitHash = it[BuildTimesTable.gitHash],
+                            gitDate = Instant.fromEpochSeconds(it[BuildTimesTable.gitDate]),
+                            timeSeconds = it[BuildTimesTable.timeSeconds]
+                        )
+                    }
+            }
+            call.respond(records)
+        }
+        post("/buildTimes") {
+            val request = call.receive<BuildTimeRequest>()
+            val error = verifyBasicInfo(projectId = request.projectId, gitHash = request.gitHash)
+            if (error.isNotEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to error))
+                return@post
+            }
+            if (request.buildName.isEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing buildName"))
+                return@post
+            }
+            transaction {
+                BuildTimesTable.upsert {
+                    it[projectId] = request.projectId
+                    it[buildName] = request.buildName
+                    it[gitHash] = request.gitHash
+                    it[gitDate] = request.gitDate.epochSeconds
+                    it[timeSeconds] = request.timeSeconds
                 }
             }
             call.respond(HttpStatusCode.Created)
