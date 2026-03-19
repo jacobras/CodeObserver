@@ -122,20 +122,20 @@ private fun BuildDetail(
         )
         DataTable(
             modifier = Modifier.weight(1f),
-            columnHeadings = listOf("Git hash", "Date", "Time"),
+            columnHeadings = listOf("Git date", "Git hash", "Time"),
             rowCount = buildTimesNewestFirst.size,
             cellContent = { rowIndex, columnIndex, modifier ->
                 val item = buildTimesNewestFirst[rowIndex]
                 when (columnIndex) {
                     0 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = item.gitHash.take(7),
-                            style = Carbon.typography.code01
+                            text = item.gitDate.toString(),
+                            style = Carbon.typography.bodyCompact01,
                         )
                     }
                     1 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = item.gitDate.toString(),
+                            text = item.gitHash.take(7),
                             style = Carbon.typography.bodyCompact01,
                         )
                     }
