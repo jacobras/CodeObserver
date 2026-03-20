@@ -33,16 +33,16 @@ internal class BuildTimesViewModel(
                 val list = client.get("/buildTimes") {
                     url { parameters.append("projectId", projectId) }
                 }.body<List<BuildTimeDto>>()
-                isLoading.value = false
                 loadingError.value = ""
                 flowOf(list)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
                 Logger.e(e) { "Failed to fetch build times" }
-                isLoading.value = false
                 loadingError.value = "Failed to fetch build times: ${e.message}"
                 flowOf(emptyList())
+            } finally {
+                isLoading.value = false
             }
         }
 
