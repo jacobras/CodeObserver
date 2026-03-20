@@ -71,14 +71,14 @@ internal fun BuildTimes(
     }
 
     val buildNames = buildTimes.map { it.buildName }.distinct()
-    var selectedBuild by remember { mutableStateOf(buildNames.first()) }
+    var selectedBuild by remember(buildNames) { mutableStateOf(buildNames.first()) }
 
     if (buildNames.size > 1) {
         val tabs = buildNames.map { TabItem(label = it) }
 
         TabList(
             tabs = tabs,
-            selectedTab = tabs.first { it.label == selectedBuild },
+            selectedTab = tabs.firstOrNull { it.label == selectedBuild } ?: tabs.first(),
             onTabSelected = { tab ->
                 selectedBuild = buildNames.first { it == tab.label }
             }
