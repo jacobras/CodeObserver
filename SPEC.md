@@ -15,7 +15,7 @@
         - `createdAt` (LONG)
         - `projectId` (TEXT)
         - `gitHash` (TEXT)
-        - `gitDate` (TEXT)
+        - `gitDate` (LONG) (epoch seconds)
         - `linesOfCode` (INTEGER)
         - `moduleCount` (INTEGER)
         - `moduleTreeHeight` (INTEGER)
@@ -28,12 +28,12 @@
         - `projectId` (TEXT)
         - `buildName` (TEXT)
         - `gitHash` (TEXT)
-        - `gitDate` (TEXT)
+        - `gitDate` (LONG) (epoch seconds)
         - `timeSeconds` (INTEGER)
     - `moduleGraph` (always holds one recorded per project)
         - `projectId` (TEXT)
         - `gitHash` (TEXT)
-        - `gitDate` (TEXT)
+        - `gitDate` (LONG) (epoch seconds)
         - `graph` (TEXT) (serialized as `{ "moduleA": ["dep1", "dep2"] }`)
     - `moduleGraphSettings`
         - `id` (INTEGER) (auto-incremented)
@@ -60,7 +60,7 @@
     - `migrationProgress`
         - `migrationId` (INTEGER) (points to `migrations` table)
         - `gitHash` (TEXT)
-        - `gitDate` (TEXT)
+        - `gitDate` (LONG) (epoch seconds)
         - `count` (INT) (number of times the rule was matched)
 - Endpoints:
     - Metrics:
