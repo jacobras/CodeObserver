@@ -22,6 +22,9 @@ import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
+import com.gabrieldrn.carbon.dropdown.Dropdown
+import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
+import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
 import io.ktor.client.HttpClient
 import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
@@ -69,7 +72,8 @@ internal fun ModuleTypes(
         formColor = ""
     }
 
-    val isFormValid = formTypeName.trim().isNotEmpty() && formPlugin.trim().isNotEmpty() && formColor.trim().isNotEmpty()
+    val isFormValid =
+        formTypeName.trim().isNotEmpty() && formPlugin.trim().isNotEmpty() && formColor.trim().isNotEmpty()
 
     Column(Modifier.fillMaxWidth()) {
         TextInput(
@@ -93,11 +97,13 @@ internal fun ModuleTypes(
             placeholderText = "0"
         )
         Spacer(Modifier.height(8.dp))
-        TextInput(
+        Dropdown(
             label = "Color",
-            value = formColor,
-            onValueChange = { formColor = it },
-            placeholderText = "#FF0000"
+            placeholder = "Select color",
+            options = ModuleColors.entries.associate { it.hex to DropdownOption(value = it.name) },
+            selectedOption = formColor,
+            onOptionSelected = { formColor = it },
+            state = DropdownInteractiveState.Enabled
         )
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -159,7 +165,7 @@ internal fun ModuleTypes(
                         }
                         3 -> SelectionContainer(modifier) {
                             BasicText(
-                                text = identifier.color,
+                                text = ModuleColors.fromHex(identifier.color)?.name ?: "Unknown",
                                 style = Carbon.typography.code01
                             )
                         }
