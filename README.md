@@ -28,6 +28,8 @@ Then run CLI commands:
 - Measure Gradle execute: `./gradlew :cli:run --args="measure-gradle --path=.. "`
 - Measure Gradle execute and upload:
   `./gradlew :cli:run --args="measure-gradle --project=test --path=.. --server=http://localhost:8080"`
+- Report build time:
+  `./gradlew :cli:run --args="report-build-time --project=test --name=mainBuild --time=123 --server=http://localhost:8080"`
 
 ## Release
 

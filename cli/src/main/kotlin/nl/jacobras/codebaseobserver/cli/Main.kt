@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.subcommands
 import nl.jacobras.codebaseobserver.cli.command.measure.MeasureCommand
 import nl.jacobras.codebaseobserver.cli.command.measure.artifact.MeasureArtifactCommand
+import nl.jacobras.codebaseobserver.cli.command.measure.buildtime.ReportBuildTimeCommand
 import nl.jacobras.codebaseobserver.cli.command.measure.code.MeasureCodeCommand
 import nl.jacobras.codebaseobserver.cli.command.measure.gradle.MeasureGradleCommand
 import nl.jacobras.codebaseobserver.cli.util.ServerUploader
@@ -25,7 +26,8 @@ private class RootCommand : CliktCommand(name = "codebaseobserver") {
             MeasureCommand(),
             MeasureCodeCommand(uploader),
             MeasureGradleCommand(uploader),
-            MeasureArtifactCommand(uploader)
+            MeasureArtifactCommand(uploader),
+            ReportBuildTimeCommand(uploader)
         )
     }
 
