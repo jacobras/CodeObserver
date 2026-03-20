@@ -111,7 +111,8 @@
         - `DELETE /moduleTypeIdentifiers/{id}` -> deletes the module identifier.
     - Module graph:
         - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> mermaid graph string.
-            - Modules are colored according to their identifier color (from `moduleIdentifiers`) when `moduleDetails` is available.
+            - Modules are colored according to their identifier color (from `moduleTypeIdentifiers`) when
+              `moduleDetails` is available.
     - Modules:
         - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
     - Projects:
@@ -178,7 +179,8 @@
             - `--name` (build name, required)
             - `--time` (build time in seconds, required)
         - Behavior:
-            - Send `POST /buildTimes` to server with JSON payload `{ projectId, buildName, gitHash, gitDate, timeSeconds }`.
+            - Send `POST /buildTimes` to server with JSON payload
+              `{ projectId, buildName, gitHash, gitDate, timeSeconds }`.
             - Print summary.
     - `measure-artifact-size`
         - Arguments:
@@ -237,7 +239,7 @@
     - `Module rules`
         - Shows a data table with all module graph settings.
         - Form to add/edit/delete module graph settings.
-    - `Module identifiers`
-        - Shows a data table with all module identifiers.
-        - Form to add/edit/delete module identifiers (name, plugin, order, color).
+    - `Module types`
+        - Shows a data table with all module types.
+        - Form to add/edit/delete module types (name, identifying plugin, order, color).
 - Settings screen allows editing projects.
