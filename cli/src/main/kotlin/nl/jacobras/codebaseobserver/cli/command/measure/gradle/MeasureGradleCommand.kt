@@ -10,6 +10,7 @@ import nl.jacobras.codebaseobserver.cli.util.ServerUploader
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import nl.jacobras.codebaseobserver.dto.MigrationDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
+import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierDto
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -47,15 +48,26 @@ class MeasureGradleCommand internal constructor(
         serverUrl?.let { url ->
             val gitHash = GitInfoCollector.getGitHash(targetPath)
             val gitDate = GitInfoCollector.getGitDate(targetPath)
-            val payload = GradleMetricsRequest(
-                projectId = projectId,
-                gitHash = gitHash,
-                gitDate = gitDate,
-                moduleCount = moduleCount,
-                moduleTreeHeight = moduleTreeHeight,
-                graph = graphInfo.graph
-            )
             runBlocking {
+                val moduleIdentifiers = try {
+                    uploader.fetch<List<ModuleTypeIdentifierDto>>(
+                        serverUrl = url,
+                        endpoint = "moduleTypeIdentifiers?projectId=$projectId"
+                    )
+                } catch (e: Exception) {
+                    println("Warning: failed to fetch module type identifiers: ${e.message}")
+                    emptyList()
+                }
+                val moduleDetails = buildModuleDetails(graphInfo.modulePlugins, moduleIdentifiers)
+                val payload = GradleMetricsRequest(
+                    projectId = projectId,
+                    gitHash = gitHash,
+                    gitDate = gitDate,
+                    moduleCount = moduleCount,
+                    moduleTreeHeight = moduleTreeHeight,
+                    graph = graphInfo.graph,
+                    moduleDetails = moduleDetails
+                )
                 uploader.upload(
                     serverUrl = url,
                     endpoint = "metrics/gradle",
@@ -86,8 +98,9 @@ class MeasureGradleCommand internal constructor(
 
     private data class ModuleGraphInfo(
         val height: Int,
-        val longestPath: List<String>,
-        val graph: Map<String, List<String>>
+        val longestPath: List<String> = emptyList(),
+        val graph: Map<String, List<String>> = emptyMap(),
+        val modulePlugins: Map<String, List<String>> = emptyMap()
     )
 
     private fun countGradleModules(root: Path): Int {
@@ -142,13 +155,13 @@ class MeasureGradleCommand internal constructor(
     private fun calculateModuleTreeHeightWithPath(root: Path): ModuleGraphInfo {
         if (!Files.exists(root)) {
             println("Warning: $root does not exist")
-            return ModuleGraphInfo(0, emptyList(), emptyMap())
+            return ModuleGraphInfo(height = 0)
         }
 
         val settingsFile = findSettingsGradleFile(root)
         if (settingsFile == null) {
             println("Warning: settings.gradle.kts not found in $root")
-            return ModuleGraphInfo(0, emptyList(), emptyMap())
+            return ModuleGraphInfo(height = 0)
         }
 
         return try {
@@ -156,6 +169,7 @@ class MeasureGradleCommand internal constructor(
 
             val modules = GradleSettingsParser.parseModules(content)
             val dependencies = mutableMapOf<String, List<String>>()
+            val modulePlugins = mutableMapOf<String, List<String>>()
             val accessorMapping = GradleSettingsParser.parseAccessorMapping(modules)
 
             modules.forEach { module ->
@@ -165,17 +179,39 @@ class MeasureGradleCommand internal constructor(
                     val buildContent = Files.readString(buildGradle)
                     val deps = GradleDependencyParser.parse(buildContent, accessorMapping)
                     dependencies[module] = deps
+                    modulePlugins[module] = GradlePluginParser.parse(buildContent)
                 } else {
                     dependencies.putIfAbsent(module, emptyList())
+                    modulePlugins.putIfAbsent(module, emptyList())
                 }
             }
 
             val (height, path) = calculateGraphHeight(modules, dependencies)
-            ModuleGraphInfo(height, path, dependencies.toMap())
+            ModuleGraphInfo(
+                height = height,
+                longestPath = path,
+                graph = dependencies.toMap(),
+                modulePlugins = modulePlugins.toMap()
+            )
         } catch (e: Exception) {
             println("Failed to calculate module height because of ${e.message}")
-            ModuleGraphInfo(0, emptyList(), emptyMap())
+            ModuleGraphInfo(height = 0)
         }
+    }
+
+    private fun buildModuleDetails(
+        modulePlugins: Map<String, List<String>>,
+        moduleTypeIdentifiers: List<ModuleTypeIdentifierDto>
+    ): String {
+        if (moduleTypeIdentifiers.isEmpty()) {
+            return ""
+        }
+
+        val sortedTypes = moduleTypeIdentifiers.sortedBy { it.order }
+        return modulePlugins.entries.mapNotNull { (module, plugins) ->
+            val matchedType = sortedTypes.firstOrNull { typeDto -> plugins.any { it == typeDto.plugin } }
+            matchedType?.let { "$module[${it.typeName}]" }
+        }.joinToString(",")
     }
 
     private fun calculateGraphHeight(

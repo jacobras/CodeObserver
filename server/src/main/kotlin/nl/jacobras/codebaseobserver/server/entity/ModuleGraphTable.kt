@@ -8,5 +8,6 @@ internal object ModuleGraphTable : Table("moduleGraph") {
     val gitHash = text("gitHash")
     val gitDate = long("gitDate")
     val graph = text("graph")
+    val moduleDetails = text("moduleDetails").default("")
     override val primaryKey = PrimaryKey(projectId)
 }

@@ -10,5 +10,6 @@ data class GradleMetricsRequest(
     override val gitDate: Instant,
     val moduleCount: Int,
     val moduleTreeHeight: Int,
-    val graph: Map<String, List<String>>
+    val graph: Map<String, List<String>>,
+    val moduleDetails: String = ""
 ) : ProjectAndGitInfo

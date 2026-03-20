@@ -13,7 +13,8 @@ object GraphVisualizer {
         groupingThreshold: Int,
         nodeLimit: Int = 30,
         layerDepth: Int = 30,
-        config: List<GraphConfig> = emptyList()
+        config: List<GraphConfig> = emptyList(),
+        moduleColors: Map<String, String> = emptyMap()
     ): String {
         val filteredModules = if (startModule.isNotEmpty()) {
             val res = filterByStartModule(modules = modules, startModule = startModule)
@@ -128,6 +129,17 @@ object GraphVisualizer {
                 }
                 for (index in forbiddenDependencyIndices) {
                     appendLine("linkStyle $index stroke:red,stroke-width:3px;")
+                }
+            }
+
+            val applicableColors = moduleColors.filter { it.key in outputModules }
+            if (applicableColors.isNotEmpty()) {
+                appendLine()
+                val colorGroups = applicableColors.entries.groupBy { it.value }
+                colorGroups.entries.forEachIndexed { index, (color, entries) ->
+                    val nodeList = entries.joinToString(",") { it.key }
+                    appendLine("classDef moduleType$index fill:$color;")
+                    appendLine("class $nodeList moduleType$index")
                 }
             }
         }.trim()
