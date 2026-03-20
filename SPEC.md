@@ -80,7 +80,7 @@
     - Build times:
         - `GET /buildTimes?projectId=...` -> list of records.
         - `POST /buildTimes` -> stores a build time record.
-            - body `{ projectId, name, gitHash, gitDate, timeSeconds }`
+            - body `{ projectId, buildName, gitHash, gitDate, timeSeconds }`
     - Migrations:
         - `GET /migrations?projectId=...` -> list of all migrations.
         - `POST /migrations` -> stores a new migration.
