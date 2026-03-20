@@ -35,6 +35,14 @@
         - `gitHash` (TEXT)
         - `gitDate` (LONG) (epoch seconds)
         - `graph` (TEXT) (serialized as `{ "moduleA": ["dep1", "dep2"] }`)
+        - `moduleDetails` (TEXT) (serialized as `moduleA[android],moduleB[kmp],moduleC[java]`)
+    - `moduleTypeIdentifiers`
+        - `id` (INTEGER) (auto-incremented)
+        - `projectId` (TEXT)
+        - `typeName` (TEXT) (e.g. `android`, `kmp`, `java`)
+        - `plugin` (TEXT) (e.g. `libs.plugins.androidApplication` or `kotlin("multiplatform")`)
+        - `order` (INTEGER) (lower value wins when multiple types match a module)
+        - `color` (TEXT) (hex color code, e.g. `#FF0000`)
     - `moduleGraphSettings`
         - `id` (INTEGER) (auto-incremented)
         - `createdAt` (LONG)
@@ -71,8 +79,9 @@
             - body `{ projectId, gitHash, gitDate, linesOfCode }`
     - Gradle metrics:
         - `POST /metrics/gradle` -> stores gradle metrics.
-            - body `{ projectId, gitHash, gitDate, moduleCount, moduleTreeHeight, graph }`
+            - body `{ projectId, gitHash, gitDate, moduleCount, moduleTreeHeight, graph, moduleDetails }`
             - graph is Map<String, List<String>>
+            - moduleDetails is optional (e.g. `moduleA[android],moduleB[kmp]`)
     - Artifact sizes:
         - `GET /artifactSizes?projectId=...` -> list of records.
         - `POST /artifactSizes` -> stores artifact size.
@@ -93,8 +102,16 @@
         - `POST /migrationProgress` -> stores migration progress.
             - body `{ migrationId, gitHash, gitDate, count }`
         - `DELETE /migrationProgress/{migrationId}/{gitHash}` -> deletes a single progress record.
+    - Module identifiers:
+        - `GET /moduleTypeIdentifiers?projectId=...` -> list of module identifier records.
+        - `POST /moduleTypeIdentifiers` -> creates a module identifier.
+            - body `{ projectId, typeName, plugin, order, color }`
+        - `PATCH /moduleTypeIdentifiers/{id}` -> updates a module identifier.
+            - body `{ typeName, plugin, order, color }`
+        - `DELETE /moduleTypeIdentifiers/{id}` -> deletes the module identifier.
     - Module graph:
         - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> mermaid graph string.
+            - Modules are colored according to their identifier color (from `moduleIdentifiers`) when `moduleDetails` is available.
     - Modules:
         - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
     - Projects:
@@ -142,8 +159,13 @@
         - Behavior:
             - Find `settings.gradle.kts` under the given `path`.
             - Count the number of Gradle modules in the project.
+            - For each module, scan its `build.gradle.kts` for plugin IDs.
             - Send `POST /metrics/gradle` to server with JSON payload including `projectId`.
             - If `--server` is provided:
+                - Fetch module identifiers for the project via `GET /moduleTypeIdentifiers?projectId=...`.
+                - For each module, determine its type by matching scanned plugin IDs against module identifiers
+                  (the identifier with the lowest `order` wins when multiple match).
+                - Include `moduleDetails` in the request (e.g. `moduleA[android],moduleB[kmp]`).
                 - Fetch all `moduleUsage` migrations for the project via `GET /migrations?projectId=...`.
                 - For each migration, count the number of dependencies in the module graph that point to the migration's
                   `rule` module.
@@ -215,4 +237,7 @@
     - `Module rules`
         - Shows a data table with all module graph settings.
         - Form to add/edit/delete module graph settings.
+    - `Module identifiers`
+        - Shows a data table with all module identifiers.
+        - Form to add/edit/delete module identifiers (name, plugin, order, color).
 - Settings screen allows editing projects.

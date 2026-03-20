@@ -177,6 +177,27 @@ class GraphVisualizerTest {
     }
 
     @Test
+    fun `graph with colors`() {
+        val graph = GraphVisualizer.build(
+            modules = mapOf("hello" to emptyList()),
+            groupingThreshold = 3,
+            moduleColors = mapOf("hello" to "#ff0000")
+        )
+
+        assertThat(graph).isEqualTo(
+            """
+            graph TD
+                hello
+            
+            %% Dependencies
+            
+            classDef moduleType0 fill:#ff0000;
+            class hello moduleType0
+        """.trimIndent()
+        )
+    }
+
+    @Test
     fun `too many modules`() {
         val graph = GraphVisualizer.build(
             modules = List(300) { "module$it" to emptyList<String>() }.toMap(),

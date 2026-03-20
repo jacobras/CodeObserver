@@ -7,4 +7,5 @@ internal enum class DashboardTab(val displayName: String) {
     Migrations("Migrations"),
     ModuleGraph("Module graph"),
     ModuleRules("Module rules"),
+    ModuleTypes("Module types"),
 }

@@ -36,6 +36,9 @@ import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingDto
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingRequest
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingUpdateRequest
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
+import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierDto
+import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierRequest
+import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierUpdateRequest
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
@@ -45,6 +48,7 @@ import nl.jacobras.codebaseobserver.server.entity.MigrationProgressTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationsTable
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphSettingsTable
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphTable
+import nl.jacobras.codebaseobserver.server.entity.ModuleTypeIdentifiersTable
 import nl.jacobras.codebaseobserver.server.entity.ProjectsTable
 import nl.jacobras.codebaseobserver.server.graph.GraphConfig
 import nl.jacobras.codebaseobserver.server.graph.GraphUtil
@@ -98,6 +102,7 @@ fun Application.module() {
             MigrationsTable,
             ModuleGraphSettingsTable,
             ModuleGraphTable,
+            ModuleTypeIdentifiersTable,
             ProjectsTable,
         )
     }
@@ -157,6 +162,7 @@ fun Application.module() {
                 BuildTimesTable.deleteWhere { BuildTimesTable.projectId eq projectId }
                 ModuleGraphTable.deleteWhere { ModuleGraphTable.projectId eq projectId }
                 ModuleGraphSettingsTable.deleteWhere { ModuleGraphSettingsTable.projectId eq projectId }
+                ModuleTypeIdentifiersTable.deleteWhere { ModuleTypeIdentifiersTable.projectId eq projectId }
                 val migrationIds = MigrationsTable
                     .selectAll()
                     .where { MigrationsTable.projectId eq projectId }
@@ -250,6 +256,7 @@ fun Application.module() {
                     it[gitHash] = request.gitHash
                     it[gitDate] = request.gitDate.epochSeconds
                     it[graph] = Json.encodeToString(request.graph)
+                    it[moduleDetails] = request.moduleDetails
                 }
             }
             call.respond(HttpStatusCode.Created)
@@ -395,8 +402,9 @@ fun Application.module() {
             }
 
             val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
-            val graphConfig = transaction {
-                ModuleGraphSettingsTable.selectAll()
+            val rawModuleDetails = graphRecord[ModuleGraphTable.moduleDetails]
+            val (graphConfig, moduleColors) = transaction {
+                val config = ModuleGraphSettingsTable.selectAll()
                     .where { ModuleGraphSettingsTable.projectId eq projectId }
                     .map {
                         when (val type = it[ModuleGraphSettingsTable.type]) {
@@ -412,13 +420,22 @@ fun Application.module() {
                             else -> error("Unsupported type: $type")
                         }
                     }
+                val typeColors = ModuleTypeIdentifiersTable.selectAll()
+                    .where { ModuleTypeIdentifiersTable.projectId eq projectId }
+                    .associate { it[ModuleTypeIdentifiersTable.typeName] to it[ModuleTypeIdentifiersTable.color] }
+                val moduleTypeMap = parseModuleDetails(rawModuleDetails)
+                val colors = moduleTypeMap
+                    .mapValues { (_, typeName) -> typeColors[typeName].orEmpty() }
+                    .filter { it.value.isNotEmpty() }
+                config to colors
             }
             val graph = GraphVisualizer.build(
                 modules = graphMap,
                 startModule = startModule,
                 groupingThreshold = groupingThreshold,
                 layerDepth = layerDepth,
-                config = graphConfig
+                config = graphConfig,
+                moduleColors = moduleColors
             )
             call.respondText(graph)
         }
@@ -700,6 +717,113 @@ fun Application.module() {
                 call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
             }
         }
+        get("/moduleTypeIdentifiers") {
+            val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@get
+            }
+            val records = transaction {
+                ModuleTypeIdentifiersTable.selectAll()
+                    .where { ModuleTypeIdentifiersTable.projectId eq projectId }
+                    .orderBy(ModuleTypeIdentifiersTable.order to SortOrder.ASC)
+                    .map {
+                        ModuleTypeIdentifierDto(
+                            id = it[ModuleTypeIdentifiersTable.id],
+                            projectId = it[ModuleTypeIdentifiersTable.projectId],
+                            typeName = it[ModuleTypeIdentifiersTable.typeName],
+                            plugin = it[ModuleTypeIdentifiersTable.plugin],
+                            order = it[ModuleTypeIdentifiersTable.order],
+                            color = it[ModuleTypeIdentifiersTable.color]
+                        )
+                    }
+            }
+            call.respond(records)
+        }
+        post("/moduleTypeIdentifiers") {
+            val request = call.receive<ModuleTypeIdentifierRequest>()
+            val projectId = request.projectId.trim()
+            val name = request.typeName.trim()
+            val plugin = request.plugin.trim()
+            val color = request.color.trim()
+            if (projectId.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
+                return@post
+            }
+            if (name.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
+                return@post
+            }
+            if (plugin.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing plugin"))
+                return@post
+            }
+            if (color.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing color"))
+                return@post
+            }
+            transaction {
+                ModuleTypeIdentifiersTable.insert {
+                    it[ModuleTypeIdentifiersTable.projectId] = projectId
+                    it[ModuleTypeIdentifiersTable.typeName] = name
+                    it[ModuleTypeIdentifiersTable.plugin] = plugin
+                    it[ModuleTypeIdentifiersTable.order] = request.order
+                    it[ModuleTypeIdentifiersTable.color] = color
+                }
+            }
+            call.respond(HttpStatusCode.Created)
+        }
+        patch("/moduleTypeIdentifiers/{id}") {
+            val id = call.parameters["id"]?.trim()?.toIntOrNull()
+            if (id == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))
+                return@patch
+            }
+            val request = call.receive<ModuleTypeIdentifierUpdateRequest>()
+            val name = request.typeName.trim()
+            val plugin = request.plugin.trim()
+            val color = request.color.trim()
+            if (name.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
+                return@patch
+            }
+            if (plugin.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing plugin"))
+                return@patch
+            }
+            if (color.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing color"))
+                return@patch
+            }
+            val updated = transaction {
+                ModuleTypeIdentifiersTable.update({ ModuleTypeIdentifiersTable.id eq id }) {
+                    it[ModuleTypeIdentifiersTable.typeName] = name
+                    it[ModuleTypeIdentifiersTable.plugin] = plugin
+                    it[ModuleTypeIdentifiersTable.order] = request.order
+                    it[ModuleTypeIdentifiersTable.color] = color
+                }
+            }
+            if (updated == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Module identifier not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "updated"))
+            }
+        }
+        delete("/moduleTypeIdentifiers/{id}") {
+            val id = call.parameters["id"]?.trim()?.toIntOrNull()
+            if (id == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))
+                return@delete
+            }
+            val deleted = transaction {
+                ModuleTypeIdentifiersTable.deleteWhere { ModuleTypeIdentifiersTable.id eq id }
+            }
+            if (deleted == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Module identifier not found"))
+            } else {
+                call.respond(HttpStatusCode.OK, mapOf("status" to "deleted"))
+            }
+        }
         delete("/migrationProgress/{migrationId}/{gitHash}") {
             val migrationId = call.parameters["migrationId"]?.trim()?.toIntOrNull()
             val gitHash = call.parameters["gitHash"]?.trim().orEmpty()
@@ -723,6 +847,20 @@ fun Application.module() {
             }
         }
     }
+}
+
+/**
+ * Parses moduleDetails text (e.g. "moduleA[android],moduleB[kmp]") into a map of module name to type name.
+ */
+private fun parseModuleDetails(moduleDetails: String): Map<String, String> {
+    if (moduleDetails.isBlank()) return emptyMap()
+    return moduleDetails.split(",").mapNotNull { entry ->
+        val bracketIndex = entry.indexOf('[')
+        if (bracketIndex < 0 || !entry.endsWith(']')) return@mapNotNull null
+        val module = entry.substring(0, bracketIndex)
+        val type = entry.substring(bracketIndex + 1, entry.length - 1)
+        if (module.isBlank() || type.isBlank()) null else module to type
+    }.toMap()
 }
 
 /**

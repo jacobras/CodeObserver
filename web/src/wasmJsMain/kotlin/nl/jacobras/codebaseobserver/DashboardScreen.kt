@@ -29,6 +29,7 @@ import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.migrations.Migrations
 import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
 import nl.jacobras.codebaseobserver.modulegraph.ModuleRules
+import nl.jacobras.codebaseobserver.modulegraph.ModuleTypes
 import nl.jacobras.codebaseobserver.trends.Trends
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
@@ -126,6 +127,10 @@ internal fun DashboardScreen(
                         projectId = selectedProjectId
                     )
                     DashboardTab.ModuleRules -> ModuleRules(
+                        client = client,
+                        projectId = selectedProjectId
+                    )
+                    DashboardTab.ModuleTypes -> ModuleTypes(
                         client = client,
                         projectId = selectedProjectId
                     )
