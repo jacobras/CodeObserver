@@ -33,7 +33,7 @@ internal fun Route.projectRoutes() {
                 .orderBy(ProjectsTable.projectId to SortOrder.ASC)
                 .map {
                     ProjectDto(
-                        projectId = it[ProjectsTable.projectId],
+                        id = it[ProjectsTable.projectId],
                         name = it[ProjectsTable.name]
                     )
                 }

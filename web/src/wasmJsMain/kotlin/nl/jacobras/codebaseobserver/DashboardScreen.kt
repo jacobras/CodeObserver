@@ -52,7 +52,7 @@ internal fun DashboardScreen(
             options = projects
                 .sortedBy { it.name }
                 .associate { project ->
-                    project.projectId to DropdownOption("${project.name} (${project.projectId})")
+                    project.id to DropdownOption("${project.name} (${project.id})")
                 },
             selectedOption = selectedProjectId,
             onOptionSelected = { onSelectProject(it) },

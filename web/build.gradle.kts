@@ -25,6 +25,8 @@ kotlin {
             implementation(libs.coroutines)
             implementation(libs.humanReadable)
             implementation(libs.kermit)
+            implementation(libs.kotlin.result)
+            implementation(libs.kotlin.result.coroutines)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.core)

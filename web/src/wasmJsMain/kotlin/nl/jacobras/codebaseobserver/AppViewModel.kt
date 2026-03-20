@@ -33,9 +33,9 @@ internal class AppViewModel(
                 val current = selectedProjectId.value
                 selectedProjectId.value = when {
                     list.isEmpty() -> ""
-                    current.isBlank() -> list.first().projectId
-                    list.any { it.projectId == current } -> current
-                    else -> list.first().projectId
+                    current.isBlank() -> list.first().id
+                    list.any { it.id == current } -> current
+                    else -> list.first().id
                 }
                 flowOf(list)
             } catch (e: CancellationException) {

@@ -103,9 +103,7 @@ fun App() {
                                 client = client
                             )
                         }
-                        Screen.Settings -> {
-                            SettingsScreen(client = client)
-                        }
+                        Screen.Settings -> SettingsScreen()
                     }
                 }
             }
