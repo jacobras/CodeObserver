@@ -34,6 +34,7 @@ internal class ProjectDataSource(
 
     suspend fun save(project: ProjectDto): Result<Unit, NetworkError> {
         Logger.i("Saving project: ${project.name}")
+        delay(1000) // TODO remove
         return try {
             client.post("/projects") {
                 contentType(ContentType.Application.Json)
@@ -48,6 +49,7 @@ internal class ProjectDataSource(
 
     suspend fun delete(id: String): Result<Unit, NetworkError> {
         Logger.i("Deleting project: $id")
+        delay(1000) // TODO remove
         return try {
             client.delete("/projects/$id")
             Ok(Unit)

@@ -24,8 +24,6 @@ import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
-import com.gabrieldrn.carbon.progressbar.IndeterminateProgressBar
-import com.gabrieldrn.carbon.progressbar.ProgressBarSize
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.data.RequestState
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
@@ -37,8 +35,7 @@ import nl.jacobras.codebaseobserver.ui.table.DataTable
 internal fun SettingsScreen() {
     val viewModel = viewModel { SettingsScreenViewModel(RepositoryLocator.projectRepository) }
     val projects by viewModel.projects.collectAsState(emptyList())
-    val loadingState by viewModel.loadingState.collectAsState()
-    val modifyingState by viewModel.modifyingState.collectAsState()
+    val state by viewModel.state.collectAsState()
 
     var editProjectId by remember { mutableStateOf("") }
     var editName by remember { mutableStateOf("") }
@@ -55,8 +52,13 @@ internal fun SettingsScreen() {
                 .layerBackground()
                 .padding(16.dp)
         ) {
-            when (val loading = loadingState) {
-                RequestState.Idle -> Unit
+            when (val loading = state.loading) {
+                is RequestState.Working -> {
+                    ProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        loading = true
+                    )
+                }
                 is RequestState.Error -> {
                     ProgressIndicator(
                         modifier = Modifier.fillMaxWidth(),
@@ -64,28 +66,7 @@ internal fun SettingsScreen() {
                         onRetry = { viewModel.refresh() }
                     )
                 }
-                RequestState.Working -> {
-                    ProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(),
-                        loading = true
-                    )
-                }
-            }
-
-            when (val modifying = modifyingState) {
                 RequestState.Idle -> Unit
-                is RequestState.Error -> {
-                    ProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(),
-                        error = modifying.type.name
-                    )
-                }
-                RequestState.Working -> {
-                    IndeterminateProgressBar(
-                        modifier = Modifier.fillMaxWidth(),
-                        size = ProgressBarSize.Small
-                    )
-                }
             }
 
             BasicText(
@@ -109,14 +90,20 @@ internal fun SettingsScreen() {
             )
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val saving = state.saving
+
                 Button(
                     label = if (isEditing) "Update project" else "Add project",
                     buttonType = ButtonType.Primary,
                     buttonSize = ButtonSize.Small,
-                    isEnabled = editProjectId.trim().isNotEmpty() && editName.trim().isNotEmpty(),
+                    isEnabled = saving !is RequestState.Working
+                            && editProjectId.trim().isNotEmpty() && editName.trim().isNotEmpty(),
                     onClick = {
-                        viewModel.saveProject(editProjectId.trim(), editName.trim())
-                        clearForm()
+                        viewModel.saveProject(
+                            projectId = editProjectId.trim(),
+                            name = editName.trim(),
+                            onSuccess = { clearForm() }
+                        )
                     }
                 )
                 Button(
