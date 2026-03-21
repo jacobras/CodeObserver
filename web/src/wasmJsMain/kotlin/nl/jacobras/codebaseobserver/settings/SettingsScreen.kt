@@ -26,6 +26,7 @@ import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.data.RequestState
+import nl.jacobras.codebaseobserver.data.UiState
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
@@ -118,6 +119,7 @@ internal fun SettingsScreen() {
             Spacer(Modifier.height(20.dp))
             ProjectsTable(
                 projects = projects,
+                state = state,
                 onEdit = { project ->
                     editProjectId = project.id
                     editName = project.name
@@ -131,6 +133,7 @@ internal fun SettingsScreen() {
 @Composable
 private fun ProjectsTable(
     projects: List<ProjectDto>,
+    state: UiState<String>,
     onEdit: (ProjectDto) -> Unit,
     onDelete: (projectId: String) -> Unit
 ) {
@@ -168,12 +171,16 @@ private fun ProjectsTable(
                         label = "Edit",
                         buttonType = ButtonType.Ghost,
                         buttonSize = ButtonSize.Small,
+                        isEnabled = state.saving !is RequestState.Working
+                                && state.deleting[project.id] !is RequestState.Working,
                         onClick = { onEdit(project) }
                     )
                     Button(
                         label = "Delete",
                         buttonType = ButtonType.GhostDanger,
                         buttonSize = ButtonSize.Small,
+                        isEnabled = state.saving !is RequestState.Working
+                                && state.deleting[project.id] !is RequestState.Working,
                         onClick = { onDelete(project.id) }
                     )
                 }
