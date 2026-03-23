@@ -28,6 +28,7 @@ import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.data.RequestState
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.ui.button.SmallProgressButton
 import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.ui.table.DataTable
 
@@ -92,12 +93,11 @@ internal fun SettingsScreen() {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val saving = state.saving
 
-                Button(
+                SmallProgressButton(
                     label = if (isEditing) "Update project" else "Add project",
                     buttonType = ButtonType.Primary,
-                    buttonSize = ButtonSize.Small,
-                    isEnabled = saving !is RequestState.Working
-                            && editProjectId.trim().isNotEmpty() && editName.trim().isNotEmpty(),
+                    isEnabled = editProjectId.trim().isNotEmpty() && editName.trim().isNotEmpty(),
+                    loading = saving is RequestState.Working,
                     onClick = {
                         viewModel.saveProject(
                             projectId = editProjectId.trim(),
@@ -166,18 +166,18 @@ private fun ProjectsTable(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = modifier
                 ) {
+                    val isDeleting = deleting[project.id] is RequestState.Working
                     Button(
                         label = "Edit",
                         buttonType = ButtonType.Ghost,
                         buttonSize = ButtonSize.Small,
-                        isEnabled = deleting[project.id] !is RequestState.Working,
+                        isEnabled = !isDeleting,
                         onClick = { onEdit(project) }
                     )
-                    Button(
+                    SmallProgressButton(
                         label = "Delete",
                         buttonType = ButtonType.GhostDanger,
-                        buttonSize = ButtonSize.Small,
-                        isEnabled = deleting[project.id] !is RequestState.Working,
+                        loading = isDeleting,
                         onClick = { onDelete(project.id) }
                     )
                 }

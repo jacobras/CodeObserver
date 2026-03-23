@@ -12,7 +12,6 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import kotlinx.coroutines.delay
 import nl.jacobras.codebaseobserver.data.NetworkError
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
@@ -34,7 +33,6 @@ internal class ProjectDataSource(
 
     suspend fun save(project: ProjectDto): Result<Unit, NetworkError> {
         Logger.i("Saving project: ${project.name}")
-        delay(1000) // TODO remove
         return try {
             client.post("/projects") {
                 contentType(ContentType.Application.Json)
@@ -49,7 +47,6 @@ internal class ProjectDataSource(
 
     suspend fun delete(id: String): Result<Unit, NetworkError> {
         Logger.i("Deleting project: $id")
-        delay(1000) // TODO remove
         return try {
             client.delete("/projects/$id")
             Ok(Unit)
