@@ -1,4 +1,6 @@
-package nl.jacobras.codebaseobserver.data
+package nl.jacobras.codebaseobserver.ui
+
+import nl.jacobras.codebaseobserver.data.RequestState
 
 internal data class UiState<Id>(
     val loading: RequestState = RequestState.Idle,

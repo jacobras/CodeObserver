@@ -28,6 +28,7 @@ import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.data.RequestState
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.ui.UiState
 import nl.jacobras.codebaseobserver.ui.button.SmallProgressButton
 import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.ui.table.DataTable
@@ -36,7 +37,7 @@ import nl.jacobras.codebaseobserver.ui.table.DataTable
 internal fun SettingsScreen() {
     val viewModel = viewModel { SettingsScreenViewModel(RepositoryLocator.projectRepository) }
     val projects by viewModel.projects.collectAsState(emptyList())
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsState(UiState())
 
     var editProjectId by remember { mutableStateOf("") }
     var editName by remember { mutableStateOf("") }
