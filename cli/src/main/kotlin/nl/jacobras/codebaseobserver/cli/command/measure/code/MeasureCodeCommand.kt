@@ -58,7 +58,9 @@ class MeasureCodeCommand internal constructor(
                         serverUrl = url,
                         endpoint = "metrics?projectId=$projectId"
                     )
-                    lastKnownLines = metrics.maxByOrNull { it.gitDate }?.linesOfCode
+                    lastKnownLines = metrics
+                        .filter { it.linesOfCode > 0 }
+                        .maxByOrNull { it.gitDate }?.linesOfCode
                 } catch (_: Exception) {
                 }
                 migrations = uploader.fetch<List<MigrationDto>>(
