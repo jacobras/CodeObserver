@@ -19,16 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
-import com.gabrieldrn.carbon.CarbonDesignSystem
 import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonType
-import com.gabrieldrn.carbon.foundation.color.WhiteTheme
-import com.patrykandpatrick.vico.compose.common.DefaultColors
-import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
-import com.patrykandpatrick.vico.compose.common.VicoTheme
-import com.patrykandpatrick.vico.compose.common.VicoTheme.CandlestickCartesianLayerColors
 import nl.jacobras.codebaseobserver.settings.SettingsScreen
+import nl.jacobras.codebaseobserver.ui.theme.COTheme
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
 @OptIn(ExperimentalCarbonApi::class)
@@ -36,39 +31,24 @@ import nl.jacobras.codebaseobserver.web.BuildConfig
 fun App() {
     var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
 
-    CarbonDesignSystem(
-        theme = WhiteTheme.copy(
-            borderInteractive = Color(0xFF1F3D4D),
-            layerSelectedInverse = Color(0xFF1F3D4D)
-        )
-    ) {
-        ProvideVicoTheme(
-            theme = VicoTheme(
-                candlestickCartesianLayerColors =
-                    CandlestickCartesianLayerColors.fromDefaultColors(DefaultColors.Light),
-                columnCartesianLayerColors = DefaultColors.Light.cartesianLayerColors.map(::Color),
-                lineColor = Color(DefaultColors.Light.lineColor),
-                textColor = Carbon.theme.textPrimary,
-            )
+    COTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Carbon.theme.background)
         ) {
-            Column(
+            TopNav(
+                active = activeScreen,
+                onSelect = { activeScreen = it }
+            )
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Carbon.theme.background)
+                    .padding(horizontal = 24.dp, vertical = 20.dp)
             ) {
-                TopNav(
-                    active = activeScreen,
-                    onSelect = { activeScreen = it }
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 24.dp, vertical = 20.dp)
-                ) {
-                    when (activeScreen) {
-                        Screen.Dashboard -> DashboardScreen()
-                        Screen.Settings -> SettingsScreen()
-                    }
+                when (activeScreen) {
+                    Screen.Dashboard -> DashboardScreen()
+                    Screen.Settings -> SettingsScreen()
                 }
             }
         }
