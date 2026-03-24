@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
-import nl.jacobras.codebaseobserver.ui.UiState
+import nl.jacobras.codebaseobserver.util.ui.UiState
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SettingsScreenViewModel(

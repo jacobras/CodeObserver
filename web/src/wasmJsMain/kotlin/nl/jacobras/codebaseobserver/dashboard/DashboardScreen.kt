@@ -38,17 +38,16 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.AppViewModel
-import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
-import nl.jacobras.codebaseobserver.buildtimes.BuildTimes
+import nl.jacobras.codebaseobserver.dashboard.artifacts.ArtifactCharts
+import nl.jacobras.codebaseobserver.dashboard.buildtimes.BuildTimes
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
-import nl.jacobras.codebaseobserver.migrations.Migrations
-import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
-import nl.jacobras.codebaseobserver.modulegraph.ModuleRules
-import nl.jacobras.codebaseobserver.modulegraph.ModuleTypes
-import nl.jacobras.codebaseobserver.nav.DashboardDestination
-import nl.jacobras.codebaseobserver.trends.CodeTrends
-import nl.jacobras.codebaseobserver.ui.chart.TimeView
+import nl.jacobras.codebaseobserver.dashboard.migrations.Migrations
+import nl.jacobras.codebaseobserver.dashboard.modulegraph.DependencyGraph
+import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleRules
+import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleTypes
+import nl.jacobras.codebaseobserver.dashboard.trends.CodeTrends
+import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
 
 @Composable
 internal fun DashboardScreen() {

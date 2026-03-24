@@ -24,11 +24,11 @@ import androidx.navigation.compose.rememberNavController
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
 import com.gabrieldrn.carbon.button.Button
+import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
 import nl.jacobras.codebaseobserver.dashboard.DashboardScreen
-import nl.jacobras.codebaseobserver.nav.Screen
 import nl.jacobras.codebaseobserver.settings.SettingsScreen
-import nl.jacobras.codebaseobserver.ui.theme.COTheme
+import nl.jacobras.codebaseobserver.util.ui.theme.COTheme
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
 @OptIn(ExperimentalCarbonApi::class)
@@ -89,7 +89,7 @@ private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
                 Button(
                     label = screen.label,
                     buttonType = if (selected) ButtonType.Primary else ButtonType.Ghost,
-                    buttonSize = com.gabrieldrn.carbon.button.ButtonSize.Small,
+                    buttonSize = ButtonSize.Small,
                     onClick = { onSelect(screen) }
                 )
             }

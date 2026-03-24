@@ -8,7 +8,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import nl.jacobras.codebaseobserver.data.RequestState
+import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)

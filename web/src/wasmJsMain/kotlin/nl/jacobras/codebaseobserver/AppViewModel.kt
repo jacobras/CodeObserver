@@ -6,7 +6,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import nl.jacobras.codebaseobserver.data.RequestState
+import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)

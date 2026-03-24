@@ -25,13 +25,13 @@ import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.TextInput
-import nl.jacobras.codebaseobserver.data.RequestState
+import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
-import nl.jacobras.codebaseobserver.ui.UiState
-import nl.jacobras.codebaseobserver.ui.button.SmallProgressButton
-import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
-import nl.jacobras.codebaseobserver.ui.table.DataTable
+import nl.jacobras.codebaseobserver.util.ui.UiState
+import nl.jacobras.codebaseobserver.util.ui.button.SmallProgressButton
+import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
+import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 
 @Composable
 internal fun SettingsScreen() {
