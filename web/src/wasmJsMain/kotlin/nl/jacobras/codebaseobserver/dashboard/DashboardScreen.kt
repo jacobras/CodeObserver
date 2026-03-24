@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,13 +41,13 @@ import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.AppViewModel
 import nl.jacobras.codebaseobserver.dashboard.artifacts.ArtifactCharts
 import nl.jacobras.codebaseobserver.dashboard.buildtimes.BuildTimes
-import nl.jacobras.codebaseobserver.di.RepositoryLocator
-import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.dashboard.migrations.Migrations
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.DependencyGraph
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleRules
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleTypes
 import nl.jacobras.codebaseobserver.dashboard.trends.CodeTrends
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
+import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
 
 @Composable
@@ -90,6 +91,10 @@ private fun DashboardScreen(
             }
         }
     }
+    DisposableEffect(client) {
+        onDispose { client.close() }
+    }
+
     Column {
         BasicText(
             text = "Dashboard",
