@@ -1,0 +1,19 @@
+package nl.jacobras.codebaseobserver.nav
+
+internal enum class DashboardDestination(
+    val route: String,
+    val label: String
+) {
+    CodeTrends("codeTrends", "Code trends"),
+    Artifacts("artifacts", "Artifact sizes"),
+    BuildTimes("buildTimes", "Build times"),
+    Migrations("migrations", "Migrations"),
+    ModuleGraph("moduleGraph", "Module graph"),
+    ModuleRules("moduleRules", "Module rules"),
+    ModuleTypes("moduleTypes", "Module types");
+
+    companion object {
+        fun fromRoute(route: String) = entries.firstOrNull { it.route == route }
+        fun fromLabel(label: String) = entries.firstOrNull { it.label == label }
+    }
+}

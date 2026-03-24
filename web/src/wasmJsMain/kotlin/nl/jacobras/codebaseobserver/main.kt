@@ -2,10 +2,14 @@ package nl.jacobras.codebaseobserver
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
+import androidx.navigation.ExperimentalBrowserHistoryApi
+import androidx.navigation.bindToBrowserNavigation
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalBrowserHistoryApi::class)
 fun main() {
     ComposeViewport {
-        App()
+        App(
+            onNavHostReady = { it.bindToBrowserNavigation() }
+        )
     }
 }

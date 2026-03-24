@@ -10,26 +10,35 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonType
+import nl.jacobras.codebaseobserver.dashboard.DashboardScreen
+import nl.jacobras.codebaseobserver.nav.Screen
 import nl.jacobras.codebaseobserver.settings.SettingsScreen
 import nl.jacobras.codebaseobserver.ui.theme.COTheme
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
 @OptIn(ExperimentalCarbonApi::class)
 @Composable
-fun App() {
-    var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
+fun App(
+    onNavHostReady: suspend (NavController) -> Unit
+) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val activeScreen = navBackStackEntry?.destination?.route?.let { Screen.fromRoute(it) } ?: Screen.Dashboard
 
     COTheme {
         Column(
@@ -39,25 +48,25 @@ fun App() {
         ) {
             TopNav(
                 active = activeScreen,
-                onSelect = { activeScreen = it }
+                onSelect = { navController.navigate(it.route) }
             )
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 24.dp, vertical = 20.dp)
             ) {
-                when (activeScreen) {
-                    Screen.Dashboard -> DashboardScreen()
-                    Screen.Settings -> SettingsScreen()
+
+                NavHost(navController = navController, startDestination = Screen.Dashboard.route) {
+                    composable(Screen.Dashboard.route) { DashboardScreen() }
+                    composable(Screen.Settings.route) { SettingsScreen() }
                 }
             }
         }
     }
-}
 
-private enum class Screen(val label: String) {
-    Dashboard("Dashboard"),
-    Settings("Settings")
+    LaunchedEffect(navController) {
+        onNavHostReady(navController)
+    }
 }
 
 @Composable

@@ -1,5 +1,7 @@
-package nl.jacobras.codebaseobserver
+package nl.jacobras.codebaseobserver.dashboard
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +18,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.dropdown.Dropdown
 import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
@@ -31,6 +37,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.AppViewModel
 import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
 import nl.jacobras.codebaseobserver.buildtimes.BuildTimes
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
@@ -39,7 +46,8 @@ import nl.jacobras.codebaseobserver.migrations.Migrations
 import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
 import nl.jacobras.codebaseobserver.modulegraph.ModuleRules
 import nl.jacobras.codebaseobserver.modulegraph.ModuleTypes
-import nl.jacobras.codebaseobserver.trends.Trends
+import nl.jacobras.codebaseobserver.nav.DashboardDestination
+import nl.jacobras.codebaseobserver.trends.CodeTrends
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
 @Composable
@@ -107,14 +115,19 @@ private fun DashboardScreen(
         )
         Spacer(Modifier.height(16.dp))
 
-        var selectedTab by remember { mutableStateOf(DashboardTab.CodeTrends) }
-        val tabs = DashboardTab.entries.map { TabItem(label = it.displayName) }
+        val navController = rememberNavController()
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val selectedTab = navBackStackEntry?.destination?.route
+            ?.let { DashboardDestination.fromRoute(it) } ?: DashboardDestination.CodeTrends
+        val tabs = DashboardDestination.entries.map { TabItem(label = it.label) }
         TabList(
             tabs = tabs,
             variant = TabVariant.Contained,
-            selectedTab = tabs.first { it.label == selectedTab.displayName },
+            selectedTab = tabs.first { it.label == selectedTab.label },
             onTabSelected = { tab ->
-                selectedTab = DashboardTab.entries.first { it.displayName == tab.label }
+                val destination = DashboardDestination.fromLabel(tab.label)
+                    ?: error("Cannot find destination for ${tab.label}")
+                navController.navigate(destination.route)
             }
         )
 
@@ -141,41 +154,60 @@ private fun DashboardScreen(
 
                 var timeView by remember { mutableStateOf(TimeView.Last7Days) }
 
-                when (selectedTab) {
-                    DashboardTab.CodeTrends -> Trends(
-                        client = client,
-                        projectId = selectedProjectId,
-                        timeView = timeView,
-                        onSelectTimeView = { timeView = it }
-                    )
-                    DashboardTab.Artifacts -> ArtifactCharts(
-                        client = client,
-                        projectId = selectedProjectId
-                    )
-                    DashboardTab.BuildTimes -> BuildTimes(
-                        client = client,
-                        projectId = selectedProjectId,
-                        timeView = timeView,
-                        onSelectTimeView = { timeView = it }
-                    )
-                    DashboardTab.Migrations -> Migrations(
-                        client = client,
-                        projectId = selectedProjectId,
-                        timeView = timeView,
-                        onSelectTimeView = { timeView = it }
-                    )
-                    DashboardTab.ModuleGraph -> DependencyGraph(
-                        client = client,
-                        projectId = selectedProjectId
-                    )
-                    DashboardTab.ModuleRules -> ModuleRules(
-                        client = client,
-                        projectId = selectedProjectId
-                    )
-                    DashboardTab.ModuleTypes -> ModuleTypes(
-                        client = client,
-                        projectId = selectedProjectId
-                    )
+                NavHost(
+                    navController = navController,
+                    startDestination = DashboardDestination.CodeTrends.route,
+                    enterTransition = { EnterTransition.None },
+                    exitTransition = { ExitTransition.None }
+                ) {
+                    composable(DashboardDestination.CodeTrends.route) {
+                        CodeTrends(
+                            client = client,
+                            projectId = selectedProjectId,
+                            timeView = timeView,
+                            onSelectTimeView = { timeView = it }
+                        )
+                    }
+                    composable(DashboardDestination.Artifacts.route) {
+                        ArtifactCharts(
+                            client = client,
+                            projectId = selectedProjectId
+                        )
+                    }
+                    composable(DashboardDestination.BuildTimes.route) {
+                        BuildTimes(
+                            client = client,
+                            projectId = selectedProjectId,
+                            timeView = timeView,
+                            onSelectTimeView = { timeView = it }
+                        )
+                    }
+                    composable(DashboardDestination.Migrations.route) {
+                        Migrations(
+                            client = client,
+                            projectId = selectedProjectId,
+                            timeView = timeView,
+                            onSelectTimeView = { timeView = it }
+                        )
+                    }
+                    composable(DashboardDestination.ModuleGraph.route) {
+                        DependencyGraph(
+                            client = client,
+                            projectId = selectedProjectId
+                        )
+                    }
+                    composable(DashboardDestination.ModuleRules.route) {
+                        ModuleRules(
+                            client = client,
+                            projectId = selectedProjectId
+                        )
+                    }
+                    composable(DashboardDestination.ModuleTypes.route) {
+                        ModuleTypes(
+                            client = client,
+                            projectId = selectedProjectId
+                        )
+                    }
                 }
             }
         }

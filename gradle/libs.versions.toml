@@ -7,6 +7,7 @@ exposed = "1.1.1"
 ktor = "3.4.1"
 
 [libraries]
+androidx-nav = { module = "org.jetbrains.androidx.navigation:navigation-compose", version = "2.9.2" }
 androidx-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version = "2.10.0" }
 assertK = { module = "com.willowtreeapps.assertk:assertk", version = "0.28.1" }
 carbon = { module = "io.github.gabrieldrn:carbon", version = "0.7.1" }

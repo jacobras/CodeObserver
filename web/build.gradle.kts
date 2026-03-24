@@ -20,6 +20,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.runtime)
             implementation(compose.ui)
+            implementation(libs.androidx.nav)
             implementation(libs.carbon)
             implementation(libs.compose.viewmodel)
             implementation(libs.coroutines)

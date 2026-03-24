@@ -18,7 +18,7 @@ import nl.jacobras.codebaseobserver.ui.chart.TimeView
 import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
 
 @Composable
-internal fun Trends(
+internal fun CodeTrends(
     client: HttpClient,
     projectId: String,
     timeView: TimeView,
