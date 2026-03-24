@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.dropdown.Dropdown
 import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
@@ -23,8 +26,14 @@ import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import com.gabrieldrn.carbon.tab.TabVariant
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.js.Js
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.artifacts.ArtifactCharts
 import nl.jacobras.codebaseobserver.buildtimes.BuildTimes
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.migrations.Migrations
 import nl.jacobras.codebaseobserver.modulegraph.DependencyGraph
@@ -34,13 +43,46 @@ import nl.jacobras.codebaseobserver.trends.Trends
 import nl.jacobras.codebaseobserver.ui.chart.TimeView
 
 @Composable
-internal fun DashboardScreen(
+internal fun DashboardScreen() {
+    val viewModel = viewModel { AppViewModel(RepositoryLocator.projectRepository) }
+    val projects by viewModel.projects.collectAsState(emptyList())
+    val selectedProjectId by viewModel.selectedProjectId.collectAsState("")
+    val loadingError by viewModel.loadingError.collectAsState("")
+
+    // Auto-select or auto-de-select the first project available.
+    LaunchedEffect(projects) {
+        if (selectedProjectId.isEmpty() && projects.isNotEmpty()) {
+            viewModel.selectProject(projects.first().id)
+        } else if (selectedProjectId.isNotEmpty() && projects.isEmpty()) {
+            viewModel.selectProject("")
+        }
+    }
+
+    DashboardScreen(
+        error = loadingError,
+        projects = projects,
+        selectedProjectId = selectedProjectId,
+        onSelectProject = { viewModel.selectProject(it) }
+    )
+}
+
+@Composable
+private fun DashboardScreen(
     error: String,
     projects: List<ProjectDto>,
     selectedProjectId: String,
-    onSelectProject: (String) -> Unit,
-    client: HttpClient
+    onSelectProject: (String) -> Unit
 ) {
+    val client = remember {
+        HttpClient(Js) {
+            defaultRequest {
+                url("/")
+            }
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+    }
     Column {
         BasicText(
             text = "Dashboard",

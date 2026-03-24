@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.CarbonDesignSystem
 import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
@@ -31,12 +28,6 @@ import com.patrykandpatrick.vico.compose.common.DefaultColors
 import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
 import com.patrykandpatrick.vico.compose.common.VicoTheme
 import com.patrykandpatrick.vico.compose.common.VicoTheme.CandlestickCartesianLayerColors
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.js.Js
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.settings.SettingsScreen
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
@@ -44,25 +35,6 @@ import nl.jacobras.codebaseobserver.web.BuildConfig
 @Composable
 fun App() {
     var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
-
-    val client = remember {
-        HttpClient(Js) {
-            defaultRequest {
-                url("/")
-            }
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-            }
-        }
-    }
-    val viewModel = viewModel { AppViewModel(client) }
-    val projects by viewModel.projects.collectAsState(emptyList())
-    val selectedProjectId by viewModel.selectedProjectId.collectAsState("")
-    val loadingError by viewModel.loadingError.collectAsState("")
-
-    DisposableEffect(Unit) {
-        onDispose { client.close() }
-    }
 
     CarbonDesignSystem(
         theme = WhiteTheme.copy(
@@ -94,15 +66,7 @@ fun App() {
                         .padding(horizontal = 24.dp, vertical = 20.dp)
                 ) {
                     when (activeScreen) {
-                        Screen.Dashboard -> {
-                            DashboardScreen(
-                                error = loadingError,
-                                projects = projects,
-                                selectedProjectId = selectedProjectId,
-                                onSelectProject = { viewModel.selectProject(it.trim()) },
-                                client = client
-                            )
-                        }
+                        Screen.Dashboard -> DashboardScreen()
                         Screen.Settings -> SettingsScreen()
                     }
                 }
