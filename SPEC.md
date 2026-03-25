@@ -42,7 +42,7 @@
         - `name` (TEXT)
 - Endpoints:
     - Projects:
-        - `GET /projects` -> list of distinct `projectId` values from `metrics`, sorted asc.
+        - `GET /projects` -> list of projects from `projects` table, sorted asc by `projectId`.
         - `DELETE /projects/{projectId}` -> deletes the project and all associated data.
 - Web app:
     - Fetch from `GET /metrics?projectId=...`.
