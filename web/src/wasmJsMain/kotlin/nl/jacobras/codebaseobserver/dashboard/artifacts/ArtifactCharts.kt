@@ -1,6 +1,7 @@
 package nl.jacobras.codebaseobserver.dashboard.artifacts
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,49 +44,51 @@ internal fun ArtifactCharts(
         viewModel.setProjectId(projectId)
     }
 
-    if (isLoading || loadingError.isNotEmpty()) {
-        ProgressIndicator(
-            modifier = Modifier.fillMaxWidth(),
-            loading = isLoading,
-            error = loadingError,
-            onRetry = if (loadingError.isNotEmpty()) {
-                { viewModel.refresh() }
-            } else {
-                null
-            }
+    Column {
+        if (isLoading || loadingError.isNotEmpty()) {
+            ProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                loading = isLoading,
+                error = loadingError,
+                onRetry = if (loadingError.isNotEmpty()) {
+                    { viewModel.refresh() }
+                } else {
+                    null
+                }
+            )
+            return
+        }
+
+        if (artifactSizes.isEmpty()) {
+            BasicText(
+                modifier = Modifier.fillMaxWidth(),
+                text = "No artifacts found",
+                style = Carbon.typography.body02
+            )
+            return
+        }
+
+        val artifacts = artifactSizes.map { it.name }.distinct().sortedBy { it }
+        var selectedArtifact by remember { mutableStateOf(artifacts.first()) }
+
+        if (artifacts.size > 1) {
+            val tabs = artifacts.map { TabItem(label = it) }
+
+            TabList(
+                tabs = tabs,
+                selectedTab = tabs.first { it.label == selectedArtifact },
+                onTabSelected = { tab ->
+                    selectedArtifact = artifacts.first { it == tab.label }
+                }
+            )
+            Spacer(Modifier.height(16.dp))
+        }
+
+        ArtifactDetail(
+            allArtifactSizes = artifactSizes,
+            artifactName = selectedArtifact
         )
-        return
     }
-
-    if (artifactSizes.isEmpty()) {
-        BasicText(
-            modifier = Modifier.fillMaxWidth(),
-            text = "No artifacts found",
-            style = Carbon.typography.body02
-        )
-        return
-    }
-
-    val artifacts = artifactSizes.map { it.name }.distinct().sortedBy { it }
-    var selectedArtifact by remember { mutableStateOf(artifacts.first()) }
-
-    if (artifacts.size > 1) {
-        val tabs = artifacts.map { TabItem(label = it) }
-
-        TabList(
-            tabs = tabs,
-            selectedTab = tabs.first { it.label == selectedArtifact },
-            onTabSelected = { tab ->
-                selectedArtifact = artifacts.first { it == tab.label }
-            }
-        )
-        Spacer(Modifier.height(16.dp))
-    }
-
-    ArtifactDetail(
-        allArtifactSizes = artifactSizes,
-        artifactName = selectedArtifact
-    )
 }
 
 @Composable
