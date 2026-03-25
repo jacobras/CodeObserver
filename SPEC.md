@@ -6,19 +6,19 @@
 2. `cli/` CLI tool to collect the metrics and send them to the server.
 3. `web/` Compose web app to display the metrics in a dashboard.
 
-## Server
+### Server
 
 - Ktor server with JSON API.
 - DB: SQLite (embedded).
 - Tables and endpoints are listed below, per feature.
 
-## CLI
+### CLI
 
 - Kotlin Multiplatform CLI (JVM only).
 - Running without any command lists available commands.
 - Commands are listed below, per feature.
 
-## Web
+### Web
 
 - Compose Multiplatform WASM app.
 - Web app is built and served by the same server host (same origin).
@@ -233,6 +233,41 @@
         - Tab "Overview" that shows all migration configurations.
             - Data table with edit/delete functionality.
             - Form to add new migration.
+
+### Detekt
+
+- Tables:
+    - `detektReports`
+        - `projectId` (TEXT)
+        - `gitHash` (TEXT)
+        - `gitDate` (LONG) (epoch seconds)
+        - `findings` (INTEGER) (number of total findings)
+        - `smellsPer1000` (INTEGER) (number of smells per 1000 lines of code)
+        - `htmlReport` (TEXT) (serialized as JSON string)
+- Endpoints:
+    - Detekt reports:
+        - `GET /detektReports?projectId=...` -> list of records.
+        - `POST /detektReports` -> stores a detekt report.
+            - body `{ projectId, gitHash, gitDate, findings, smellsPer1000, htmlReport }`
+- CLI commands:
+    - `report-detekt`
+        - Arguments:
+            - `--htmlFile` (path to the detekt HTML report, required)
+            - `--server` (server URL to upload results, optional)
+            - `--project` (required project identifier)
+        - Behavior:
+            - Parse the detekt HTML report to extract:
+              - total number of findings from the heading `<li>2,061 number of total code smells</li>` 
+              - smells per 1000 lines of code from the bullet points `<li>38 code smells per 1,000 lloc</li>`
+            - Send `POST /detektReports` to server with JSON payload including the HTML report.
+            - Print summary.
+- Web app:
+    - Dashboard tab `Detekt trends`
+        - List of detekt reports with findings and smells per 1000 lines of code.
+        - Option to view the full HTML report in a new tab.
+        - Option to download the full HTML report as a file.
+    - Dashboard tab `Detekt report`
+        - Shows an iframe (using `WebElementView`) to the detekt HTML report.
 
 ### Module graph
 
