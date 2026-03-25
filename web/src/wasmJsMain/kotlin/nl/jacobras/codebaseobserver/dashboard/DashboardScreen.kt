@@ -131,7 +131,10 @@ private fun DashboardScreen(
             onTabSelected = { tab ->
                 val destination = DashboardDestination.fromLabel(tab.label)
                     ?: error("Cannot find destination for ${tab.label}")
-                navController.navigate(destination.route)
+                navController.navigate(destination.route) {
+                    launchSingleTop = true
+                    popUpTo(navController.graph.startDestinationId)
+                }
             }
         )
 
