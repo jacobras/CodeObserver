@@ -1,5 +1,6 @@
 package nl.jacobras.codebaseobserver.projects
 
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.util.data.NetworkError
 
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 internal class ProjectRepository(
@@ -39,9 +41,9 @@ internal class ProjectRepository(
             }
     }
 
-    suspend fun save(project: ProjectDto) {
+    suspend fun save(project: ProjectDto): Result<Unit, NetworkError> {
         savingState.update { RequestState.Working }
-        dataSource.save(project)
+        return dataSource.save(project)
             .onOk { savingState.update { RequestState.Idle } }
             .onErr { error ->
                 savingState.update { RequestState.Error(error) }

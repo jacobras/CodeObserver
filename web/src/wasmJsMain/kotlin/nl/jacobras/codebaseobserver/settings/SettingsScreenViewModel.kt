@@ -2,6 +2,7 @@ package nl.jacobras.codebaseobserver.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -33,9 +34,10 @@ internal class SettingsScreenViewModel(
                 id = projectId,
                 name = name
             )
-        )
-        onSuccess()
-        refresh()
+        ).onOk {
+            onSuccess()
+            refresh()
+        }
     }
 
     fun deleteProject(projectId: String) = viewModelScope.launch {
