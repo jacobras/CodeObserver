@@ -136,7 +136,7 @@ private fun BuildDetail(
                     1 -> SelectionContainer(modifier) {
                         BasicText(
                             text = item.gitHash.take(7),
-                            style = Carbon.typography.bodyCompact01,
+                            style = Carbon.typography.code01,
                         )
                     }
                     2 -> SelectionContainer(modifier) {

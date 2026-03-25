@@ -14,6 +14,7 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.BuildTimesTable
+import nl.jacobras.codebaseobserver.server.entity.DetektReportsTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationProgressTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationsTable
@@ -23,6 +24,7 @@ import nl.jacobras.codebaseobserver.server.entity.ModuleTypeIdentifiersTable
 import nl.jacobras.codebaseobserver.server.entity.ProjectsTable
 import nl.jacobras.codebaseobserver.server.routes.artifactSizeRoutes
 import nl.jacobras.codebaseobserver.server.routes.buildTimeRoutes
+import nl.jacobras.codebaseobserver.server.routes.detektReportRoutes
 import nl.jacobras.codebaseobserver.server.routes.metricRoutes
 import nl.jacobras.codebaseobserver.server.routes.migrationRoutes
 import nl.jacobras.codebaseobserver.server.routes.moduleGraphSettingsRoutes
@@ -63,6 +65,7 @@ fun Application.module() {
         SchemaUtils.create(
             ArtifactSizesTable,
             BuildTimesTable,
+            DetektReportsTable,
             MetricsTable,
             MigrationProgressTable,
             MigrationsTable,
@@ -84,6 +87,7 @@ fun Application.module() {
         metricRoutes()
         artifactSizeRoutes()
         buildTimeRoutes()
+        detektReportRoutes()
         moduleRoutes()
         migrationRoutes()
         moduleGraphSettingsRoutes()

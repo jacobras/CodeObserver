@@ -11,6 +11,7 @@ import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.BuildTimesTable
+import nl.jacobras.codebaseobserver.server.entity.DetektReportsTable
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationProgressTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationsTable
@@ -72,6 +73,7 @@ internal fun Route.projectRoutes() {
             MetricsTable.deleteWhere { MetricsTable.projectId eq projectId }
             ArtifactSizesTable.deleteWhere { ArtifactSizesTable.projectId eq projectId }
             BuildTimesTable.deleteWhere { BuildTimesTable.projectId eq projectId }
+            DetektReportsTable.deleteWhere { DetektReportsTable.projectId eq projectId }
             ModuleGraphTable.deleteWhere { ModuleGraphTable.projectId eq projectId }
             ModuleGraphSettingsTable.deleteWhere { ModuleGraphSettingsTable.projectId eq projectId }
             ModuleTypeIdentifiersTable.deleteWhere { ModuleTypeIdentifiersTable.projectId eq projectId }

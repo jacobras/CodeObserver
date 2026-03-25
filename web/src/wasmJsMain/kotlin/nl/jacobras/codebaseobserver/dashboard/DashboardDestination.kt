@@ -7,6 +7,8 @@ internal enum class DashboardDestination(
     CodeTrends("codeTrends", "Code trends"),
     Artifacts("artifacts", "Artifact sizes"),
     BuildTimes("buildTimes", "Build times"),
+    DetektTrends("detektTrends", "Detekt trends"),
+    DetektReport("detektReport", "Detekt report"),
     Migrations("migrations", "Migrations"),
     ModuleGraph("moduleGraph", "Module graph"),
     ModuleRules("moduleRules", "Module rules"),

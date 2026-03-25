@@ -41,6 +41,8 @@ import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.AppViewModel
 import nl.jacobras.codebaseobserver.dashboard.artifacts.ArtifactCharts
 import nl.jacobras.codebaseobserver.dashboard.buildtimes.BuildTimes
+import nl.jacobras.codebaseobserver.dashboard.detekt.DetektReport
+import nl.jacobras.codebaseobserver.dashboard.detekt.DetektTrends
 import nl.jacobras.codebaseobserver.dashboard.migrations.Migrations
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.DependencyGraph
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleRules
@@ -187,6 +189,20 @@ private fun DashboardScreen(
                             projectId = selectedProjectId,
                             timeView = timeView,
                             onSelectTimeView = { timeView = it }
+                        )
+                    }
+                    composable(DashboardDestination.DetektTrends.route) {
+                        DetektTrends(
+                            client = client,
+                            projectId = selectedProjectId,
+                            timeView = timeView,
+                            onSelectTimeView = { timeView = it }
+                        )
+                    }
+                    composable(DashboardDestination.DetektReport.route) {
+                        DetektReport(
+                            client = client,
+                            projectId = selectedProjectId
                         )
                     }
                     composable(DashboardDestination.Migrations.route) {

@@ -244,30 +244,35 @@
         - `findings` (INTEGER) (number of total findings)
         - `smellsPer1000` (INTEGER) (number of smells per 1000 lines of code)
         - `htmlReport` (TEXT) (serialized as JSON string)
+        - Primary key: `(projectId, gitHash)`
 - Endpoints:
     - Detekt reports:
-        - `GET /detektReports?projectId=...` -> list of records.
-        - `POST /detektReports` -> stores a detekt report.
+        - `GET /detektReports?projectId=...` -> list of `DetektReportDto` records, sorted asc by `gitDate`.
+        - `POST /detektReports` -> stores a Detekt report (upserts).
             - body `{ projectId, gitHash, gitDate, findings, smellsPer1000, htmlReport }`
 - CLI commands:
     - `report-detekt`
         - Arguments:
-            - `--htmlFile` (path to the detekt HTML report, required)
-            - `--server` (server URL to upload results, optional)
+            - `--htmlFile` (path to the Detekt HTML report file, required)
+            - `--server` (server URL to upload results, required)
             - `--project` (required project identifier)
         - Behavior:
-            - Parse the detekt HTML report to extract:
-              - total number of findings from the heading `<li>2,061 number of total code smells</li>` 
-              - smells per 1000 lines of code from the bullet points `<li>38 code smells per 1,000 lloc</li>`
-            - Send `POST /detektReports` to server with JSON payload including the HTML report.
-            - Print summary.
+            - Parse `findings` from HTML: `<li>{n} number of total code smells</li>`.
+            - Parse `smellsPer1000` from HTML: `<li>{n} code smells per 1,000 lloc</li>`.
+            - Send `POST /detektReports` to server.
+            - Print summary: `Detekt report uploaded: {findings} findings, {smellsPer1000} smells/1000 lloc`.
 - Web app:
     - Dashboard tab `Detekt trends`
-        - List of detekt reports with findings and smells per 1000 lines of code.
-        - Option to view the full HTML report in a new tab.
-        - Option to download the full HTML report as a file.
+        - Time selection.
+        - Line chart of `findings` vs `gitDate`.
+        - Line chart of `smellsPer1000` vs `gitDate`.
+        - Data table of records (columns: git date, git hash, findings, smells/1000 lloc, actions).
+            - Actions:
+                - View (opens the HTML report in a new tab)
+                - Download (saves the HTML report).
     - Dashboard tab `Detekt report`
-        - Shows an iframe (using `WebElementView`) to the detekt HTML report.
+        - Shows the latest HTML report in an embedded iframe.
+        - Falls back to "No report available" if no reports exist.
 
 ### Module graph
 

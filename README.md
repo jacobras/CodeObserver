@@ -30,6 +30,8 @@ Then run CLI commands:
   `./gradlew :cli:run --args="measure-gradle --project=test --path=.. --server=http://localhost:8080"`
 - Report build time:
   `./gradlew :cli:run --args="report-build-time --project=test --name=mainBuild --time=123 --server=http://localhost:8080"`
+- Report Detekt:
+  `./gradlew :cli:run --args="report-detekt --project=test --htmlFile=../build/reports/detekt/detekt.html --server=http://localhost:8080"`
 
 ## Release
 
