@@ -94,6 +94,7 @@ internal fun SettingsScreen() {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val saving = state.saving
 
+                // TODO: show error state/message
                 SmallProgressButton(
                     label = if (isEditing) "Update project" else "Add project",
                     buttonType = ButtonType.Primary,
