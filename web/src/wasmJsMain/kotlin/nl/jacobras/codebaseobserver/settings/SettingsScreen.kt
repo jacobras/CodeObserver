@@ -25,18 +25,20 @@ import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.TextInput
-import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.util.data.RequestState
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
-import nl.jacobras.codebaseobserver.ui.loading.ProgressIndicator
-import nl.jacobras.codebaseobserver.ui.table.DataTable
+import nl.jacobras.codebaseobserver.util.ui.UiState
+import nl.jacobras.codebaseobserver.util.ui.button.SmallProgressButton
+import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
+import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 
 @Composable
-internal fun SettingsScreen(client: HttpClient) {
-    val viewModel = viewModel { SettingsScreenViewModel(client) }
+internal fun SettingsScreen() {
+    val viewModel = viewModel { SettingsScreenViewModel(RepositoryLocator.projectRepository) }
     val projects by viewModel.projects.collectAsState(emptyList())
-    val isLoading by viewModel.isLoading.collectAsState(false)
-    val loadingError by viewModel.loadingError.collectAsState("")
-    val updateError by viewModel.updateError.collectAsState("")
+    val state by viewModel.state.collectAsState(UiState())
+
     var editProjectId by remember { mutableStateOf("") }
     var editName by remember { mutableStateOf("") }
 
@@ -45,27 +47,30 @@ internal fun SettingsScreen(client: HttpClient) {
         editName = ""
     }
 
-    if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
-        ProgressIndicator(
-            modifier = Modifier.fillMaxWidth(),
-            loading = isLoading,
-            error = updateError.ifEmpty { loadingError },
-            onRetry = if (loadingError.isNotEmpty()) {
-                { viewModel.refresh() }
-            } else {
-                null
-            }
-        )
-        return
-    }
-
-    val isEditing = projects.any { it.projectId == editProjectId.trim() }
+    val isEditing = projects.any { it.id == editProjectId.trim() }
     CarbonLayer {
         Column(
             modifier = Modifier
                 .layerBackground()
                 .padding(16.dp)
         ) {
+            when (val loading = state.loading) {
+                is RequestState.Working -> {
+                    ProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        loading = true
+                    )
+                }
+                is RequestState.Error -> {
+                    ProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        error = loading.type.name,
+                        onRetry = { viewModel.refresh() }
+                    )
+                }
+                RequestState.Idle -> Unit
+            }
+
             BasicText(
                 text = "Settings",
                 style = Carbon.typography.heading06
@@ -87,14 +92,20 @@ internal fun SettingsScreen(client: HttpClient) {
             )
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
+                val saving = state.saving
+
+                // TODO: show error state/message
+                SmallProgressButton(
                     label = if (isEditing) "Update project" else "Add project",
                     buttonType = ButtonType.Primary,
-                    buttonSize = ButtonSize.Small,
                     isEnabled = editProjectId.trim().isNotEmpty() && editName.trim().isNotEmpty(),
+                    loading = saving is RequestState.Working,
                     onClick = {
-                        viewModel.saveProject(editProjectId.trim(), editName.trim())
-                        clearForm()
+                        viewModel.saveProject(
+                            projectId = editProjectId.trim(),
+                            name = editName.trim(),
+                            onSuccess = { clearForm() }
+                        )
                     }
                 )
                 Button(
@@ -109,8 +120,9 @@ internal fun SettingsScreen(client: HttpClient) {
             Spacer(Modifier.height(20.dp))
             ProjectsTable(
                 projects = projects,
+                deleting = state.deleting,
                 onEdit = { project ->
-                    editProjectId = project.projectId
+                    editProjectId = project.id
                     editName = project.name
                 },
                 onDelete = { viewModel.deleteProject(it) }
@@ -122,6 +134,7 @@ internal fun SettingsScreen(client: HttpClient) {
 @Composable
 private fun ProjectsTable(
     projects: List<ProjectDto>,
+    deleting: Map<String, RequestState>,
     onEdit: (ProjectDto) -> Unit,
     onDelete: (projectId: String) -> Unit
 ) {
@@ -141,7 +154,7 @@ private fun ProjectsTable(
             when (columnIndex) {
                 0 -> SelectionContainer(modifier) {
                     BasicText(
-                        text = project.projectId,
+                        text = project.id,
                         style = Carbon.typography.code01
                     )
                 }
@@ -155,17 +168,19 @@ private fun ProjectsTable(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = modifier
                 ) {
+                    val isDeleting = deleting[project.id] is RequestState.Working
                     Button(
                         label = "Edit",
                         buttonType = ButtonType.Ghost,
                         buttonSize = ButtonSize.Small,
+                        isEnabled = !isDeleting,
                         onClick = { onEdit(project) }
                     )
-                    Button(
+                    SmallProgressButton(
                         label = "Delete",
                         buttonType = ButtonType.GhostDanger,
-                        buttonSize = ButtonSize.Small,
-                        onClick = { onDelete(project.projectId) }
+                        loading = isDeleting,
+                        onClick = { onDelete(project.id) }
                     )
                 }
             }

@@ -10,112 +10,63 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.gabrieldrn.carbon.Carbon
-import com.gabrieldrn.carbon.CarbonDesignSystem
 import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
 import com.gabrieldrn.carbon.button.Button
+import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
-import com.gabrieldrn.carbon.foundation.color.WhiteTheme
-import com.patrykandpatrick.vico.compose.common.DefaultColors
-import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
-import com.patrykandpatrick.vico.compose.common.VicoTheme
-import com.patrykandpatrick.vico.compose.common.VicoTheme.CandlestickCartesianLayerColors
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.js.Js
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.dashboard.DashboardScreen
 import nl.jacobras.codebaseobserver.settings.SettingsScreen
+import nl.jacobras.codebaseobserver.util.ui.theme.COTheme
 import nl.jacobras.codebaseobserver.web.BuildConfig
 
 @OptIn(ExperimentalCarbonApi::class)
 @Composable
-fun App() {
-    var activeScreen by remember { mutableStateOf(Screen.Dashboard) }
+fun App(
+    onNavHostReady: suspend (NavController) -> Unit
+) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val activeScreen = navBackStackEntry?.destination?.route?.let { Screen.fromRoute(it) } ?: Screen.Dashboard
 
-    val client = remember {
-        HttpClient(Js) {
-            defaultRequest {
-                url("/")
-            }
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-            }
-        }
-    }
-    val viewModel = viewModel { AppViewModel(client) }
-    val projects by viewModel.projects.collectAsState(emptyList())
-    val selectedProjectId by viewModel.selectedProjectId.collectAsState("")
-    val loadingError by viewModel.loadingError.collectAsState("")
-
-    DisposableEffect(Unit) {
-        onDispose { client.close() }
-    }
-
-    CarbonDesignSystem(
-        theme = WhiteTheme.copy(
-            borderInteractive = Color(0xFF1F3D4D),
-            layerSelectedInverse = Color(0xFF1F3D4D)
-        )
-    ) {
-        ProvideVicoTheme(
-            theme = VicoTheme(
-                candlestickCartesianLayerColors =
-                    CandlestickCartesianLayerColors.fromDefaultColors(DefaultColors.Light),
-                columnCartesianLayerColors = DefaultColors.Light.cartesianLayerColors.map(::Color),
-                lineColor = Color(DefaultColors.Light.lineColor),
-                textColor = Carbon.theme.textPrimary,
-            )
+    COTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Carbon.theme.background)
         ) {
-            Column(
+            TopNav(
+                active = activeScreen,
+                onSelect = { navController.navigate(it.route) }
+            )
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Carbon.theme.background)
+                    .padding(horizontal = 24.dp, vertical = 20.dp)
             ) {
-                TopNav(
-                    active = activeScreen,
-                    onSelect = { activeScreen = it }
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 24.dp, vertical = 20.dp)
-                ) {
-                    when (activeScreen) {
-                        Screen.Dashboard -> {
-                            DashboardScreen(
-                                error = loadingError,
-                                projects = projects,
-                                selectedProjectId = selectedProjectId,
-                                onSelectProject = { viewModel.selectProject(it.trim()) },
-                                client = client
-                            )
-                        }
-                        Screen.Settings -> {
-                            SettingsScreen(client = client)
-                        }
-                    }
+
+                NavHost(navController = navController, startDestination = Screen.Dashboard.route) {
+                    composable(Screen.Dashboard.route) { DashboardScreen() }
+                    composable(Screen.Settings.route) { SettingsScreen() }
                 }
             }
         }
     }
-}
 
-private enum class Screen(val label: String) {
-    Dashboard("Dashboard"),
-    Settings("Settings")
+    LaunchedEffect(navController) {
+        onNavHostReady(navController)
+    }
 }
 
 @Composable
@@ -138,7 +89,7 @@ private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
                 Button(
                     label = screen.label,
                     buttonType = if (selected) ButtonType.Primary else ButtonType.Ghost,
-                    buttonSize = com.gabrieldrn.carbon.button.ButtonSize.Small,
+                    buttonSize = ButtonSize.Small,
                     onClick = { onSelect(screen) }
                 )
             }
