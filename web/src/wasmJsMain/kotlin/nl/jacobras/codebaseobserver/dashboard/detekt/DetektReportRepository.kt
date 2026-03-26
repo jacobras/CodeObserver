@@ -4,19 +4,38 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
-import nl.jacobras.codebaseobserver.dto.DetektReportDto
+import kotlinx.coroutines.flow.update
+import nl.jacobras.codebaseobserver.dto.DetektMetricDto
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 import nl.jacobras.codebaseobserver.util.data.RequestState
 
 internal class DetektReportRepository(
     private val dataSource: DetektReportDataSource
 ) {
-    val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
+    val metricsLoadingState = MutableStateFlow<RequestState>(RequestState.Idle)
+    val reportLoadingState = MutableStateFlow<RequestState>(RequestState.Idle)
+    val deletingState = MutableStateFlow<Map<String, RequestState>>(emptyMap())
 
-    suspend fun fetchReports(projectId: String): Result<List<DetektReportDto>, NetworkError> {
-        loadingState.value = RequestState.Working
+    suspend fun fetchMetrics(projectId: String): Result<List<DetektMetricDto>, NetworkError> {
+        metricsLoadingState.value = RequestState.Working
         return dataSource.fetchMetrics(projectId)
-            .onOk { loadingState.value = RequestState.Idle }
-            .onErr { loadingState.value = RequestState.Error(it) }
+            .onOk { metricsLoadingState.value = RequestState.Idle }
+            .onErr { metricsLoadingState.value = RequestState.Error(it) }
+    }
+
+    suspend fun fetchReport(reportId: Int): Result<String, NetworkError> {
+        reportLoadingState.value = RequestState.Working
+        return dataSource.fetchReport(reportId)
+            .onOk { reportLoadingState.value = RequestState.Idle }
+            .onErr { reportLoadingState.value = RequestState.Error(it) }
+    }
+
+    suspend fun deleteReport(projectId: String, gitHash: String): Result<Unit, NetworkError> {
+        deletingState.update { it + mapOf("$projectId/$gitHash" to RequestState.Working) }
+        return dataSource.delete(projectId, gitHash)
+            .onOk { deletingState.update { it - "$projectId/$gitHash" } }
+            .onErr { error ->
+                deletingState.update { it + mapOf("$projectId/$gitHash" to RequestState.Error(error)) }
+            }
     }
 }

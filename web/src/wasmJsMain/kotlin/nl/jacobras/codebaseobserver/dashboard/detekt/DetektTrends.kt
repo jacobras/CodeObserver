@@ -17,13 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
-import com.gabrieldrn.carbon.button.Button
-import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
-import nl.jacobras.codebaseobserver.dto.DetektReportDto
+import nl.jacobras.codebaseobserver.dto.DetektMetricDto
 import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.UiState
+import nl.jacobras.codebaseobserver.util.ui.button.SmallProgressButton
 import nl.jacobras.codebaseobserver.util.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
@@ -43,8 +42,8 @@ internal fun DetektTrends(
             projectRepository = RepositoryLocator.projectRepository
         )
     }
-    val reports by viewModel.reports.collectAsState(emptyList())
-    val state by viewModel.state.collectAsState(UiState())
+    val reports by viewModel.metrics.collectAsState(emptyList())
+    val state by viewModel.metricsState.collectAsState(UiState())
 
     Column {
         when (val loading = state.loading) {
@@ -79,14 +78,21 @@ internal fun DetektTrends(
         )
         Spacer(Modifier.height(16.dp))
 
-        DetektChartsAndTable(reports = reports, timeView = timeView)
+        DetektChartsAndTable(
+            reports = reports,
+            deleting = state.deleting,
+            timeView = timeView,
+            onDelete = { viewModel.delete(it) }
+        )
     }
 }
 
 @Composable
 private fun DetektChartsAndTable(
-    reports: List<DetektReportDto>,
-    timeView: TimeView
+    reports: List<DetektMetricDto>,
+    deleting: Map<Int, RequestState>,
+    timeView: TimeView,
+    onDelete: (DetektMetricDto) -> Unit
 ) {
     val reportsOldestFirst = reports.sortedBy { it.gitDate }
     val reportsNewestFirst = reportsOldestFirst.reversed()
@@ -121,44 +127,42 @@ private fun DetektChartsAndTable(
             columnHeadings = listOf("Git date", "Git hash", "Findings", "Smells/1000 lloc", "Actions"),
             rowCount = reportsNewestFirst.size,
             cellContent = { rowIndex, columnIndex, modifier ->
-                val item = reportsNewestFirst[rowIndex]
+                val record = reportsNewestFirst[rowIndex]
                 when (columnIndex) {
                     0 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = item.gitDate.toString(),
+                            text = record.gitDate.toString(),
                             style = Carbon.typography.bodyCompact01
                         )
                     }
                     1 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = item.gitHash.gitHashExcerpt(),
+                            text = record.gitHash.gitHashExcerpt(),
                             style = Carbon.typography.code01
                         )
                     }
                     2 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = item.findings.toString(),
+                            text = record.findings.toString(),
                             style = Carbon.typography.bodyCompact01
                         )
                     }
                     3 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = item.smellsPer1000.toString(),
+                            text = record.smellsPer1000.toString(),
                             style = Carbon.typography.bodyCompact01
                         )
                     }
-                    4 -> Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            label = "View",
-                            onClick = { openHtmlInNewTab(item.htmlReport) },
-                            buttonSize = ButtonSize.Small,
-                            buttonType = ButtonType.Ghost
-                        )
-                        Button(
-                            label = "Download",
-                            onClick = { downloadHtmlFile(item.htmlReport) },
-                            buttonSize = ButtonSize.Small,
-                            buttonType = ButtonType.Ghost
+                    4 -> Row(
+                        modifier = modifier,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val isDeleting = deleting[record.id] is RequestState.Working
+                        SmallProgressButton(
+                            label = "Delete",
+                            buttonType = ButtonType.GhostDanger,
+                            loading = isDeleting,
+                            onClick = { onDelete(record) }
                         )
                     }
                 }
@@ -166,26 +170,3 @@ private fun DetektChartsAndTable(
         )
     }
 }
-
-@JsFun(
-    """
-    (html) => {
-        const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
-        window.open(url, '_blank');
-    }
-"""
-)
-private external fun openHtmlInNewTab(html: String)
-
-@JsFun(
-    """
-    (html) => {
-        const a = document.createElement('a');
-        const url = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
-        a.href = url;
-        a.download = 'detekt-report.html';
-        a.click();
-        URL.revokeObjectURL(url);
-    }"""
-)
-private external fun downloadHtmlFile(html: String)

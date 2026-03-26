@@ -68,6 +68,7 @@ internal class ProjectRepository(
         dataSource.delete(projectId)
             .onOk {
                 deletingState.update { it - projectId }
+                Logger.i { "Project $projectId deleted" }
                 refresh()
             }
             .onErr { error ->

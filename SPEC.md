@@ -238,6 +238,7 @@
 
 - Tables:
     - `detektReports`
+        - `id` (INTEGER) (auto-incremented)
         - `projectId` (TEXT)
         - `gitHash` (TEXT)
         - `gitDate` (LONG) (epoch seconds)
@@ -247,9 +248,11 @@
         - Primary key: `(projectId, gitHash)`
 - Endpoints:
     - Detekt reports:
-        - `GET /detektReports?projectId=...` -> list of `DetektReportDto` records, sorted asc by `gitDate`.
+        - `GET /detektMetrics?projectId=...` -> list of `DetektMetricDto` records, sorted asc by `gitDate`.
+        - `GET /detektReports/{projectId}/{gitHash}` -> get specific HTML report.
         - `POST /detektReports` -> stores a Detekt report (upserts).
             - body `{ projectId, gitHash, gitDate, findings, smellsPer1000, htmlReport }`
+        - `DELETE /detektReports/{reportId}` -> deletes the report.
 - CLI commands:
     - `report-detekt`
         - Arguments:
@@ -268,8 +271,7 @@
         - Line chart of `smellsPer1000` vs `gitDate`.
         - Data table of records (columns: git date, git hash, findings, smells/1000 lloc, actions).
             - Actions:
-                - View (opens the HTML report in a new tab)
-                - Download (saves the HTML report).
+                - Delete.
     - Dashboard tab `Detekt report`
         - Shows the latest HTML report in an embedded iframe.
         - Falls back to "No report available" if no reports exist.

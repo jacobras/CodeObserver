@@ -28,8 +28,8 @@ internal fun DetektReport() {
             projectRepository = RepositoryLocator.projectRepository
         )
     }
-    val reports by viewModel.reports.collectAsState(emptyList())
-    val state by viewModel.state.collectAsState(UiState())
+    val latestReport by viewModel.detailReport.collectAsState("")
+    val state by viewModel.detailReportState.collectAsState(UiState())
 
     Column {
         when (val loading = state.loading) {
@@ -49,8 +49,7 @@ internal fun DetektReport() {
             RequestState.Idle -> Unit
         }
 
-        val latestReport = reports.maxByOrNull { it.gitDate }
-        if (latestReport == null) {
+        if (latestReport.isEmpty()) {
             BasicText(
                 modifier = Modifier.fillMaxWidth(),
                 text = "No report available",
@@ -63,13 +62,13 @@ internal fun DetektReport() {
             factory = {
                 (document.createElement("iframe") as HTMLIFrameElement)
                     .apply {
-                        srcdoc = latestReport.htmlReport
+                        srcdoc = latestReport
                         sandbox.value = ""
                         frameBorder = "0"
                     }
             },
             modifier = Modifier.fillMaxSize(),
-            update = { iframe -> iframe.srcdoc = latestReport.htmlReport }
+            update = { iframe -> iframe.srcdoc = latestReport }
         )
     }
 }
