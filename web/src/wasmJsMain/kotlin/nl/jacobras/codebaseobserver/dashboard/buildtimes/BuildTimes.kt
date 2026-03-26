@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,8 +20,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
-import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.BuildTimeDto
+import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
@@ -35,19 +35,19 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 internal fun BuildTimes(
-    client: HttpClient,
-    projectId: String,
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel { BuildTimesViewModel(client) }
-    val buildTimes by viewModel.buildTimes.collectAsState(emptyList())
-    val isLoading by viewModel.isLoading.collectAsState(false)
-    val loadingError by viewModel.loadingError.collectAsState("")
-
-    LaunchedEffect(projectId) {
-        viewModel.setProjectId(projectId)
+    val viewModel = viewModel {
+        BuildTimesViewModel(
+            buildTimesRepository = RepositoryLocator.buildTimesRepository,
+            projectRepository = RepositoryLocator.projectRepository
+        )
     }
+    val uiState by viewModel.uiState.collectAsState(null)
+    val buildTimes by viewModel.buildTimes.collectAsState(emptyList())
+    val isLoading = uiState?.loading == RequestState.Working
+    val loadingError = (uiState?.loading as? RequestState.Error)?.type?.name ?: ""
 
     Column {
         if (isLoading || loadingError.isNotEmpty()) {

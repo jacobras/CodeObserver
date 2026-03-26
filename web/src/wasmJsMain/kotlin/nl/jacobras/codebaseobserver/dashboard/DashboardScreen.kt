@@ -175,8 +175,6 @@ private fun DashboardScreen(
                     }
                     composable(DashboardDestination.BuildTimes.route) {
                         BuildTimes(
-                            client = client,
-                            projectId = selectedProjectId,
                             timeView = timeView,
                             onSelectTimeView = { timeView = it }
                         )
