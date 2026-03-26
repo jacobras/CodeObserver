@@ -234,7 +234,7 @@
             - Data table with edit/delete functionality.
             - Form to add new migration.
 
-### Detekt
+### Detekt metrics
 
 - Tables:
     - `detektReports`
