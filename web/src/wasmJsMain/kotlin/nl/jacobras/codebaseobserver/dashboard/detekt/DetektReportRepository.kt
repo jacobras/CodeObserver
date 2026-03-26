@@ -14,7 +14,7 @@ internal class DetektReportRepository(
 ) {
     val metricsLoadingState = MutableStateFlow<RequestState>(RequestState.Idle)
     val reportLoadingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val deletingState = MutableStateFlow<Map<String, RequestState>>(emptyMap())
+    val deletingState = MutableStateFlow<Map<Int, RequestState>>(emptyMap())
 
     suspend fun fetchMetrics(projectId: String): Result<List<DetektMetricDto>, NetworkError> {
         metricsLoadingState.value = RequestState.Working
@@ -30,12 +30,12 @@ internal class DetektReportRepository(
             .onErr { reportLoadingState.value = RequestState.Error(it) }
     }
 
-    suspend fun deleteReport(projectId: String, gitHash: String): Result<Unit, NetworkError> {
-        deletingState.update { it + mapOf("$projectId/$gitHash" to RequestState.Working) }
-        return dataSource.delete(projectId, gitHash)
-            .onOk { deletingState.update { it - "$projectId/$gitHash" } }
+    suspend fun deleteReport(reportId: Int): Result<Unit, NetworkError> {
+        deletingState.update { it + mapOf(reportId to RequestState.Working) }
+        return dataSource.delete(reportId)
+            .onOk { deletingState.update { it - reportId } }
             .onErr { error ->
-                deletingState.update { it + mapOf("$projectId/$gitHash" to RequestState.Error(error)) }
+                deletingState.update { it + mapOf(reportId to RequestState.Error(error)) }
             }
     }
 }

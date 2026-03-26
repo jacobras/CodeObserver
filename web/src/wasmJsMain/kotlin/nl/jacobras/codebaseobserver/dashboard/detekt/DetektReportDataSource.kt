@@ -36,11 +36,11 @@ internal class DetektReportDataSource(
         }
     }
 
-    suspend fun delete(projectId: String, gitHash: String): Result<Unit, NetworkError> {
-        Logger.i("Deleting Detekt report for project $projectId and git hash $gitHash")
+    suspend fun delete(reportId: Int): Result<Unit, NetworkError> {
+        Logger.i("Deleting Detekt report for report ID $reportId")
         return runSuspendCatching {
-            client.delete("/detektReports/$projectId/$gitHash")
-            Logger.i("Detekt report for project $projectId and git hash $gitHash deleted")
+            client.delete("/detektReports/$reportId")
+            Logger.i("Detekt report for report ID $reportId deleted")
         }.mapError {
             Logger.e(it) { "Failed to delete Detekt report" }
             NetworkError.UnknownError

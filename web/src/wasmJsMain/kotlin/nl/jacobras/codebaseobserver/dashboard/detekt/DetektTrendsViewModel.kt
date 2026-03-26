@@ -6,6 +6,7 @@ import com.github.michaelbull.result.get
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -21,22 +22,26 @@ internal class DetektTrendsViewModel(
 ) : ViewModel() {
 
     private val projectId = projectRepository.selectedProjectId
-    val metricsState = detektReportRepository.metricsLoadingState.map { UiState<Int>(loading = it) }
+    val metricsState =
+        combine(
+            detektReportRepository.metricsLoadingState,
+            detektReportRepository.deletingState
+        ) { loading, deleting ->
+            UiState(
+                loading = loading,
+                deleting = deleting
+            )
+        }
     val metrics = MutableStateFlow(emptyList<DetektMetricDto>())
 
     val detailReportState = detektReportRepository.reportLoadingState.map { UiState<String>(loading = it) }
     val latestReportId = metrics.map { reports -> reports.maxByOrNull { it.gitDate }?.id ?: -1 }
     val detailReport = latestReportId.flatMapLatest { id ->
-        if (id != -1) {
-            val res = detektReportRepository.fetchReport(id)
-            if (res.isOk) {
-                flowOf(res.get())
-            } else {
-                flowOf("")
-            }
-        } else {
-            flowOf("")
-        }
+        val content = id.takeIf { it != -1 }
+            ?.let { detektReportRepository.fetchReport(it) }
+            ?.takeIf { it.isOk }
+            ?.get() ?: ""
+        flowOf(content)
     }
 
     init {
@@ -55,8 +60,8 @@ internal class DetektTrendsViewModel(
             .onOk { metrics.value = it }
     }
 
-    fun delete(record: DetektMetricDto) = viewModelScope.launch {
-        detektReportRepository.deleteReport(projectId = record.projectId, gitHash = record.gitHash)
+    fun delete(report: DetektMetricDto) = viewModelScope.launch {
+        detektReportRepository.deleteReport(reportId = report.id)
             .onOk { refresh() }
     }
 }
