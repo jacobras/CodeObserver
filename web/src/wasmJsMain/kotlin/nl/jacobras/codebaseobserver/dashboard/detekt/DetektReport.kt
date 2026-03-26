@@ -62,6 +62,7 @@ internal fun DetektReport(
             (document.createElement("iframe") as HTMLIFrameElement)
                 .apply {
                     srcdoc = latestReport.htmlReport
+                    sandbox.value = ""
                     frameBorder = "0"
                 }
         },
