@@ -44,14 +44,14 @@ internal fun Route.detektReportRoutes() {
         call.respond(records)
     }
     get("/detektReports/{reportId}") {
-        val reportId = call.parameters["reportId"]!!.trim()
-        if (reportId.isBlank()) {
+        val reportId = call.parameters["reportId"]!!.trim().toIntOrNull()
+        if (reportId == null) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing reportId"))
             return@get
         }
         val record = transaction {
             DetektReportsTable.selectAll()
-                .where { DetektReportsTable.id eq reportId.toInt() }
+                .where { DetektReportsTable.id eq reportId }
                 .firstNotNullOfOrNull {
                     it[DetektReportsTable.htmlReport]
                 }
