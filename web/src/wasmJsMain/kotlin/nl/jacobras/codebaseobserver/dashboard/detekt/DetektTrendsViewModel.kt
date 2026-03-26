@@ -6,8 +6,9 @@ import com.github.michaelbull.result.get
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.DetektMetricDto
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
@@ -24,17 +25,17 @@ internal class DetektTrendsViewModel(
     val metrics = MutableStateFlow(emptyList<DetektMetricDto>())
 
     val detailReportState = detektReportRepository.reportLoadingState.map { UiState<String>(loading = it) }
-    val latestReportId = metrics.map { it.firstOrNull()?.id ?: -1 }
-    val detailReport = latestReportId.mapNotNull { id ->
+    val latestReportId = metrics.map { reports -> reports.maxByOrNull { it.gitDate }?.id ?: -1 }
+    val detailReport = latestReportId.flatMapLatest { id ->
         if (id != -1) {
             val res = detektReportRepository.fetchReport(id)
             if (res.isOk) {
-                res.get()
+                flowOf(res.get())
             } else {
-                ""
+                flowOf("")
             }
         } else {
-            ""
+            flowOf("")
         }
     }
 
