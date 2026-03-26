@@ -1,5 +1,6 @@
 package nl.jacobras.codebaseobserver.projects
 
+import co.touchlab.kermit.Logger
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
@@ -9,15 +10,20 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.util.data.NetworkError
+import nl.jacobras.codebaseobserver.util.data.RequestState
 
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 internal class ProjectRepository(
     private val dataSource: ProjectDataSource
 ) {
     val projects = MutableStateFlow(emptyList<ProjectDto>())
+
+    /**
+     * Selected project id, which changes the loaded data for everything in the app.
+     */
+    val selectedProjectId = MutableStateFlow("")
 
     val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
     val savingState = MutableStateFlow<RequestState>(RequestState.Idle)
@@ -35,6 +41,13 @@ internal class ProjectRepository(
             .onOk { newValue ->
                 projects.value = newValue
                 loadingState.update { RequestState.Idle }
+
+                // Auto-select or auto-de-select the first project available.
+                if (selectedProjectId.value.isEmpty() && newValue.isNotEmpty()) {
+                    selectedProjectId.value = newValue.first().id
+                } else if (selectedProjectId.value.isNotEmpty() && newValue.isEmpty()) {
+                    selectedProjectId.value = ""
+                }
             }
             .onErr { error ->
                 loadingState.update { RequestState.Error(error) }
@@ -60,5 +73,10 @@ internal class ProjectRepository(
             .onErr { error ->
                 deletingState.update { it + mapOf(projectId to RequestState.Error(error)) }
             }
+    }
+
+    fun setSelectedProjectId(projectId: String) {
+        Logger.i { "Switching to project: $projectId" }
+        selectedProjectId.value = projectId
     }
 }

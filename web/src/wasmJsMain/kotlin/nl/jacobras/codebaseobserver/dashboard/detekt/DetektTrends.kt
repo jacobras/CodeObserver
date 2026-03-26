@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -21,8 +20,10 @@ import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
-import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.DetektReportDto
+import nl.jacobras.codebaseobserver.util.data.RequestState
+import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
@@ -32,33 +33,34 @@ import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 
 @Composable
 internal fun DetektTrends(
-    client: HttpClient,
-    projectId: String,
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel { DetektTrendsViewModel(client) }
-    val reports by viewModel.reports.collectAsState(emptyList())
-    val isLoading by viewModel.isLoading.collectAsState(false)
-    val loadingError by viewModel.loadingError.collectAsState("")
-
-    LaunchedEffect(projectId) {
-        viewModel.setProjectId(projectId)
+    val viewModel = viewModel {
+        DetektTrendsViewModel(
+            detektReportRepository = RepositoryLocator.detektReportRepository,
+            projectRepository = RepositoryLocator.projectRepository
+        )
     }
+    val reports by viewModel.reports.collectAsState(emptyList())
+    val state by viewModel.state.collectAsState(UiState())
 
     Column {
-        if (isLoading || loadingError.isNotEmpty()) {
-            ProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                loading = isLoading,
-                error = loadingError,
-                onRetry = if (loadingError.isNotEmpty()) {
-                    { viewModel.refresh() }
-                } else {
-                    null
-                }
-            )
-            return
+        when (val loading = state.loading) {
+            is RequestState.Working -> {
+                ProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    loading = true
+                )
+            }
+            is RequestState.Error -> {
+                ProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    error = loading.type.name,
+                    onRetry = { viewModel.refresh() }
+                )
+            }
+            RequestState.Idle -> Unit
         }
 
         if (reports.isEmpty()) {

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,15 +57,6 @@ internal fun DashboardScreen() {
     val projects by viewModel.projects.collectAsState(emptyList())
     val selectedProjectId by viewModel.selectedProjectId.collectAsState("")
     val loadingError by viewModel.loadingError.collectAsState("")
-
-    // Auto-select or auto-de-select the first project available.
-    LaunchedEffect(projects) {
-        if (selectedProjectId.isEmpty() && projects.isNotEmpty()) {
-            viewModel.selectProject(projects.first().id)
-        } else if (selectedProjectId.isNotEmpty() && projects.isEmpty()) {
-            viewModel.selectProject("")
-        }
-    }
 
     DashboardScreen(
         error = loadingError,
@@ -193,17 +183,12 @@ private fun DashboardScreen(
                     }
                     composable(DashboardDestination.DetektTrends.route) {
                         DetektTrends(
-                            client = client,
-                            projectId = selectedProjectId,
                             timeView = timeView,
                             onSelectTimeView = { timeView = it }
                         )
                     }
                     composable(DashboardDestination.DetektReport.route) {
-                        DetektReport(
-                            client = client,
-                            projectId = selectedProjectId
-                        )
+                        DetektReport()
                     }
                     composable(DashboardDestination.Migrations.route) {
                         Migrations(
