@@ -1,56 +1,34 @@
 package nl.jacobras.codebaseobserver.dashboard.artifacts
 
 import androidx.lifecycle.ViewModel
-import co.touchlab.kermit.Logger
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
+import androidx.lifecycle.viewModelScope
+import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
-import kotlin.coroutines.cancellation.CancellationException
+import nl.jacobras.codebaseobserver.projects.ProjectRepository
+import nl.jacobras.codebaseobserver.util.ui.UiState
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class ArtifactChartsViewModel(
-    private val client: HttpClient
+    private val artifactSizesRepository: ArtifactSizesRepository,
+    projectRepository: ProjectRepository
 ) : ViewModel() {
 
-    private val projectId = MutableStateFlow("")
-    private val refreshKey = MutableStateFlow(0)
-    val isLoading = MutableStateFlow(false)
-    val loadingError = MutableStateFlow("")
+    private val projectId = projectRepository.selectedProjectId
+    val uiState = artifactSizesRepository.loadingState.map { UiState<Nothing>(loading = it) }
+    val artifactSizes = MutableStateFlow(emptyList<ArtifactSizeDto>())
 
-    val artifactSizes: Flow<List<ArtifactSizeDto>> = combine(projectId, refreshKey) { id, _ -> id }
-        .filter { it.isNotEmpty() }
-        .flatMapLatest { projectId ->
-            try {
-                isLoading.value = true
-                val list = client.get("/artifactSizes") {
-                    url { parameters.append("projectId", projectId) }
-                }.body<List<ArtifactSizeDto>>()
-                isLoading.value = false
-                loadingError.value = ""
-                flowOf(list)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                Logger.e(e) { "Failed to fetch artifact sizes" }
-                isLoading.value = false
-                loadingError.value = "Failed to fetch artifact sizes: ${e.message}"
-                flowOf(emptyList())
-            }
+    init {
+        refresh()
+
+        viewModelScope.launch {
+            projectId.collect { refresh() }
         }
-
-    fun setProjectId(id: String) {
-        projectId.value = id
     }
 
-    fun refresh() {
-        refreshKey.value++
+    fun refresh() = viewModelScope.launch {
+        artifactSizesRepository.fetchArtifactSizes(projectId.value)
+            .onOk { artifactSizes.value = it }
     }
 }

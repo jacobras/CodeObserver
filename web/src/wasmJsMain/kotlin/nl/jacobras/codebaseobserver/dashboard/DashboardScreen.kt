@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,12 +30,6 @@ import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import com.gabrieldrn.carbon.tab.TabVariant
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.js.Js
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.AppViewModel
 import nl.jacobras.codebaseobserver.dashboard.artifacts.ArtifactCharts
 import nl.jacobras.codebaseobserver.dashboard.buildtimes.BuildTimes
@@ -73,20 +66,6 @@ private fun DashboardScreen(
     selectedProjectId: String,
     onSelectProject: (String) -> Unit
 ) {
-    val client = remember {
-        HttpClient(Js) {
-            defaultRequest {
-                url("/")
-            }
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-            }
-        }
-    }
-    DisposableEffect(client) {
-        onDispose { client.close() }
-    }
-
     Column {
         BasicText(
             text = "Dashboard",
@@ -161,17 +140,12 @@ private fun DashboardScreen(
                 ) {
                     composable(DashboardDestination.CodeTrends.route) {
                         CodeTrends(
-                            client = client,
-                            projectId = selectedProjectId,
                             timeView = timeView,
                             onSelectTimeView = { timeView = it }
                         )
                     }
                     composable(DashboardDestination.Artifacts.route) {
-                        ArtifactCharts(
-                            client = client,
-                            projectId = selectedProjectId
-                        )
+                        ArtifactCharts()
                     }
                     composable(DashboardDestination.BuildTimes.route) {
                         BuildTimes(
@@ -190,29 +164,18 @@ private fun DashboardScreen(
                     }
                     composable(DashboardDestination.Migrations.route) {
                         Migrations(
-                            client = client,
-                            projectId = selectedProjectId,
                             timeView = timeView,
                             onSelectTimeView = { timeView = it }
                         )
                     }
                     composable(DashboardDestination.ModuleGraph.route) {
-                        DependencyGraph(
-                            client = client,
-                            projectId = selectedProjectId
-                        )
+                        DependencyGraph()
                     }
                     composable(DashboardDestination.ModuleRules.route) {
-                        ModuleRules(
-                            client = client,
-                            projectId = selectedProjectId
-                        )
+                        ModuleRules()
                     }
                     composable(DashboardDestination.ModuleTypes.route) {
-                        ModuleTypes(
-                            client = client,
-                            projectId = selectedProjectId
-                        )
+                        ModuleTypes()
                     }
                 }
             }

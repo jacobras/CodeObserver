@@ -23,8 +23,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
-import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.util.data.RequestState
+import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
@@ -35,20 +37,23 @@ import nl.jacobras.codebaseobserver.util.ui.text.gitHashExcerpt
 
 @Composable
 internal fun Migrations(
-    client: HttpClient,
-    projectId: String,
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel { MigrationsViewModel(client) }
-    val migrations by viewModel.migrations.collectAsState(emptyList())
-    val isLoading by viewModel.isLoading.collectAsState(false)
-    val loadingError by viewModel.loadingError.collectAsState("")
-    val updateError by viewModel.updateError.collectAsState("")
-
-    LaunchedEffect(projectId) {
-        viewModel.setProjectId(projectId)
+    val viewModel = viewModel {
+        MigrationsViewModel(
+            migrationsRepository = RepositoryLocator.migrationsRepository,
+            projectRepository = RepositoryLocator.projectRepository
+        )
     }
+    val migrations by viewModel.migrations.collectAsState(emptyList())
+    val state by viewModel.uiState.collectAsState(UiState())
+
+    val isLoading = state.loading is RequestState.Working
+    val loadingError = (state.loading as? RequestState.Error)?.type?.name ?: ""
+    val updateError = (state.saving as? RequestState.Error)?.type?.name
+        ?: state.deleting.values.filterIsInstance<RequestState.Error>().firstOrNull()?.type?.name
+        ?: ""
 
     if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
         ProgressIndicator(
@@ -91,7 +96,6 @@ internal fun Migrations(
         } else {
             val selectedMigration = migrations.first { it.name == selectedTab.label }
             MigrationDetail(
-                client = client,
                 migration = selectedMigration,
                 timeView = timeView,
                 onSelectTimeView = onSelectTimeView
@@ -102,15 +106,17 @@ internal fun Migrations(
 
 @Composable
 private fun MigrationDetail(
-    client: HttpClient,
     migration: MigrationDto,
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel { MigrationDetailViewModel(client) }
+    val viewModel = viewModel {
+        MigrationDetailViewModel(
+            migrationProgressRepository = RepositoryLocator.migrationProgressRepository
+        )
+    }
     val progress by viewModel.progress.collectAsState(emptyList())
-    val isLoading by viewModel.isLoading.collectAsState(false)
-    val loadingError by viewModel.loadingError.collectAsState("")
+    val state by viewModel.uiState.collectAsState(UiState())
 
     LaunchedEffect(migration.id) {
         viewModel.setMigrationId(migration.id)
@@ -138,18 +144,20 @@ private fun MigrationDetail(
     }
     Spacer(Modifier.height(32.dp))
 
-    if (isLoading || loadingError.isNotEmpty()) {
-        ProgressIndicator(
-            modifier = Modifier.fillMaxWidth(),
-            loading = isLoading,
-            error = loadingError,
-            onRetry = if (loadingError.isNotEmpty()) {
-                { viewModel.refresh() }
-            } else {
-                null
-            }
-        )
-        return
+    when (val loading = state.loading) {
+        is RequestState.Working -> {
+            ProgressIndicator(modifier = Modifier.fillMaxWidth(), loading = true)
+            return
+        }
+        is RequestState.Error -> {
+            ProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                error = loading.type.name,
+                onRetry = { viewModel.refresh() }
+            )
+            return
+        }
+        RequestState.Idle -> Unit
     }
 
     val progressOldestFirst = progress.sortedBy { it.gitDate }
