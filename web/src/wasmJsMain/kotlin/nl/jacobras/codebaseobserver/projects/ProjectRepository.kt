@@ -42,11 +42,15 @@ internal class ProjectRepository(
                 projects.value = newValue
                 loadingState.update { RequestState.Idle }
 
-                // Auto-select or auto-de-select the first project available.
                 if (selectedProjectId.value.isEmpty() && newValue.isNotEmpty()) {
+                    Logger.i { "Auto-selecting new project: ${newValue.first().id}" }
                     selectedProjectId.value = newValue.first().id
                 } else if (selectedProjectId.value.isNotEmpty() && newValue.isEmpty()) {
+                    Logger.i { "No more projects, de-selecting" }
                     selectedProjectId.value = ""
+                } else if (selectedProjectId.value !in newValue.map { it.id }) {
+                    Logger.i { "Selected project not available anymore, auto-selecting first project" }
+                    selectedProjectId.value = newValue.first().id
                 }
             }
             .onErr { error ->
