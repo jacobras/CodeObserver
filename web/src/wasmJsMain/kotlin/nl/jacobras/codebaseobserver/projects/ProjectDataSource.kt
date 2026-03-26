@@ -16,7 +16,6 @@ import nl.jacobras.codebaseobserver.dto.ProjectDto
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-@Suppress("TooGenericExceptionCaught")
 internal class ProjectDataSource(
     private val client: HttpClient
 ) {

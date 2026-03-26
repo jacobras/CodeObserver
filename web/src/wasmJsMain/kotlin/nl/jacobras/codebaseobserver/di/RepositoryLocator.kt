@@ -6,6 +6,8 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import nl.jacobras.codebaseobserver.dashboard.detekt.DetektReportDataSource
+import nl.jacobras.codebaseobserver.dashboard.detekt.DetektReportRepository
 import nl.jacobras.codebaseobserver.projects.ProjectDataSource
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 
@@ -20,6 +22,9 @@ internal object RepositoryLocator {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
+    }
+    val detektReportRepository: DetektReportRepository by lazy {
+        DetektReportRepository(dataSource = DetektReportDataSource(httpClient))
     }
     val projectRepository: ProjectRepository by lazy {
         ProjectRepository(dataSource = ProjectDataSource(httpClient))

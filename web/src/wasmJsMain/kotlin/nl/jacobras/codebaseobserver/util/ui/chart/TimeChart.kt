@@ -53,8 +53,8 @@ internal fun <T> TimeChart(
     metricField: (T) -> Int,
     color: Color,
     timeView: TimeView,
-    yAxisFormatter: ((Double) -> String)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    yAxisFormatter: ((Double) -> String)? = null
 ) {
     val now = Clock.System.now()
     val filteredRecords = remember(records, timeView) {

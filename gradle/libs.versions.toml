@@ -3,6 +3,8 @@ kotlin = "2.3.20"
 compose = "1.10.3"
 
 buildconfig = "6.0.9"
+detekt = "1.23.8"
+detektCompose = "0.4.28" # Version 0.5 requires Detekt 2.x which is not yet stable.
 exposed = "1.1.1"
 ktor = "3.4.1"
 
@@ -14,6 +16,8 @@ carbon = { module = "io.github.gabrieldrn:carbon", version = "0.7.1" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version = "5.1.0" }
 compose-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version = "2.10.0" }
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.2" }
+detekt-compose = { module = "io.nlopez.compose.rules:detekt", version.ref = "detektCompose" }
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
@@ -38,8 +42,12 @@ semver = { module = "io.github.z4kn4fein:semver", version = "3.0.0" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.51.3.0" }
 vico = { module = "com.patrykandpatrick.vico:compose", version = "3.0.3" }
 
+# Dependencies of the included build-logic
+detekt-gradlePlugin = { group = "io.gitlab.arturbosch.detekt", name = "io.gitlab.arturbosch.detekt.gradle.plugin", version.ref = "detekt" }
+
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
+codebaseobserver-detekt = { id = "codebaseobserver-detekt" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

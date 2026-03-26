@@ -12,6 +12,7 @@ import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
+import nl.jacobras.codebaseobserver.util.ui.text.gitHashExcerpt
 import nl.jacobras.humanreadable.HumanReadable
 
 @Composable
@@ -43,7 +44,7 @@ internal fun CodeTable(
                 }
                 1 -> SelectionContainer(modifier) {
                     BasicText(
-                        text = record.gitHash.take(7),
+                        text = record.gitHash.gitHashExcerpt(),
                         style = Carbon.typography.code01
                     )
                 }

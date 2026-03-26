@@ -6,19 +6,19 @@
 2. `cli/` CLI tool to collect the metrics and send them to the server.
 3. `web/` Compose web app to display the metrics in a dashboard.
 
-## Server
+### Server
 
 - Ktor server with JSON API.
 - DB: SQLite (embedded).
 - Tables and endpoints are listed below, per feature.
 
-## CLI
+### CLI
 
 - Kotlin Multiplatform CLI (JVM only).
 - Running without any command lists available commands.
 - Commands are listed below, per feature.
 
-## Web
+### Web
 
 - Compose Multiplatform WASM app.
 - Web app is built and served by the same server host (same origin).
@@ -233,6 +233,48 @@
         - Tab "Overview" that shows all migration configurations.
             - Data table with edit/delete functionality.
             - Form to add new migration.
+
+### Detekt metrics
+
+- Tables:
+    - `detektReports`
+        - `id` (INTEGER) (auto-incremented)
+        - `projectId` (TEXT)
+        - `gitHash` (TEXT)
+        - `gitDate` (LONG) (epoch seconds)
+        - `findings` (INTEGER) (number of total findings)
+        - `smellsPer1000` (INTEGER) (number of smells per 1000 lines of code)
+        - `htmlReport` (TEXT) (serialized as JSON string)
+        - Primary key: `(projectId, gitHash)`
+- Endpoints:
+    - Detekt reports:
+        - `GET /detektMetrics?projectId=...` -> list of `DetektMetricDto` records, sorted asc by `gitDate`.
+        - `GET /detektReports/{reportId}` -> get specific HTML report.
+        - `POST /detektReports` -> stores a Detekt report (upserts).
+            - body `{ projectId, gitHash, gitDate, findings, smellsPer1000, htmlReport }`
+        - `DELETE /detektReports/{reportId}` -> deletes the report.
+- CLI commands:
+    - `report-detekt`
+        - Arguments:
+            - `--htmlFile` (path to the Detekt HTML report file, required)
+            - `--server` (server URL to upload results, required)
+            - `--project` (required project identifier)
+        - Behavior:
+            - Parse `findings` from HTML: `<li>{n} number of total code smells</li>`.
+            - Parse `smellsPer1000` from HTML: `<li>{n} code smells per 1,000 lloc</li>`.
+            - Send `POST /detektReports` to server.
+            - Print summary: `Detekt report uploaded: {findings} findings, {smellsPer1000} smells/1000 lloc`.
+- Web app:
+    - Dashboard tab `Detekt trends`
+        - Time selection.
+        - Line chart of `findings` vs `gitDate`.
+        - Line chart of `smellsPer1000` vs `gitDate`.
+        - Data table of records (columns: git date, git hash, findings, smells/1000 lloc, actions).
+            - Actions:
+                - Delete.
+    - Dashboard tab `Detekt report`
+        - Shows the latest HTML report in an embedded iframe.
+        - Falls back to "No report available" if no reports exist.
 
 ### Module graph
 
