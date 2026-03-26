@@ -30,10 +30,14 @@ class ReportDetektCommand internal constructor(
         val htmlContent = file.readText()
 
         val findingsMatch = Regex("<li>([\\d,]+) number of total code smells</li>").find(htmlContent)
-        val findings = findingsMatch?.groupValues?.get(1)?.replace(",", "")?.toInt() ?: 0
+        val findings = findingsMatch?.groupValues?.get(1)?.replace(",", "")?.toInt()
 
         val smellsMatch = Regex("<li>([\\d,]+) code smells per 1,000 lloc</li>").find(htmlContent)
-        val smellsPer1000 = smellsMatch?.groupValues?.get(1)?.replace(",", "")?.toInt() ?: 0
+        val smellsPer1000 = smellsMatch?.groupValues?.get(1)?.replace(",", "")?.toInt()
+
+        check(findings != null && smellsPer1000 != null) {
+            "Could not extract findings or smells per 1000 from the HTML report."
+        }
 
         val workingDir = File(".").toPath().normalize().toAbsolutePath()
         val gitHash = GitInfoCollector.getGitHash(workingDir)
