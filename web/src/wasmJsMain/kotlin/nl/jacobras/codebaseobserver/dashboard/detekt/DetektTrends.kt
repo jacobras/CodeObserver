@@ -30,6 +30,7 @@ import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeViewSelector
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
+import nl.jacobras.codebaseobserver.util.ui.text.gitHashExcerpt
 
 @Composable
 internal fun DetektTrends(
@@ -130,7 +131,7 @@ private fun DetektChartsAndTable(
                     }
                     1 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = item.gitHash.take(7),
+                            text = item.gitHash.gitHashExcerpt(),
                             style = Carbon.typography.code01
                         )
                     }

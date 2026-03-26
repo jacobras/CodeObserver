@@ -1,0 +1,7 @@
+formatting:
+    FinalNewline:
+        active: false
+
+naming:
+    FunctionNaming:
+        ignoreAnnotated: [ 'Composable' ]

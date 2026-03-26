@@ -133,7 +133,7 @@ class MeasureCodeCommand internal constructor(
                 .filter { it.isRegularFile() }
                 .filter { path ->
                     (includeMatchers.isEmpty() || includeMatchers.any { it.matches(path) }) &&
-                            excludeMatchers.none { it.matches(path) }
+                        excludeMatchers.none { it.matches(path) }
                 }
                 .forEach { filePath ->
                     val text = Files.readString(filePath)
@@ -145,11 +145,13 @@ class MeasureCodeCommand internal constructor(
                     }
                     filesProcessed++
 
-                    if (filesProcessed % 1_000 == 0) {
+                    if (filesProcessed % UPDATE_INTERVAL == 0) {
                         val progressSuffix = if (lastKnownLines != null && lastKnownLines > 0) {
-                            val pct = (totalLines * 100 / lastKnownLines).coerceAtMost(99)
+                            val pct = (totalLines * PERCENTAGE / lastKnownLines).coerceAtMost(MAX_PERCENTAGE)
                             " (~$pct%)"
-                        } else ""
+                        } else {
+                            ""
+                        }
                         println("Processed $filesProcessed files...$progressSuffix")
                     }
                 }
@@ -161,3 +163,7 @@ class MeasureCodeCommand internal constructor(
 }
 
 private data class ScanResult(val linesOfCode: Int, val importCounts: Map<String, Int>)
+
+private const val UPDATE_INTERVAL = 1000
+private const val MAX_PERCENTAGE = 99
+private const val PERCENTAGE = 100

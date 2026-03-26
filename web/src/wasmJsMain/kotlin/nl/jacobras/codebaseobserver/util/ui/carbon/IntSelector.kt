@@ -26,8 +26,8 @@ internal fun IntSelector(
     value: Int,
     values: List<Int>,
     onValueChanged: (Int) -> Unit,
-    enabled: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Column(modifier = modifier) {
         BasicText(

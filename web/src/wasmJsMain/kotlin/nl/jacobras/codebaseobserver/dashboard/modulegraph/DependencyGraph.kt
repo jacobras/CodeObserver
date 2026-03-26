@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,11 +55,10 @@ internal fun DependencyGraph(
         viewModel.setProjectId(projectId)
     }
 
-    Column(modifier = Modifier)
-    {
+    Column(modifier = Modifier) {
         var startModule by remember { mutableStateOf("") }
-        var groupingThreshold by remember { mutableStateOf(3) }
-        var layerDepth by remember { mutableStateOf(30) }
+        var groupingThreshold by remember { mutableIntStateOf(DEFAULT_GROUPING_THRESHOLD) }
+        var layerDepth by remember { mutableIntStateOf(DEFAULT_LAYER_DEPTH) }
 
         if (isLoading || loadingError.isNotEmpty()) {
             ProgressIndicator(
@@ -113,6 +113,7 @@ internal fun DependencyGraph(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun ModuleList(
     modules: List<GraphModuleDto>,
@@ -186,7 +187,8 @@ private fun ModuleList(
             items(
                 modules.sortedWith(
                     compareByDescending<GraphModuleDto> { it.score }.thenBy { it.name }
-                )) { module ->
+                )
+            ) { module ->
                 ModuleRow(
                     module = module,
                     selected = module.name == startModule,
@@ -229,3 +231,6 @@ private fun ModuleRow(
         }
     }
 }
+
+private const val DEFAULT_GROUPING_THRESHOLD = 3
+private const val DEFAULT_LAYER_DEPTH = 30

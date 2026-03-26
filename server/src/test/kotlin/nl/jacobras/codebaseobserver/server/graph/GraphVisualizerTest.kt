@@ -19,7 +19,7 @@ class GraphVisualizerTest {
                 A[No data to display]
             
             %% Dependencies
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -45,7 +45,7 @@ class GraphVisualizerTest {
                 moduleA --> moduleB
                 moduleA --> moduleD
                 moduleB --> sub:c
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -79,7 +79,7 @@ class GraphVisualizerTest {
             linkStyle 1 stroke:orange,stroke-width:3px;
             linkStyle 2 stroke:orange,stroke-width:3px;
             linkStyle 0 stroke:red,stroke-width:3px;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -120,7 +120,7 @@ class GraphVisualizerTest {
             linkStyle 2 stroke:red,stroke-width:3px;
             linkStyle 3 stroke:red,stroke-width:3px;
             linkStyle 4 stroke:red,stroke-width:3px;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -151,7 +151,7 @@ class GraphVisualizerTest {
                 app --> groupfeature
             
             linkStyle 0 stroke:red,stroke-width:3px;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -172,7 +172,7 @@ class GraphVisualizerTest {
             
             class hello start
             classDef start fill:#a5a5b2;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -193,7 +193,7 @@ class GraphVisualizerTest {
             
             classDef moduleType0 fill:#ff0000;
             class hello moduleType0
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -208,7 +208,7 @@ class GraphVisualizerTest {
             """
             graph TD
                 A["Too large: 300 nodes (limit 30)."]
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -234,7 +234,7 @@ class GraphVisualizerTest {
             """
             graph TD
                 A["Too large: 3 nodes (limit 2)."]
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -261,7 +261,7 @@ class GraphVisualizerTest {
 
             class moduleB start
             classDef start fill:#a5a5b2;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -289,7 +289,7 @@ class GraphVisualizerTest {
             
             class feature:products start
             classDef start fill:#a5a5b2;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -315,7 +315,7 @@ class GraphVisualizerTest {
                 end
             
             %% Dependencies
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -347,7 +347,7 @@ class GraphVisualizerTest {
             
             %% Dependencies
                 grouputil --> randomExcludedFromCount
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -381,7 +381,7 @@ class GraphVisualizerTest {
 
             class util start
             classDef start fill:#a5a5b2;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -414,7 +414,7 @@ class GraphVisualizerTest {
             
             class app start
             classDef start fill:#a5a5b2;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -446,7 +446,7 @@ class GraphVisualizerTest {
             
             class app start
             classDef start fill:#a5a5b2;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -481,7 +481,7 @@ class GraphVisualizerTest {
             
             class module:b start
             classDef start fill:#a5a5b2;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 
@@ -529,7 +529,7 @@ class GraphVisualizerTest {
             
             class util start
             classDef start fill:#a5a5b2;
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 }

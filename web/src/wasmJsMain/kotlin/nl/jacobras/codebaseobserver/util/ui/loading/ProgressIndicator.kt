@@ -19,10 +19,10 @@ import com.gabrieldrn.carbon.loading.SmallLoading
  */
 @Composable
 internal fun ProgressIndicator(
+    modifier: Modifier = Modifier,
     loading: Boolean = false,
     error: String = "",
-    onRetry: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    onRetry: (() -> Unit)? = null
 ) {
     if (loading) {
         SmallLoading(modifier)
