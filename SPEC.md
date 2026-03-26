@@ -249,7 +249,7 @@
 - Endpoints:
     - Detekt reports:
         - `GET /detektMetrics?projectId=...` -> list of `DetektMetricDto` records, sorted asc by `gitDate`.
-        - `GET /detektReports/{projectId}/{gitHash}` -> get specific HTML report.
+        - `GET /detektReports/{reportId}` -> get specific HTML report.
         - `POST /detektReports` -> stores a Detekt report (upserts).
             - body `{ projectId, gitHash, gitDate, findings, smellsPer1000, htmlReport }`
         - `DELETE /detektReports/{reportId}` -> deletes the report.
