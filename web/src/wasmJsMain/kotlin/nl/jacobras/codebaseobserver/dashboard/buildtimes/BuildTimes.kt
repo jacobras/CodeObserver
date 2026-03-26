@@ -1,6 +1,7 @@
 package nl.jacobras.codebaseobserver.dashboard.buildtimes
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,59 +49,63 @@ internal fun BuildTimes(
         viewModel.setProjectId(projectId)
     }
 
-    if (isLoading || loadingError.isNotEmpty()) {
-        ProgressIndicator(
-            modifier = Modifier.fillMaxWidth(),
-            loading = isLoading,
-            error = loadingError,
-            onRetry = if (loadingError.isNotEmpty()) {
-                { viewModel.refresh() }
-            } else {
-                null
-            }
-        )
-        return
-    }
+    Column {
+        if (isLoading || loadingError.isNotEmpty()) {
+            ProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                loading = isLoading,
+                error = loadingError,
+                onRetry = if (loadingError.isNotEmpty()) {
+                    { viewModel.refresh() }
+                } else {
+                    null
+                }
+            )
+            return
+        }
 
-    if (buildTimes.isEmpty()) {
-        BasicText(
-            modifier = Modifier.fillMaxWidth(),
-            text = "No build times found",
-            style = Carbon.typography.body02
-        )
-        return
-    }
+        if (buildTimes.isEmpty()) {
+            BasicText(
+                modifier = Modifier.fillMaxWidth(),
+                text = "No build times found",
+                style = Carbon.typography.body02
+            )
+            return
+        }
 
-    val buildNames = buildTimes.map { it.buildName }.distinct()
-    var selectedBuild by remember(buildNames) { mutableStateOf(buildNames.first()) }
+        val buildNames = buildTimes.map { it.buildName }.distinct()
+        var selectedBuild by remember(buildNames) { mutableStateOf(buildNames.first()) }
 
-    if (buildNames.size > 1) {
-        val tabs = buildNames.map { TabItem(label = it) }
+        if (buildNames.size > 1) {
+            val tabs = buildNames.map { TabItem(label = it) }
 
-        TabList(
-            tabs = tabs,
-            selectedTab = tabs.firstOrNull { it.label == selectedBuild } ?: tabs.first(),
-            onTabSelected = { tab ->
-                selectedBuild = buildNames.first { it == tab.label }
-            }
+            TabList(
+                tabs = tabs,
+                selectedTab = tabs.firstOrNull { it.label == selectedBuild } ?: tabs.first(),
+                onTabSelected = { tab ->
+                    selectedBuild = buildNames.first { it == tab.label }
+                }
+            )
+            Spacer(Modifier.height(16.dp))
+        }
+
+        TimeViewSelector(
+            selected = timeView,
+            onSelect = onSelectTimeView
         )
         Spacer(Modifier.height(16.dp))
+
+        BuildDetail(
+            buildName = selectedBuild,
+            buildTimes = buildTimes.filter { it.buildName == selectedBuild },
+            timeView = timeView
+        )
     }
-
-    TimeViewSelector(
-        selected = timeView,
-        onSelect = onSelectTimeView
-    )
-    Spacer(Modifier.height(16.dp))
-
-    BuildDetail(
-        buildTimes = buildTimes.filter { it.buildName == selectedBuild },
-        timeView = timeView
-    )
 }
 
 @Composable
 private fun BuildDetail(
+    buildName: String,
     buildTimes: List<BuildTimeDto>,
     timeView: TimeView
 ) {
@@ -113,7 +118,7 @@ private fun BuildDetail(
     ) {
         TimeChart(
             modifier = Modifier.weight(1f),
-            title = "Build time",
+            title = buildName,
             records = buildTimesOldestFirst,
             dateField = { it.gitDate },
             metricField = { it.timeSeconds },
