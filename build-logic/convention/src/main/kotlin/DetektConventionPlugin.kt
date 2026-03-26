@@ -7,9 +7,7 @@ import org.gradle.kotlin.dsl.register
 class DetektConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            pluginManager.apply(
-                libs.findLibrary("detekt-gradlePlugin").get().get().group
-            )
+            pluginManager.apply("io.gitlab.arturbosch.detekt")
 
             tasks.register<Detekt>("detektMultiModule") {
                 description = "Detekt scan for all modules in the project"
