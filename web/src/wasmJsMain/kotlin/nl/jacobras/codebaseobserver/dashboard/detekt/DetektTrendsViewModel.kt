@@ -50,9 +50,6 @@ internal class DetektTrendsViewModel(
         viewModelScope.launch {
             projectId.collect { refresh() }
         }
-        viewModelScope.launch {
-            metrics.collect { refresh() }
-        }
     }
 
     fun refresh() = viewModelScope.launch {
