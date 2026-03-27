@@ -49,7 +49,7 @@ internal class ProjectRepository(
                 } else if (selectedProjectId.value != null && newValue.isEmpty()) {
                     Logger.i { "No more projects, de-selecting" }
                     selectedProjectId.value = null
-                } else if (selectedProjectId.value !in newValue.map { it.id }) {
+                } else if (selectedProjectId.value != null && selectedProjectId.value !in newValue.map { it.id }) {
                     Logger.i { "Selected project not available anymore, auto-selecting first project" }
                     selectedProjectId.value = newValue.first().id
                 }

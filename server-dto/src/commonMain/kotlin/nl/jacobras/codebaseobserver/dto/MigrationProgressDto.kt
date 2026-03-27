@@ -5,7 +5,7 @@ import kotlin.time.Instant
 
 @Serializable
 data class MigrationProgressDto(
-    val migrationId: Int,
+    val migrationId: MigrationId,
     val gitHash: GitHash,
     val gitDate: Instant,
     val count: Int

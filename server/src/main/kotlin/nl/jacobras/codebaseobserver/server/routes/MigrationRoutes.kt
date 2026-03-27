@@ -137,7 +137,7 @@ internal fun Route.migrationRoutes() {
                 .orderBy(MigrationProgressTable.gitDate to SortOrder.ASC)
                 .map {
                     MigrationProgressDto(
-                        migrationId = it[MigrationProgressTable.migrationId],
+                        migrationId = MigrationId(it[MigrationProgressTable.migrationId]),
                         gitHash = GitHash(it[MigrationProgressTable.gitHash]),
                         gitDate = Instant.fromEpochSeconds(it[MigrationProgressTable.gitDate]),
                         count = it[MigrationProgressTable.count]

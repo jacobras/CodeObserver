@@ -83,7 +83,7 @@ internal fun SettingsScreen() {
                 label = "Project ID",
                 value = editProjectId?.value ?: "",
                 onValueChange = { newValue ->
-                    editProjectId = if (newValue.isNotEmpty()) {
+                    editProjectId = if (newValue.isNotBlank()) {
                         ProjectId(newValue)
                     } else {
                         null
