@@ -13,7 +13,7 @@ Current supported metrics:
 ## Run locally
 
 1. Run server: `./gradlew :server:run`
-2. Build web app: `./gradlew :web:wasmJsBrowserDevelopmentExecutableDistribution`
+2. Build web app: `./gradlew :web:clean :web:wasmJsBrowserDevelopmentExecutableDistribution`
 
 When the server is running, the web development build will be accessible at http://localhost:8080/dev/.
 
