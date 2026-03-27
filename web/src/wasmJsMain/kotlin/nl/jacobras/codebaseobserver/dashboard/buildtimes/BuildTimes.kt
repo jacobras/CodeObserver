@@ -23,6 +23,7 @@ import com.gabrieldrn.carbon.tab.TabList
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.BuildTimeDto
 import nl.jacobras.codebaseobserver.util.data.RequestState
+import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
@@ -44,10 +45,10 @@ internal fun BuildTimes(
             projectRepository = RepositoryLocator.projectRepository
         )
     }
-    val uiState by viewModel.uiState.collectAsState(null)
+    val uiState by viewModel.uiState.collectAsState(UiState())
     val buildTimes by viewModel.buildTimes.collectAsState(emptyList())
-    val isLoading = uiState?.loading == RequestState.Working
-    val loadingError = (uiState?.loading as? RequestState.Error)?.type?.name ?: ""
+    val isLoading = uiState.loading == RequestState.Working
+    val loadingError = uiState.loading.let { (it as? RequestState.Error)?.type?.name } ?: ""
 
     Column {
         if (isLoading || loadingError.isNotEmpty()) {
