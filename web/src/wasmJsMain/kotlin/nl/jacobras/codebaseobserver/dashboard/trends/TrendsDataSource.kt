@@ -9,16 +9,18 @@ import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import nl.jacobras.codebaseobserver.dto.GitHash
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
 internal class TrendsDataSource(
     private val client: HttpClient
 ) {
-    suspend fun fetchMetrics(projectId: String): Result<List<CodeMetricsDto>, NetworkError> {
-        Logger.i("Fetching metrics for project $projectId")
+    suspend fun fetchMetrics(projectId: ProjectId): Result<List<CodeMetricsDto>, NetworkError> {
+        Logger.i("Fetching metrics for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/metrics") {
-                url { parameters.append("projectId", projectId) }
+                url { parameters.append("projectId", projectId.value) }
             }.body<List<CodeMetricsDto>>()
         }.mapError {
             Logger.e(it) { "Failed to fetch metrics" }
@@ -26,13 +28,13 @@ internal class TrendsDataSource(
         }
     }
 
-    suspend fun delete(projectId: String, gitHash: String): Result<Unit, NetworkError> {
-        Logger.i("Deleting metrics for project $projectId, git hash $gitHash")
+    suspend fun delete(projectId: ProjectId, gitHash: GitHash): Result<Unit, NetworkError> {
+        Logger.i("Deleting metrics for project ${projectId.value}, git hash ${gitHash.value}")
         return runSuspendCatching {
-            client.delete("/metrics/$gitHash") {
-                url { parameters.append("projectId", projectId) }
+            client.delete("/metrics/${gitHash.value}") {
+                url { parameters.append("projectId", projectId.value) }
             }
-            Logger.i("Metrics deleted for git hash $gitHash")
+            Logger.i("Metrics deleted for git hash ${gitHash.value}")
         }.mapError {
             Logger.e(it) { "Failed to delete metrics" }
             NetworkError.UnknownError

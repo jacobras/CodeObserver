@@ -5,7 +5,7 @@ import kotlin.time.Instant
 
 @Serializable
 data class ArtifactSizeDto(
-    val projectId: String,
+    val projectId: ProjectId,
     val createdAt: Instant,
     val name: String,
     val semVer: String,

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationId
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 import nl.jacobras.codebaseobserver.util.ui.UiState
 
@@ -29,7 +30,7 @@ internal class MigrationsViewModel(
     init {
         viewModelScope.launch {
             projectId.collectLatest { id ->
-                if (id.isNotEmpty()) {
+                if (id != null) {
                     loadData()
                 }
             }
@@ -37,7 +38,8 @@ internal class MigrationsViewModel(
     }
 
     private suspend fun loadData() {
-        migrationsRepository.fetchMigrations(projectId.value)
+        val projectId = projectId.value ?: return
+        migrationsRepository.fetchMigrations(projectId)
             .onOk { migrations.value = it }
     }
 
@@ -45,12 +47,13 @@ internal class MigrationsViewModel(
         loadData()
     }
 
-    fun save(id: Int?, name: String, description: String, type: String, rule: String) = viewModelScope.launch {
-        migrationsRepository.save(id, projectId.value, name, description, type, rule)
+    fun save(id: MigrationId?, name: String, description: String, type: String, rule: String) = viewModelScope.launch {
+        val projectId = projectId.value ?: return@launch
+        migrationsRepository.save(id, projectId, name, description, type, rule)
             .onOk { refresh() }
     }
 
-    fun delete(id: Int) = viewModelScope.launch {
+    fun delete(id: MigrationId) = viewModelScope.launch {
         migrationsRepository.delete(id)
             .onOk { refresh() }
     }

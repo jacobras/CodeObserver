@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.required
 import kotlinx.coroutines.runBlocking
 import nl.jacobras.codebaseobserver.cli.util.ServerUploader
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.humanreadable.HumanReadable
 import java.io.File
 import java.nio.file.FileSystems
@@ -44,7 +45,7 @@ class MeasureArtifactCommand internal constructor(
 
         serverUrl?.let { url ->
             val payload = ArtifactSizeRequest(
-                projectId = projectId,
+                projectId = ProjectId(projectId),
                 name = name,
                 semVer = semVer,
                 size = size

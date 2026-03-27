@@ -7,9 +7,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierDto
+import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierId
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 import nl.jacobras.codebaseobserver.util.ui.UiState
 
@@ -31,14 +32,15 @@ internal class ModuleTypesViewModel(
     init {
         viewModelScope.launch {
             projectId
-                .filter { it.isNotBlank() }
+                .filterNotNull()
                 .distinctUntilChanged()
                 .collectLatest { refresh() }
         }
     }
 
     suspend fun loadData() {
-        moduleTypeIdentifiersRepository.fetchIdentifiers(projectId.value)
+        val projectId = projectId.value ?: return
+        moduleTypeIdentifiersRepository.fetchIdentifiers(projectId)
             .onOk { moduleTypeIdentifiers.value = it }
     }
 
@@ -46,12 +48,19 @@ internal class ModuleTypesViewModel(
         loadData()
     }
 
-    fun save(id: Int?, typeName: String, plugin: String, order: Int, color: String) = viewModelScope.launch {
-        moduleTypeIdentifiersRepository.save(id, projectId.value, typeName, plugin, order, color)
+    fun save(
+        id: ModuleTypeIdentifierId?,
+        typeName: String,
+        plugin: String,
+        order: Int,
+        color: String
+    ) = viewModelScope.launch {
+        val projectId = projectId.value ?: return@launch
+        moduleTypeIdentifiersRepository.save(id, projectId, typeName, plugin, order, color)
             .onOk { refresh() }
     }
 
-    fun delete(id: Int) = viewModelScope.launch {
+    fun delete(id: ModuleTypeIdentifierId) = viewModelScope.launch {
         moduleTypeIdentifiersRepository.delete(id)
             .onOk { refresh() }
     }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingDto
+import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingId
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 import nl.jacobras.codebaseobserver.util.ui.UiState
 
@@ -29,7 +30,7 @@ internal class ModuleRulesViewModel(
     init {
         viewModelScope.launch {
             projectId.collectLatest { id ->
-                if (id.isNotEmpty()) {
+                if (id != null) {
                     loadData()
                 }
             }
@@ -37,7 +38,8 @@ internal class ModuleRulesViewModel(
     }
 
     private suspend fun loadData() {
-        moduleGraphSettingsRepository.fetchSettings(projectId.value)
+        val projectId = projectId.value ?: return
+        moduleGraphSettingsRepository.fetchSettings(projectId)
             .onOk { settings.value = it }
     }
 
@@ -45,12 +47,13 @@ internal class ModuleRulesViewModel(
         loadData()
     }
 
-    fun save(id: Int?, type: String, data: String) = viewModelScope.launch {
-        moduleGraphSettingsRepository.save(id, projectId.value, type, data)
+    fun save(id: ModuleGraphSettingId?, type: String, data: String) = viewModelScope.launch {
+        val projectId = projectId.value ?: return@launch
+        moduleGraphSettingsRepository.save(id, projectId, type, data)
             .onOk { refresh() }
     }
 
-    fun delete(id: Int) = viewModelScope.launch {
+    fun delete(id: ModuleGraphSettingId) = viewModelScope.launch {
         moduleGraphSettingsRepository.delete(id)
             .onOk { refresh() }
     }

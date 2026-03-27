@@ -8,6 +8,7 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codebaseobserver.server.entity.BuildTimesTable
@@ -34,7 +35,7 @@ internal fun Route.projectRoutes() {
                 .orderBy(ProjectsTable.projectId to SortOrder.ASC)
                 .map {
                     ProjectDto(
-                        id = it[ProjectsTable.projectId],
+                        id = ProjectId(it[ProjectsTable.projectId]),
                         name = it[ProjectsTable.name]
                     )
                 }
@@ -43,12 +44,7 @@ internal fun Route.projectRoutes() {
     }
     post("/projects") {
         val request = call.receive<ProjectRequest>()
-        val projectId = request.projectId.trim()
         val name = request.name.trim()
-        if (projectId.isEmpty()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-            return@post
-        }
         if (name.isEmpty()) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
             return@post
@@ -56,7 +52,7 @@ internal fun Route.projectRoutes() {
 
         transaction {
             ProjectsTable.upsert {
-                it[ProjectsTable.projectId] = projectId
+                it[ProjectsTable.projectId] = request.projectId.value
                 it[ProjectsTable.name] = name
             }
         }

@@ -5,8 +5,8 @@ import kotlin.time.Instant
 
 @Serializable
 data class DetektReportRequest(
-    val projectId: String,
-    val gitHash: String,
+    val projectId: ProjectId,
+    val gitHash: GitHash,
     val gitDate: Instant,
     val findings: Int,
     val smellsPer1000: Int,

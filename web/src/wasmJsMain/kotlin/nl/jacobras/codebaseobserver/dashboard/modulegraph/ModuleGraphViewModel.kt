@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -19,7 +18,7 @@ internal class ModuleGraphViewModel(
     projectRepository: ProjectRepository
 ) : ViewModel() {
 
-    val projectId: StateFlow<String> = projectRepository.selectedProjectId
+    val projectId = projectRepository.selectedProjectId
     val sortOrder = MutableStateFlow(ModuleSortOrder.Alphabetical)
     val uiState = modulesRepository.loadingState.map { UiState<Nothing>(loading = it) }
     val graphModules = MutableStateFlow(GraphModulesDto())
@@ -28,7 +27,7 @@ internal class ModuleGraphViewModel(
         viewModelScope.launch {
             combine(projectId, sortOrder) { id, sort -> id to sort }
                 .collectLatest { (id, _) ->
-                    if (id.isNotEmpty()) {
+                    if (id != null) {
                         loadData()
                     }
                 }
@@ -40,7 +39,8 @@ internal class ModuleGraphViewModel(
     }
 
     private suspend fun loadData() {
-        modulesRepository.fetchGraphModules(projectId.value, sortOrder.value)
+        val projectId = projectId.value ?: return
+        modulesRepository.fetchGraphModules(projectId, sortOrder.value)
             .onOk { graphModules.value = it }
     }
 

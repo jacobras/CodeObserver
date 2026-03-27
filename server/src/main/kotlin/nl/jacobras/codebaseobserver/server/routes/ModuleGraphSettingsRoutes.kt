@@ -9,8 +9,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingDto
+import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingId
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingRequest
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingUpdateRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphSettingsTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -33,9 +35,9 @@ internal fun Route.moduleGraphSettingsRoutes() {
                 .where { ModuleGraphSettingsTable.projectId eq projectId }
                 .map {
                     ModuleGraphSettingDto(
-                        id = it[ModuleGraphSettingsTable.id],
+                        id = ModuleGraphSettingId(it[ModuleGraphSettingsTable.id]),
                         createdAt = Instant.fromEpochSeconds(it[ModuleGraphSettingsTable.createdAt]),
-                        projectId = it[ModuleGraphSettingsTable.projectId],
+                        projectId = ProjectId(it[ModuleGraphSettingsTable.projectId]),
                         type = it[ModuleGraphSettingsTable.type],
                         data = it[ModuleGraphSettingsTable.data]
                     )
@@ -45,13 +47,8 @@ internal fun Route.moduleGraphSettingsRoutes() {
     }
     post("/moduleGraphSettings") {
         val request = call.receive<ModuleGraphSettingRequest>()
-        val projectId = request.projectId.trim()
         val type = request.type.trim()
         val data = request.data.trim()
-        if (projectId.isBlank()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-            return@post
-        }
         if (type !in listOf("deprecatedModule", "forbiddenDependency")) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid type: $type"))
             return@post
@@ -67,7 +64,7 @@ internal fun Route.moduleGraphSettingsRoutes() {
         transaction {
             ModuleGraphSettingsTable.insert {
                 it[ModuleGraphSettingsTable.createdAt] = Clock.System.now().epochSeconds
-                it[ModuleGraphSettingsTable.projectId] = projectId
+                it[ModuleGraphSettingsTable.projectId] = request.projectId.value
                 it[ModuleGraphSettingsTable.type] = type
                 it[ModuleGraphSettingsTable.data] = data
             }

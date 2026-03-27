@@ -8,8 +8,9 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import nl.jacobras.codebaseobserver.dto.BuildTimeDto
 import nl.jacobras.codebaseobserver.dto.BuildTimeRequest
+import nl.jacobras.codebaseobserver.dto.GitHash
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.server.entity.BuildTimesTable
-import nl.jacobras.codebaseobserver.server.verifyGitInfo
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -30,9 +31,9 @@ internal fun Route.buildTimeRoutes() {
                 .orderBy(BuildTimesTable.gitDate to SortOrder.ASC)
                 .map {
                     BuildTimeDto(
-                        projectId = it[BuildTimesTable.projectId],
+                        projectId = ProjectId(it[BuildTimesTable.projectId]),
                         buildName = it[BuildTimesTable.buildName],
-                        gitHash = it[BuildTimesTable.gitHash],
+                        gitHash = GitHash(it[BuildTimesTable.gitHash]),
                         gitDate = Instant.fromEpochSeconds(it[BuildTimesTable.gitDate]),
                         timeSeconds = it[BuildTimesTable.timeSeconds]
                     )
@@ -42,20 +43,15 @@ internal fun Route.buildTimeRoutes() {
     }
     post("/buildTimes") {
         val request = call.receive<BuildTimeRequest>()
-        val error = verifyGitInfo(projectId = request.projectId, gitHash = request.gitHash)
-        if (error.isNotEmpty()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to error))
-            return@post
-        }
         if (request.buildName.isEmpty()) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing buildName"))
             return@post
         }
         transaction {
             BuildTimesTable.upsert {
-                it[projectId] = request.projectId
+                it[projectId] = request.projectId.value
                 it[buildName] = request.buildName
-                it[gitHash] = request.gitHash
+                it[gitHash] = request.gitHash.value
                 it[gitDate] = request.gitDate.epochSeconds
                 it[timeSeconds] = request.timeSeconds
             }

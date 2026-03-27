@@ -106,27 +106,35 @@ internal fun ModuleGraph() {
                 modifier = Modifier.width(350.dp).padding(end = 16.dp)
             )
 
-            val graphSrc = buildString {
-                append("graph.html?projectId=")
-                append(projectId)
-                append("&startModule=")
-                append(startModule)
-                append("&groupingThreshold=")
-                append(groupingThreshold)
-                append("&layerDepth=")
-                append(layerDepth)
+            if (projectId == null) {
+                BasicText(
+                    text = "Select a project to see the module graph",
+                    style = Carbon.typography.body02,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                val graphSrc = buildString {
+                    append("graph.html?projectId=")
+                    append(projectId!!.value)
+                    append("&startModule=")
+                    append(startModule)
+                    append("&groupingThreshold=")
+                    append(groupingThreshold)
+                    append("&layerDepth=")
+                    append(layerDepth)
+                }
+                WebElementView(
+                    factory = {
+                        (document.createElement("iframe") as HTMLIFrameElement)
+                            .apply {
+                                src = graphSrc
+                                frameBorder = "0"
+                            }
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                    update = { iframe -> iframe.src = graphSrc }
+                )
             }
-            WebElementView(
-                factory = {
-                    (document.createElement("iframe") as HTMLIFrameElement)
-                        .apply {
-                            src = graphSrc
-                            frameBorder = "0"
-                        }
-                },
-                modifier = Modifier.fillMaxSize(),
-                update = { iframe -> iframe.src = graphSrc }
-            )
         }
     }
 }

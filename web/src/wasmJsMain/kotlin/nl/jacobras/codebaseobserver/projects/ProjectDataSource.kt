@@ -13,6 +13,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
@@ -43,10 +44,10 @@ internal class ProjectDataSource(
         }
     }
 
-    suspend fun delete(id: String): Result<Unit, NetworkError> {
-        Logger.i("Deleting project: $id")
+    suspend fun delete(id: ProjectId): Result<Unit, NetworkError> {
+        Logger.i("Deleting project: ${id.value}")
         return runSuspendCatching {
-            client.delete("/projects/$id")
+            client.delete("/projects/${id.value}")
             Unit
         }.mapError {
             Logger.e(it) { "Failed to delete project" }

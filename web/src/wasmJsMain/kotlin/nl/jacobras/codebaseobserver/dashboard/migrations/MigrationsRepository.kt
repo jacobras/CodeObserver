@@ -6,6 +6,8 @@ import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationId
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 import nl.jacobras.codebaseobserver.util.data.RequestState
 
@@ -14,9 +16,9 @@ internal class MigrationsRepository(
 ) {
     val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
     val savingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val deletingState = MutableStateFlow<Map<Int, RequestState>>(emptyMap())
+    val deletingState = MutableStateFlow<Map<MigrationId, RequestState>>(emptyMap())
 
-    suspend fun fetchMigrations(projectId: String): Result<List<MigrationDto>, NetworkError> {
+    suspend fun fetchMigrations(projectId: ProjectId): Result<List<MigrationDto>, NetworkError> {
         loadingState.value = RequestState.Working
         return dataSource.fetchMigrations(projectId)
             .onOk { loadingState.value = RequestState.Idle }
@@ -24,8 +26,8 @@ internal class MigrationsRepository(
     }
 
     suspend fun save(
-        id: Int?,
-        projectId: String,
+        id: MigrationId?,
+        projectId: ProjectId,
         name: String,
         description: String,
         type: String,
@@ -42,7 +44,7 @@ internal class MigrationsRepository(
             .onErr { savingState.value = RequestState.Error(it) }
     }
 
-    suspend fun delete(id: Int): Result<Unit, NetworkError> {
+    suspend fun delete(id: MigrationId): Result<Unit, NetworkError> {
         deletingState.update { it + mapOf(id to RequestState.Working) }
         return dataSource.delete(id)
             .onOk { deletingState.update { it - id } }

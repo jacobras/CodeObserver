@@ -9,8 +9,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierDto
+import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierId
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierRequest
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierUpdateRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.server.entity.ModuleTypeIdentifiersTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
@@ -33,8 +35,8 @@ internal fun Route.moduleTypeIdentifierRoutes() {
                 .orderBy(ModuleTypeIdentifiersTable.order to SortOrder.ASC)
                 .map {
                     ModuleTypeIdentifierDto(
-                        id = it[ModuleTypeIdentifiersTable.id],
-                        projectId = it[ModuleTypeIdentifiersTable.projectId],
+                        id = ModuleTypeIdentifierId(it[ModuleTypeIdentifiersTable.id]),
+                        projectId = ProjectId(it[ModuleTypeIdentifiersTable.projectId]),
                         typeName = it[ModuleTypeIdentifiersTable.typeName],
                         plugin = it[ModuleTypeIdentifiersTable.plugin],
                         order = it[ModuleTypeIdentifiersTable.order],
@@ -46,14 +48,9 @@ internal fun Route.moduleTypeIdentifierRoutes() {
     }
     post("/moduleTypeIdentifiers") {
         val request = call.receive<ModuleTypeIdentifierRequest>()
-        val projectId = request.projectId.trim()
         val name = request.typeName.trim()
         val plugin = request.plugin.trim()
         val color = request.color.trim()
-        if (projectId.isBlank()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-            return@post
-        }
         if (name.isBlank()) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
             return@post
@@ -68,7 +65,7 @@ internal fun Route.moduleTypeIdentifierRoutes() {
         }
         transaction {
             ModuleTypeIdentifiersTable.insert {
-                it[ModuleTypeIdentifiersTable.projectId] = projectId
+                it[ModuleTypeIdentifiersTable.projectId] = request.projectId.value
                 it[ModuleTypeIdentifiersTable.typeName] = name
                 it[ModuleTypeIdentifiersTable.plugin] = plugin
                 it[ModuleTypeIdentifiersTable.order] = request.order

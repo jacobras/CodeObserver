@@ -1,3 +1,6 @@
 package nl.jacobras.codebaseobserver.util.ui.text
 
-internal fun String.gitHashExcerpt() = take(7)
+import nl.jacobras.codebaseobserver.dto.GitHash
+
+@Suppress("MagicNumber")
+internal fun GitHash.excerpt() = value.take(7)

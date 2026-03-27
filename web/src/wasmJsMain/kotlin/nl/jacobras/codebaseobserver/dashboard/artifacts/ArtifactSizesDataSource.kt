@@ -8,16 +8,17 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
 internal class ArtifactSizesDataSource(
     private val client: HttpClient
 ) {
-    suspend fun fetchArtifactSizes(projectId: String): Result<List<ArtifactSizeDto>, NetworkError> {
-        Logger.i("Fetching artifact sizes for project $projectId")
+    suspend fun fetchArtifactSizes(projectId: ProjectId): Result<List<ArtifactSizeDto>, NetworkError> {
+        Logger.i("Fetching artifact sizes for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/artifactSizes") {
-                url { parameters.append("projectId", projectId) }
+                url { parameters.append("projectId", projectId.value) }
             }.body<List<ArtifactSizeDto>>()
         }.mapError {
             Logger.e(it) { "Failed to fetch artifact sizes" }

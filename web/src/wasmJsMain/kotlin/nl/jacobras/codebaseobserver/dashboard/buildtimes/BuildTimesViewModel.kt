@@ -6,7 +6,7 @@ import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.BuildTimeDto
@@ -25,14 +25,15 @@ internal class BuildTimesViewModel(
     init {
         viewModelScope.launch {
             projectId
-                .filter { it.isNotBlank() }
+                .filterNotNull()
                 .distinctUntilChanged()
                 .collectLatest { refresh() }
         }
     }
 
     private suspend fun loadData() {
-        buildTimesRepository.fetchBuildTimes(projectId.value)
+        val projectId = projectId.value ?: return
+        buildTimesRepository.fetchBuildTimes(projectId)
             .onOk { buildTimes.value = it }
     }
 

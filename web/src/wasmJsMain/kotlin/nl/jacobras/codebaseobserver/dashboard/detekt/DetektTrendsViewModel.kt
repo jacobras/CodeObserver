@@ -35,9 +35,9 @@ internal class DetektTrendsViewModel(
     val metrics = MutableStateFlow(emptyList<DetektMetricDto>())
 
     val detailReportState = detektReportRepository.reportLoadingState.map { UiState<String>(loading = it) }
-    val latestReportId = metrics.map { reports -> reports.maxByOrNull { it.gitDate }?.id ?: -1 }
+    val latestReportId = metrics.map { reports -> reports.maxByOrNull { it.gitDate }?.id }
     val detailReport = latestReportId.flatMapLatest { id ->
-        val content = id.takeIf { it != -1 }
+        val content = id.takeIf { it != null }
             ?.let { detektReportRepository.fetchReport(it) }
             ?.takeIf { it.isOk }
             ?.get() ?: ""
@@ -53,7 +53,8 @@ internal class DetektTrendsViewModel(
     }
 
     fun refresh() = viewModelScope.launch {
-        detektReportRepository.fetchMetrics(projectId.value)
+        val projectId = projectId.value ?: return@launch
+        detektReportRepository.fetchMetrics(projectId)
             .onOk { metrics.value = it }
     }
 

@@ -6,6 +6,8 @@ import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierDto
+import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierId
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 import nl.jacobras.codebaseobserver.util.data.RequestState
 
@@ -14,9 +16,9 @@ internal class ModuleTypeIdentifiersRepository(
 ) {
     val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
     val savingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val deletingState = MutableStateFlow<Map<Int, RequestState>>(emptyMap())
+    val deletingState = MutableStateFlow<Map<ModuleTypeIdentifierId, RequestState>>(emptyMap())
 
-    suspend fun fetchIdentifiers(projectId: String): Result<List<ModuleTypeIdentifierDto>, NetworkError> {
+    suspend fun fetchIdentifiers(projectId: ProjectId): Result<List<ModuleTypeIdentifierDto>, NetworkError> {
         loadingState.value = RequestState.Working
         return dataSource.fetchIdentifiers(projectId)
             .onOk { loadingState.value = RequestState.Idle }
@@ -24,8 +26,8 @@ internal class ModuleTypeIdentifiersRepository(
     }
 
     suspend fun save(
-        id: Int?,
-        projectId: String,
+        id: ModuleTypeIdentifierId?,
+        projectId: ProjectId,
         typeName: String,
         plugin: String,
         order: Int,
@@ -42,7 +44,7 @@ internal class ModuleTypeIdentifiersRepository(
             .onErr { savingState.value = RequestState.Error(it) }
     }
 
-    suspend fun delete(id: Int): Result<Unit, NetworkError> {
+    suspend fun delete(id: ModuleTypeIdentifierId): Result<Unit, NetworkError> {
         deletingState.update { it + mapOf(id to RequestState.Working) }
         return dataSource.delete(id)
             .onOk { deletingState.update { it - id } }

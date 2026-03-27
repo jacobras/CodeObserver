@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 import nl.jacobras.codebaseobserver.util.data.RequestState
 
@@ -23,11 +24,11 @@ internal class ProjectRepository(
     /**
      * Selected project id, which changes the loaded data for everything in the app.
      */
-    val selectedProjectId = MutableStateFlow("")
+    val selectedProjectId = MutableStateFlow<ProjectId?>(null)
 
     val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
     val savingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val deletingState = MutableStateFlow<Map<String, RequestState>>(emptyMap())
+    val deletingState = MutableStateFlow<Map<ProjectId, RequestState>>(emptyMap())
 
     init {
         GlobalScope.launch {
@@ -42,13 +43,13 @@ internal class ProjectRepository(
                 projects.value = newValue
                 loadingState.update { RequestState.Idle }
 
-                if (selectedProjectId.value.isEmpty() && newValue.isNotEmpty()) {
+                if (selectedProjectId.value == null && newValue.isNotEmpty()) {
                     Logger.i { "Auto-selecting new project: ${newValue.first().id}" }
                     selectedProjectId.value = newValue.first().id
-                } else if (selectedProjectId.value.isNotEmpty() && newValue.isEmpty()) {
+                } else if (selectedProjectId.value != null && newValue.isEmpty()) {
                     Logger.i { "No more projects, de-selecting" }
-                    selectedProjectId.value = ""
-                } else if (selectedProjectId.value !in newValue.map { it.id }) {
+                    selectedProjectId.value = null
+                } else if (selectedProjectId.value != null && selectedProjectId.value !in newValue.map { it.id }) {
                     Logger.i { "Selected project not available anymore, auto-selecting first project" }
                     selectedProjectId.value = newValue.first().id
                 }
@@ -67,7 +68,7 @@ internal class ProjectRepository(
             }
     }
 
-    suspend fun delete(projectId: String) {
+    suspend fun delete(projectId: ProjectId) {
         deletingState.update { it + mapOf(projectId to RequestState.Working) }
         dataSource.delete(projectId)
             .onOk {
@@ -80,7 +81,7 @@ internal class ProjectRepository(
             }
     }
 
-    fun setSelectedProjectId(projectId: String) {
+    fun setSelectedProjectId(projectId: ProjectId) {
         Logger.i { "Switching to project: $projectId" }
         selectedProjectId.value = projectId
     }

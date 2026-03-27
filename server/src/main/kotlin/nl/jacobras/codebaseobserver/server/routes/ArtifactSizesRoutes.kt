@@ -9,6 +9,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.server.entity.ArtifactSizesTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -29,7 +30,7 @@ internal fun Route.artifactSizeRoutes() {
                 .where { ArtifactSizesTable.projectId eq projectId }
                 .map {
                     ArtifactSizeDto(
-                        projectId = it[ArtifactSizesTable.projectId],
+                        projectId = ProjectId(it[ArtifactSizesTable.projectId]),
                         createdAt = Instant.fromEpochSeconds(it[ArtifactSizesTable.createdAt]),
                         name = it[ArtifactSizesTable.name],
                         semVer = it[ArtifactSizesTable.semVer],
@@ -41,10 +42,6 @@ internal fun Route.artifactSizeRoutes() {
     }
     post("/artifactSizes") {
         val request = call.receive<ArtifactSizeRequest>()
-        if (request.projectId.isEmpty()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-            return@post
-        }
         if (request.name.isEmpty()) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
             return@post
@@ -61,7 +58,7 @@ internal fun Route.artifactSizeRoutes() {
             ArtifactSizesTable.upsert(
                 onUpdateExclude = listOf(ArtifactSizesTable.createdAt)
             ) {
-                it[projectId] = request.projectId
+                it[projectId] = request.projectId.value
                 it[createdAt] = Clock.System.now().epochSeconds
                 it[name] = request.name
                 it[semVer] = request.semVer

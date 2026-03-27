@@ -6,6 +6,7 @@ import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
 import nl.jacobras.codebaseobserver.dto.GraphModulesDto
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 import nl.jacobras.codebaseobserver.util.data.RequestState
 
@@ -15,7 +16,7 @@ internal class ModulesRepository(
     val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
 
     suspend fun fetchGraphModules(
-        projectId: String,
+        projectId: ProjectId,
         sortOrder: ModuleSortOrder
     ): Result<GraphModulesDto, NetworkError> {
         loadingState.value = RequestState.Working

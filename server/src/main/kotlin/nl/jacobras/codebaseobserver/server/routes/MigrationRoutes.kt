@@ -8,11 +8,14 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
+import nl.jacobras.codebaseobserver.dto.GitHash
 import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationId
 import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
 import nl.jacobras.codebaseobserver.dto.MigrationRequest
 import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.server.entity.MigrationProgressTable
 import nl.jacobras.codebaseobserver.server.entity.MigrationsTable
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -39,11 +42,11 @@ internal fun Route.migrationRoutes() {
                 .where { MigrationsTable.projectId eq projectId }
                 .map {
                     MigrationDto(
-                        id = it[MigrationsTable.id],
+                        id = MigrationId(it[MigrationsTable.id]),
                         createdAt = Instant.fromEpochSeconds(it[MigrationsTable.createdAt]),
                         name = it[MigrationsTable.name],
                         description = it[MigrationsTable.description],
-                        projectId = it[MigrationsTable.projectId],
+                        projectId = ProjectId(it[MigrationsTable.projectId]),
                         type = it[MigrationsTable.type],
                         rule = it[MigrationsTable.rule]
                     )
@@ -53,15 +56,10 @@ internal fun Route.migrationRoutes() {
     }
     post("/migrations") {
         val request = call.receive<MigrationRequest>()
-        val projectId = request.projectId.trim()
         val name = request.name.trim()
         val description = request.description.trim()
         val type = request.type.trim()
         val rule = request.rule.trim()
-        if (projectId.isBlank()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
-            return@post
-        }
         if (name.isBlank()) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing name"))
             return@post
@@ -79,7 +77,7 @@ internal fun Route.migrationRoutes() {
                 it[MigrationsTable.createdAt] = Clock.System.now().epochSeconds
                 it[MigrationsTable.name] = name
                 it[MigrationsTable.description] = description
-                it[MigrationsTable.projectId] = projectId
+                it[MigrationsTable.projectId] = request.projectId.value
                 it[MigrationsTable.type] = type
                 it[MigrationsTable.rule] = rule
             }
@@ -139,8 +137,8 @@ internal fun Route.migrationRoutes() {
                 .orderBy(MigrationProgressTable.gitDate to SortOrder.ASC)
                 .map {
                     MigrationProgressDto(
-                        migrationId = it[MigrationProgressTable.migrationId],
-                        gitHash = it[MigrationProgressTable.gitHash],
+                        migrationId = MigrationId(it[MigrationProgressTable.migrationId]),
+                        gitHash = GitHash(it[MigrationProgressTable.gitHash]),
                         gitDate = Instant.fromEpochSeconds(it[MigrationProgressTable.gitDate]),
                         count = it[MigrationProgressTable.count]
                     )
@@ -150,15 +148,11 @@ internal fun Route.migrationRoutes() {
     }
     post("/migrationProgress") {
         val request = call.receive<MigrationProgressRequest>()
-        val gitHash = request.gitHash.trim()
-        if (gitHash.isBlank()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing gitHash"))
-            return@post
-        }
+        val gitHash = request.gitHash
         transaction {
             MigrationProgressTable.upsert {
-                it[MigrationProgressTable.migrationId] = request.migrationId
-                it[MigrationProgressTable.gitHash] = gitHash
+                it[MigrationProgressTable.migrationId] = request.migrationId.value
+                it[MigrationProgressTable.gitHash] = gitHash.value
                 it[MigrationProgressTable.gitDate] = request.gitDate.epochSeconds
                 it[MigrationProgressTable.count] = request.count
             }
