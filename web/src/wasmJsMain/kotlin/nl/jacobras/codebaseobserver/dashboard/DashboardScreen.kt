@@ -67,10 +67,6 @@ private fun DashboardScreen(
     onSelectProject: (String) -> Unit
 ) {
     Column {
-        BasicText(
-            text = "Dashboard",
-            style = Carbon.typography.heading06
-        )
         Dropdown(
             label = "Project",
             placeholder = "Select a project",

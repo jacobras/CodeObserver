@@ -285,6 +285,7 @@
         - `gitDate` (LONG) (epoch seconds)
         - `graph` (TEXT) (serialized as `{ "moduleA": ["dep1", "dep2"] }`)
         - `moduleDetails` (TEXT) (serialized as `moduleA[android],moduleB[kmp],moduleC[java]`)
+        - `longestPath` (TEXT) (serialized as `moduleA,moduleB,moduleC`)
     - `moduleTypeIdentifiers`
         - `id` (INTEGER) (auto-incremented)
         - `projectId` (TEXT)
@@ -302,7 +303,8 @@
             - in case of `forbiddenDependency` setting is a dependency, e.g. `* -> moduleB` or `moduleA -> *`.
 - Endpoints:
     - Modules:
-        - `GET /modules?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
+        - `GET /modules?projectId=...` -> `GraphModulesDto` with all modules and `longestPath` for the project,
+          derived from the `moduleGraph` table.
     - Module graph:
         - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> mermaid graph string.
             - Modules are colored according to their identifier color (from `moduleTypeIdentifiers`) when
@@ -318,6 +320,7 @@
     - Included in `measure-gradle` command.
 - Web app:
     - Dashboard tab `Module graph`
+        - Shows the longest path in the module graph.
         - Shows the module graph using the `DependencyGraph()` composable.
         - List to select a start module.
         - Tweakable grouping threshold and layer depth.

@@ -7,6 +7,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
+import nl.jacobras.codebaseobserver.dto.GraphModulesDto
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphSettingsTable
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphTable
@@ -109,22 +110,34 @@ internal fun Route.moduleRoutes() {
                 .singleOrNull()
         }
         if (graphRecord == null) {
-            call.respond(emptyList<GraphModuleDto>())
+            call.respond(GraphModulesDto())
             return@get
         }
 
         val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
 
-        when (sortOrder) {
+        val modules = when (sortOrder) {
             ModuleSortOrder.BetweennessCentrality -> {
                 val betweennessCentrality = GraphUtil.calculateBetweennessCentralityScore(graphMap)
-                call.respond(betweennessCentrality.map { GraphModuleDto(it.key, it.value.toInt()) })
+                betweennessCentrality.map { GraphModuleDto(it.key, it.value.toInt()) }
             }
             ModuleSortOrder.Alphabetical -> {
                 val modules = (graphMap.keys + graphMap.values.flatten()).distinct().sorted()
-                call.respond(modules.map { GraphModuleDto(it, 0) })
+                modules.map { GraphModuleDto(it, 0) }
             }
         }
+        call.respond(
+            GraphModulesDto(
+                modules = modules,
+                longestPath = graphRecord[ModuleGraphTable.longestPath].let {
+                    if (it.isBlank()) {
+                        emptyList()
+                    } else {
+                        it.split(",")
+                    }
+                }
+            )
+        )
     }
 }
 

@@ -92,7 +92,7 @@ internal fun Route.metricRoutes() {
                 it[gitHash] = request.gitHash
                 it[gitDate] = request.gitDate.epochSeconds
                 it[moduleCount] = request.moduleCount
-                it[moduleTreeHeight] = request.moduleTreeHeight
+                it[moduleTreeHeight] = request.longestPath.size
             }
             ModuleGraphTable.upsert(
                 onUpdateExclude = listOf(ModuleGraphTable.createdAt)
@@ -103,6 +103,7 @@ internal fun Route.metricRoutes() {
                 it[gitDate] = request.gitDate.epochSeconds
                 it[graph] = Json.encodeToString(request.graph)
                 it[moduleDetails] = request.moduleDetails
+                it[longestPath] = request.longestPath.joinToString(separator = ",")
             }
         }
         call.respond(HttpStatusCode.Created)
