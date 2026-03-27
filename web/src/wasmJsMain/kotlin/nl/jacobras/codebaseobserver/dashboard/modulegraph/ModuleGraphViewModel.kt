@@ -14,7 +14,7 @@ import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 import nl.jacobras.codebaseobserver.util.ui.UiState
 
-internal class DependencyGraphViewModel(
+internal class ModuleGraphViewModel(
     private val modulesRepository: ModulesRepository,
     projectRepository: ProjectRepository
 ) : ViewModel() {

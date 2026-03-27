@@ -36,7 +36,7 @@ import nl.jacobras.codebaseobserver.dashboard.buildtimes.BuildTimes
 import nl.jacobras.codebaseobserver.dashboard.detekt.DetektReport
 import nl.jacobras.codebaseobserver.dashboard.detekt.DetektTrends
 import nl.jacobras.codebaseobserver.dashboard.migrations.Migrations
-import nl.jacobras.codebaseobserver.dashboard.modulegraph.DependencyGraph
+import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleGraph
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleRules
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleTypes
 import nl.jacobras.codebaseobserver.dashboard.trends.CodeTrends
@@ -169,7 +169,7 @@ private fun DashboardScreen(
                         )
                     }
                     composable(DashboardDestination.ModuleGraph.route) {
-                        DependencyGraph()
+                        ModuleGraph()
                     }
                     composable(DashboardDestination.ModuleRules.route) {
                         ModuleRules()

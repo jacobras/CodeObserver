@@ -42,9 +42,9 @@ import org.w3c.dom.HTMLIFrameElement
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-internal fun DependencyGraph() {
+internal fun ModuleGraph() {
     val viewModel = viewModel {
-        DependencyGraphViewModel(
+        ModuleGraphViewModel(
             modulesRepository = RepositoryLocator.modulesRepository,
             projectRepository = RepositoryLocator.projectRepository
         )
