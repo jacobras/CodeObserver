@@ -303,7 +303,8 @@
             - in case of `forbiddenDependency` setting is a dependency, e.g. `* -> moduleB` or `moduleA -> *`.
 - Endpoints:
     - Modules:
-        - `GET /moduleGraph?projectId=...` -> list of all modules in a project, from the `moduleGraph` table.
+        - `GET /modules?projectId=...` -> `GraphModulesDto` with all modules and `longestPath` for the project,
+          derived from the `moduleGraph` table.
     - Module graph:
         - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> mermaid graph string.
             - Modules are colored according to their identifier color (from `moduleTypeIdentifiers`) when
