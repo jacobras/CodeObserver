@@ -6,7 +6,7 @@ buildconfig = "6.0.9"
 detekt = "1.23.8"
 detektCompose = "0.4.28" # Version 0.5 requires Detekt 2.x which is not yet stable.
 exposed = "1.1.1"
-ktor = "3.4.1"
+ktor = "3.4.2"
 
 [libraries]
 androidx-nav = { module = "org.jetbrains.androidx.navigation:navigation-compose", version = "2.9.2" }
