@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
@@ -20,15 +21,21 @@ internal class ArtifactChartsViewModel(
     val artifactSizes = MutableStateFlow(emptyList<ArtifactSizeDto>())
 
     init {
-        refresh()
-
         viewModelScope.launch {
-            projectId.collect { refresh() }
+            projectId.collectLatest { id ->
+                if (id.isNotEmpty()) {
+                    loadData()
+                }
+            }
         }
     }
 
-    fun refresh() = viewModelScope.launch {
+    private suspend fun loadData() {
         artifactSizesRepository.fetchArtifactSizes(projectId.value)
             .onOk { artifactSizes.value = it }
+    }
+
+    fun refresh() = viewModelScope.launch {
+        loadData()
     }
 }

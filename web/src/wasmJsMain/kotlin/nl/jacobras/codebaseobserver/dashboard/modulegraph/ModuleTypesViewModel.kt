@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierDto
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
@@ -26,16 +29,21 @@ internal class ModuleTypesViewModel(
     val moduleTypeIdentifiers = MutableStateFlow(emptyList<ModuleTypeIdentifierDto>())
 
     init {
-        refresh()
-
         viewModelScope.launch {
-            projectId.collect { refresh() }
+            projectId
+                .filter { it.isNotBlank() }
+                .distinctUntilChanged()
+                .collectLatest { refresh() }
         }
     }
 
-    fun refresh() = viewModelScope.launch {
+    suspend fun loadData() {
         moduleTypeIdentifiersRepository.fetchIdentifiers(projectId.value)
             .onOk { moduleTypeIdentifiers.value = it }
+    }
+
+    fun refresh() = viewModelScope.launch {
+        loadData()
     }
 
     fun save(id: Int?, typeName: String, plugin: String, order: Int, color: String) = viewModelScope.launch {

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
@@ -25,16 +26,22 @@ internal class TrendsViewModel(
     val metrics = MutableStateFlow(emptyList<CodeMetricsDto>())
 
     init {
-        refresh()
-
         viewModelScope.launch {
-            projectId.collect { refresh() }
+            projectId.collectLatest { id ->
+                if (id.isNotEmpty()) {
+                    loadData()
+                }
+            }
         }
     }
 
-    fun refresh() = viewModelScope.launch {
+    private suspend fun loadData() {
         trendsRepository.fetchMetrics(projectId.value)
             .onOk { metrics.value = it }
+    }
+
+    fun refresh() = viewModelScope.launch {
+        loadData()
     }
 
     fun delete(record: CodeMetricsDto) = viewModelScope.launch {

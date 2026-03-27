@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -26,8 +27,10 @@ internal class DependencyGraphViewModel(
     init {
         viewModelScope.launch {
             combine(projectId, sortOrder) { id, sort -> id to sort }
-                .collect { (id, _) ->
-                    if (id.isNotEmpty()) refresh()
+                .collectLatest { (id, _) ->
+                    if (id.isNotEmpty()) {
+                        loadData()
+                    }
                 }
         }
     }
@@ -36,8 +39,12 @@ internal class DependencyGraphViewModel(
         sortOrder.value = order
     }
 
-    fun refresh() = viewModelScope.launch {
+    private suspend fun loadData() {
         modulesRepository.fetchModules(projectId.value, sortOrder.value)
             .onOk { modules.value = it }
+    }
+
+    fun refresh() = viewModelScope.launch {
+        loadData()
     }
 }

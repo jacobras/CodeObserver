@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
@@ -19,8 +20,10 @@ internal class MigrationDetailViewModel(
 
     init {
         viewModelScope.launch {
-            migrationId.collect { id ->
-                if (id > 0) refresh()
+            migrationId.collectLatest { id ->
+                if (id > 0) {
+                    loadData()
+                }
             }
         }
     }
@@ -29,8 +32,12 @@ internal class MigrationDetailViewModel(
         migrationId.value = id
     }
 
-    fun refresh() = viewModelScope.launch {
+    private suspend fun loadData() {
         migrationProgressRepository.fetchProgress(migrationId.value)
             .onOk { progress.value = it }
+    }
+
+    fun refresh() = viewModelScope.launch {
+        loadData()
     }
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.MigrationDto
@@ -26,16 +27,22 @@ internal class MigrationsViewModel(
     val migrations = MutableStateFlow(emptyList<MigrationDto>())
 
     init {
-        refresh()
-
         viewModelScope.launch {
-            projectId.collect { refresh() }
+            projectId.collectLatest { id ->
+                if (id.isNotEmpty()) {
+                    loadData()
+                }
+            }
         }
     }
 
-    fun refresh() = viewModelScope.launch {
+    private suspend fun loadData() {
         migrationsRepository.fetchMigrations(projectId.value)
             .onOk { migrations.value = it }
+    }
+
+    fun refresh() = viewModelScope.launch {
+        loadData()
     }
 
     fun save(id: Int?, name: String, description: String, type: String, rule: String) = viewModelScope.launch {

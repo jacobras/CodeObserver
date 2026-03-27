@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingDto
@@ -26,16 +27,22 @@ internal class ModuleRulesViewModel(
     val settings = MutableStateFlow(emptyList<ModuleGraphSettingDto>())
 
     init {
-        refresh()
-
         viewModelScope.launch {
-            projectId.collect { refresh() }
+            projectId.collectLatest { id ->
+                if (id.isNotEmpty()) {
+                    loadData()
+                }
+            }
         }
     }
 
-    fun refresh() = viewModelScope.launch {
+    private suspend fun loadData() {
         moduleGraphSettingsRepository.fetchSettings(projectId.value)
             .onOk { settings.value = it }
+    }
+
+    fun refresh() = viewModelScope.launch {
+        loadData()
     }
 
     fun save(id: Int?, type: String, data: String) = viewModelScope.launch {
