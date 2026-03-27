@@ -60,7 +60,7 @@ internal fun Route.moduleGraphSettingsRoutes() {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing data"))
             return@post
         }
-        if (type == "deprecatedModule" && !data.contains("->")) {
+        if (type == "forbiddenDependency" && !data.contains("->")) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid data format: $data"))
             return@post
         }
