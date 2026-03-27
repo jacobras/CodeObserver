@@ -11,10 +11,14 @@ import nl.jacobras.codebaseobserver.dto.BuildTimeDto
 import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class BuildTimesDataSource(
+internal interface BuildTimesDataSource {
+    suspend fun fetchBuildTimes(projectId: ProjectId): Result<List<BuildTimeDto>, NetworkError>
+}
+
+internal class BuildTimesDataSourceImpl(
     private val client: HttpClient
-) {
-    suspend fun fetchBuildTimes(projectId: ProjectId): Result<List<BuildTimeDto>, NetworkError> {
+) : BuildTimesDataSource {
+    override suspend fun fetchBuildTimes(projectId: ProjectId): Result<List<BuildTimeDto>, NetworkError> {
         Logger.i("Fetching build times for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/buildTimes") {

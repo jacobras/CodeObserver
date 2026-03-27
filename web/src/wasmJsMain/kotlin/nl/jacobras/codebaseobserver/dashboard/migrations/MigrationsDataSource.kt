@@ -20,10 +20,23 @@ import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
 import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class MigrationsDataSource(
+internal interface MigrationsDataSource {
+    suspend fun fetchMigrations(projectId: ProjectId): Result<List<MigrationDto>, NetworkError>
+    suspend fun create(
+        projectId: ProjectId,
+        name: String,
+        description: String,
+        type: String,
+        rule: String
+    ): Result<Unit, NetworkError>
+    suspend fun update(id: MigrationId, name: String, description: String): Result<Unit, NetworkError>
+    suspend fun delete(id: MigrationId): Result<Unit, NetworkError>
+}
+
+internal class MigrationsDataSourceImpl(
     private val client: HttpClient
-) {
-    suspend fun fetchMigrations(projectId: ProjectId): Result<List<MigrationDto>, NetworkError> {
+) : MigrationsDataSource {
+    override suspend fun fetchMigrations(projectId: ProjectId): Result<List<MigrationDto>, NetworkError> {
         Logger.i("Fetching migrations for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/migrations") {
@@ -35,7 +48,7 @@ internal class MigrationsDataSource(
         }
     }
 
-    suspend fun create(
+    override suspend fun create(
         projectId: ProjectId,
         name: String,
         description: String,
@@ -63,7 +76,7 @@ internal class MigrationsDataSource(
         }
     }
 
-    suspend fun update(id: MigrationId, name: String, description: String): Result<Unit, NetworkError> {
+    override suspend fun update(id: MigrationId, name: String, description: String): Result<Unit, NetworkError> {
         Logger.i("Updating migration ${id.value}")
         return runSuspendCatching {
             client.patch("/migrations/${id.value}") {
@@ -77,7 +90,7 @@ internal class MigrationsDataSource(
         }
     }
 
-    suspend fun delete(id: MigrationId): Result<Unit, NetworkError> {
+    override suspend fun delete(id: MigrationId): Result<Unit, NetworkError> {
         Logger.i("Deleting migration ${id.value}")
         return runSuspendCatching {
             client.delete("/migrations/${id.value}")

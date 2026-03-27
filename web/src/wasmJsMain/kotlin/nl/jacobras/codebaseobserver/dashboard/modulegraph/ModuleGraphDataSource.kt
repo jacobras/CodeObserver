@@ -12,10 +12,17 @@ import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class ModuleGraphDataSource(
-    private val client: HttpClient
-) {
+internal interface ModuleGraphDataSource {
     suspend fun fetchGraphModules(
+        projectId: ProjectId,
+        sortOrder: ModuleSortOrder
+    ): Result<GraphModulesDto, NetworkError>
+}
+
+internal class ModuleGraphDataSourceImpl(
+    private val client: HttpClient
+) : ModuleGraphDataSource {
+    override suspend fun fetchGraphModules(
         projectId: ProjectId,
         sortOrder: ModuleSortOrder
     ): Result<GraphModulesDto, NetworkError> {

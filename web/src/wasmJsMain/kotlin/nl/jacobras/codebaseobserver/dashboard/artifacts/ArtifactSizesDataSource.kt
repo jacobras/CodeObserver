@@ -11,10 +11,14 @@ import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
 import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class ArtifactSizesDataSource(
+internal interface ArtifactSizesDataSource {
+    suspend fun fetchArtifactSizes(projectId: ProjectId): Result<List<ArtifactSizeDto>, NetworkError>
+}
+
+internal class ArtifactSizesDataSourceImpl(
     private val client: HttpClient
-) {
-    suspend fun fetchArtifactSizes(projectId: ProjectId): Result<List<ArtifactSizeDto>, NetworkError> {
+) : ArtifactSizesDataSource {
+    override suspend fun fetchArtifactSizes(projectId: ProjectId): Result<List<ArtifactSizeDto>, NetworkError> {
         Logger.i("Fetching artifact sizes for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/artifactSizes") {

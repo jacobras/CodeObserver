@@ -17,10 +17,16 @@ import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.dto.ProjectRequest
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class ProjectDataSource(
+internal interface ProjectDataSource {
+    suspend fun fetch(): Result<List<ProjectDto>, NetworkError>
+    suspend fun save(project: ProjectDto): Result<Unit, NetworkError>
+    suspend fun delete(id: ProjectId): Result<Unit, NetworkError>
+}
+
+internal class ProjectDataSourceImpl(
     private val client: HttpClient
-) {
-    suspend fun fetch(): Result<List<ProjectDto>, NetworkError> {
+) : ProjectDataSource {
+    override suspend fun fetch(): Result<List<ProjectDto>, NetworkError> {
         Logger.i("Fetching projects")
         return runSuspendCatching {
             client.get("/projects").body<List<ProjectDto>>()
@@ -30,7 +36,7 @@ internal class ProjectDataSource(
         }
     }
 
-    suspend fun save(project: ProjectDto): Result<Unit, NetworkError> {
+    override suspend fun save(project: ProjectDto): Result<Unit, NetworkError> {
         Logger.i("Saving project: ${project.name}")
         return runSuspendCatching {
             client.post("/projects") {
@@ -44,7 +50,7 @@ internal class ProjectDataSource(
         }
     }
 
-    suspend fun delete(id: ProjectId): Result<Unit, NetworkError> {
+    override suspend fun delete(id: ProjectId): Result<Unit, NetworkError> {
         Logger.i("Deleting project: ${id.value}")
         return runSuspendCatching {
             client.delete("/projects/${id.value}")

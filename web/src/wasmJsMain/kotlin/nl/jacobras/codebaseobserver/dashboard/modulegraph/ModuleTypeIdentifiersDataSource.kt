@@ -20,10 +20,29 @@ import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierUpdateRequest
 import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class ModuleTypeIdentifiersDataSource(
+internal interface ModuleTypeIdentifiersDataSource {
+    suspend fun fetchIdentifiers(projectId: ProjectId): Result<List<ModuleTypeIdentifierDto>, NetworkError>
+    suspend fun create(
+        projectId: ProjectId,
+        typeName: String,
+        plugin: String,
+        order: Int,
+        color: String
+    ): Result<Unit, NetworkError>
+    suspend fun update(
+        id: ModuleTypeIdentifierId,
+        typeName: String,
+        plugin: String,
+        order: Int,
+        color: String
+    ): Result<Unit, NetworkError>
+    suspend fun delete(id: ModuleTypeIdentifierId): Result<Unit, NetworkError>
+}
+
+internal class ModuleTypeIdentifiersDataSourceImpl(
     private val client: HttpClient
-) {
-    suspend fun fetchIdentifiers(projectId: ProjectId): Result<List<ModuleTypeIdentifierDto>, NetworkError> {
+) : ModuleTypeIdentifiersDataSource {
+    override suspend fun fetchIdentifiers(projectId: ProjectId): Result<List<ModuleTypeIdentifierDto>, NetworkError> {
         Logger.i("Fetching module type identifiers for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/moduleTypeIdentifiers") {
@@ -35,7 +54,7 @@ internal class ModuleTypeIdentifiersDataSource(
         }
     }
 
-    suspend fun create(
+    override suspend fun create(
         projectId: ProjectId,
         typeName: String,
         plugin: String,
@@ -63,7 +82,7 @@ internal class ModuleTypeIdentifiersDataSource(
         }
     }
 
-    suspend fun update(
+    override suspend fun update(
         id: ModuleTypeIdentifierId,
         typeName: String,
         plugin: String,
@@ -90,7 +109,7 @@ internal class ModuleTypeIdentifiersDataSource(
         }
     }
 
-    suspend fun delete(id: ModuleTypeIdentifierId): Result<Unit, NetworkError> {
+    override suspend fun delete(id: ModuleTypeIdentifierId): Result<Unit, NetworkError> {
         Logger.i("Deleting module type identifier ${id.value}")
         return runSuspendCatching {
             client.delete("/moduleTypeIdentifiers/${id.value}")

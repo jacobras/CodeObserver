@@ -11,10 +11,14 @@ import nl.jacobras.codebaseobserver.dto.MigrationId
 import nl.jacobras.codebaseobserver.dto.MigrationProgressDto
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class MigrationProgressDataSource(
+internal interface MigrationProgressDataSource {
+    suspend fun fetchProgress(migrationId: MigrationId): Result<List<MigrationProgressDto>, NetworkError>
+}
+
+internal class MigrationProgressDataSourceImpl(
     private val client: HttpClient
-) {
-    suspend fun fetchProgress(migrationId: MigrationId): Result<List<MigrationProgressDto>, NetworkError> {
+) : MigrationProgressDataSource {
+    override suspend fun fetchProgress(migrationId: MigrationId): Result<List<MigrationProgressDto>, NetworkError> {
         Logger.i("Fetching migration progress for migration ${migrationId.value}")
         return runSuspendCatching {
             client.get("/migrationProgress") {
