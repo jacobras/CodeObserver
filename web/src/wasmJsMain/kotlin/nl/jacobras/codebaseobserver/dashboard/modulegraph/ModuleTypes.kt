@@ -28,6 +28,7 @@ import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.UiState
+import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 
@@ -144,6 +145,18 @@ internal fun ModuleTypes() {
                 style = Carbon.typography.body02
             )
         } else {
+            var requestDeleteId by remember { mutableStateOf<Int?>(null) }
+            if (requestDeleteId != null) {
+                DeleteDialog(
+                    message = "Are you sure you want to delete this identifier?",
+                    onCancel = { requestDeleteId = null },
+                    onDelete = {
+                        viewModel.delete(requestDeleteId!!)
+                        requestDeleteId = null
+                    }
+                )
+            }
+
             DataTable(
                 columnHeadings = listOf("Name", "Plugin", "Order", "Color", "Actions"),
                 rowCount = typeIdentifiers.size,
@@ -194,7 +207,7 @@ internal fun ModuleTypes() {
                                 label = "Delete",
                                 buttonType = ButtonType.GhostDanger,
                                 buttonSize = ButtonSize.Small,
-                                onClick = { viewModel.delete(identifier.id) }
+                                onClick = { requestDeleteId = identifier.id }
                             )
                         }
                     }

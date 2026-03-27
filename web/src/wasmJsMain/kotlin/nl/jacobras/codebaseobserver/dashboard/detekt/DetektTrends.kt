@@ -13,6 +13,9 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -27,6 +30,7 @@ import nl.jacobras.codebaseobserver.util.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeViewSelector
+import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 import nl.jacobras.codebaseobserver.util.ui.text.gitHashExcerpt
@@ -122,6 +126,18 @@ private fun DetektChartsAndTable(
             )
         }
 
+        var requestDeleteRecord by remember { mutableStateOf<DetektMetricDto?>(null) }
+        if (requestDeleteRecord != null) {
+            DeleteDialog(
+                message = "Are you sure you want to delete this record?",
+                onCancel = { requestDeleteRecord = null },
+                onDelete = {
+                    onDelete(requestDeleteRecord!!)
+                    requestDeleteRecord = null
+                }
+            )
+        }
+
         DataTable(
             modifier = Modifier.fillMaxWidth(),
             columnHeadings = listOf("Git date", "Git hash", "Findings", "Smells/1000 lloc", "Actions"),
@@ -162,7 +178,7 @@ private fun DetektChartsAndTable(
                             label = "Delete",
                             buttonType = ButtonType.GhostDanger,
                             loading = isDeleting,
-                            onClick = { onDelete(record) }
+                            onClick = { requestDeleteRecord = record }
                         )
                     }
                 }

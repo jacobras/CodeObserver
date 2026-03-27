@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,6 +29,7 @@ import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.UiState
+import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 
@@ -115,12 +117,25 @@ internal fun ModuleRules() {
         }
         Spacer(Modifier.height(20.dp))
 
+
         if (settings.isEmpty()) {
             BasicText(
                 text = "No settings yet. Add one above.",
                 style = Carbon.typography.body02
             )
         } else {
+            var requestDeleteId by remember { mutableIntStateOf(0) }
+            if (requestDeleteId > 0) {
+                DeleteDialog(
+                    message = "Are you sure you want to delete this setting?",
+                    onCancel = { requestDeleteId = 0 },
+                    onDelete = {
+                        viewModel.delete(requestDeleteId)
+                        requestDeleteId = 0
+                    }
+                )
+            }
+
             DataTable(
                 columnHeadings = listOf("Type", "Data", "Actions"),
                 rowCount = settings.size,
@@ -157,7 +172,7 @@ internal fun ModuleRules() {
                                 label = "Delete",
                                 buttonType = ButtonType.GhostDanger,
                                 buttonSize = ButtonSize.Small,
-                                onClick = { viewModel.delete(setting.id) }
+                                onClick = { requestDeleteId = setting.id }
                             )
                         }
                     }
