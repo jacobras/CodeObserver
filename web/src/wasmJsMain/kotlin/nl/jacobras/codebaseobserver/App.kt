@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -76,14 +77,22 @@ private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
             .fillMaxWidth()
             .background(Color(0xFF1F3D4D))
             .padding(horizontal = 24.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val demoSuffix = if (BuildConfig.IS_DEMO) {
+            " (DEMO)"
+        } else {
+            ""
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {}
         BasicText(
-            text = "CodebaseObserver ${BuildConfig.VERSION}",
+            text = "CodebaseObserver ${BuildConfig.VERSION}$demoSuffix",
             style = Carbon.typography.headingCompact02.copy(color = Color(0xFFF5F2EA))
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Spacer(Modifier.weight(1f))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Screen.entries.forEach { screen ->
                 val selected = screen == active
                 Button(
