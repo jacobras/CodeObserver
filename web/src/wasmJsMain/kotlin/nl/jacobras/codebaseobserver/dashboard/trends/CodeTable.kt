@@ -5,12 +5,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 import nl.jacobras.codebaseobserver.util.ui.text.gitHashExcerpt
 import nl.jacobras.humanreadable.HumanReadable
@@ -21,6 +26,18 @@ internal fun CodeTable(
     onDelete: (CodeMetricsDto) -> Unit
 ) {
     val sortedMetrics = metrics.sortedByDescending { it.gitDate }
+    var requestDeleteRecord by remember { mutableStateOf<CodeMetricsDto?>(null) }
+
+    if (requestDeleteRecord != null) {
+        DeleteDialog(
+            message = "Are you sure you want to delete this record?",
+            onCancel = { requestDeleteRecord = null },
+            onDelete = {
+                onDelete(requestDeleteRecord!!)
+                requestDeleteRecord = null
+            }
+        )
+    }
 
     DataTable(
         columnHeadings = listOf(
@@ -74,7 +91,7 @@ internal fun CodeTable(
                         label = "Delete",
                         buttonType = ButtonType.GhostDanger,
                         buttonSize = ButtonSize.Small,
-                        onClick = { onDelete(record) }
+                        onClick = { requestDeleteRecord = record }
                     )
                 }
             }

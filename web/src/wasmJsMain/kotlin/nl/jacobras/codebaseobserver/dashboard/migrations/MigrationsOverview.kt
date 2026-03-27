@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,6 +25,7 @@ import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 
 @Composable
@@ -112,6 +114,18 @@ internal fun MigrationsOverview(
                 style = Carbon.typography.body02
             )
         } else {
+            var requestDeleteId by remember { mutableIntStateOf(0) }
+            if (requestDeleteId > 0) {
+                DeleteDialog(
+                    message = "Are you sure you want to delete this migration?",
+                    onCancel = { requestDeleteId = 0 },
+                    onDelete = {
+                        onDelete(requestDeleteId)
+                        requestDeleteId = 0
+                    }
+                )
+            }
+
             DataTable(
                 columnHeadings = listOf("Name", "Type", "Rule", "Actions"),
                 rowCount = migrations.size,
@@ -156,7 +170,7 @@ internal fun MigrationsOverview(
                                 label = "Delete",
                                 buttonType = ButtonType.GhostDanger,
                                 buttonSize = ButtonSize.Small,
-                                onClick = { onDelete(migration.id) }
+                                onClick = { requestDeleteId = migration.id }
                             )
                         }
                     }
