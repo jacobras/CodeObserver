@@ -43,4 +43,48 @@ internal class DemoModuleGraphDataSource : ModuleGraphDataSource {
             )
         }
     }
+
+    override suspend fun fetchGraph(
+        projectId: ProjectId,
+        startModule: String,
+        groupingThreshold: Int,
+        layerDepth: Int
+    ): Result<String, NetworkError> {
+        return Ok(
+            """
+            graph TD
+                app
+                core:common
+                core:data
+                core:network
+                core:ui
+                feature:home
+                feature:profile
+                feature:settings
+            
+            %% Dependencies
+                app --> core:common
+                app --> core:data
+                app --> core:ui
+                app --> feature:home
+                app --> feature:profile
+                app --> feature:settings
+                feature:home --> core:data
+                core:data --> core:network
+                feature:profile --> core:data
+                feature:settings --> core:data
+                core:ui --> core:common
+            
+            classDef moduleType0 fill:#9bf6ff;
+            classDef moduleType1 fill:#bdb2ff;
+            classDef moduleType2 fill:#caffbf;
+            class app moduleType0
+            class core:common moduleType1
+            class core:network moduleType1
+            class feature:home moduleType2
+            class feature:profile moduleType2
+            class feature:settings moduleType2
+            """.trimIndent()
+        )
+    }
 }

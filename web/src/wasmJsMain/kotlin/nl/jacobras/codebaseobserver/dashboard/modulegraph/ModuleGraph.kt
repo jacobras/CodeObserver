@@ -18,10 +18,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -52,14 +48,16 @@ internal fun ModuleGraph() {
         )
     }
     val projectId by viewModel.projectId.collectAsState()
-    val graph by viewModel.graphModules.collectAsState(GraphModulesDto())
+    val graphModules by viewModel.graphModules.collectAsState(GraphModulesDto())
     val state by viewModel.uiState.collectAsState(UiState())
     val sortOrder by viewModel.sortOrder.collectAsState()
 
+    val startModule by viewModel.startModule.collectAsState("")
+    val groupingThreshold by viewModel.groupingThreshold.collectAsState(10)
+    val layerDepth by viewModel.layerDepth.collectAsState(10)
+    val graph by viewModel.graph.collectAsState("")
+
     Column(modifier = Modifier) {
-        var startModule by remember { mutableStateOf("") }
-        var groupingThreshold by remember { mutableIntStateOf(DEFAULT_GROUPING_THRESHOLD) }
-        var layerDepth by remember { mutableIntStateOf(DEFAULT_LAYER_DEPTH) }
 
         when (val loading = state.loading) {
             is RequestState.Working -> {
@@ -77,7 +75,7 @@ internal fun ModuleGraph() {
             RequestState.Idle -> Unit
         }
 
-        if (graph.longestPath.isNotEmpty()) {
+        if (graphModules.longestPath.isNotEmpty()) {
             BasicText(
                 text = "Longest path",
                 style = Carbon.typography.headingCompact02.copy(color = Carbon.theme.textPrimary),
@@ -85,7 +83,7 @@ internal fun ModuleGraph() {
             Spacer(Modifier.height(8.dp))
             SelectionContainer {
                 BasicText(
-                    text = graph.longestPath.joinToString(separator = " » "),
+                    text = graphModules.longestPath.joinToString(separator = " » "),
                     style = Carbon.typography.code01.copy(color = Carbon.theme.textSecondary),
                 )
             }
@@ -94,13 +92,13 @@ internal fun ModuleGraph() {
 
         Row {
             ModuleList(
-                modules = graph.modules,
+                modules = graphModules.modules,
                 startModule = startModule,
-                onSelectModule = { startModule = it },
+                onSelectModule = { viewModel.startModule.value = it },
                 groupingThreshold = groupingThreshold,
-                onGroupingThresholdChange = { groupingThreshold = it },
+                onGroupingThresholdChange = { viewModel.groupingThreshold.value = it },
                 layerDepth = layerDepth,
-                onLayerDepthChange = { layerDepth = it },
+                onLayerDepthChange = { viewModel.layerDepth.value = it },
                 sortOrder = sortOrder,
                 onSortOrderChange = { viewModel.setSortOrder(it) },
                 modifier = Modifier.width(350.dp).padding(end = 16.dp)
@@ -113,26 +111,17 @@ internal fun ModuleGraph() {
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
-                val graphSrc = buildString {
-                    append("graph.html?projectId=")
-                    append(projectId!!.value)
-                    append("&startModule=")
-                    append(startModule)
-                    append("&groupingThreshold=")
-                    append(groupingThreshold)
-                    append("&layerDepth=")
-                    append(layerDepth)
-                }
+                val graphSrc = buildGraphSrcdoc(mermaidGraph = graph)
                 WebElementView(
                     factory = {
                         (document.createElement("iframe") as HTMLIFrameElement)
                             .apply {
-                                src = graphSrc
+                                srcdoc = graphSrc
                                 frameBorder = "0"
                             }
                     },
                     modifier = Modifier.fillMaxSize(),
-                    update = { iframe -> iframe.src = graphSrc }
+                    update = { iframe -> iframe.srcdoc = graphSrc }
                 )
             }
         }
@@ -258,5 +247,81 @@ private fun ModuleRow(
     }
 }
 
-private const val DEFAULT_GROUPING_THRESHOLD = 3
-private const val DEFAULT_LAYER_DEPTH = 30
+private fun buildGraphSrcdoc(
+    mermaidGraph: String
+): String {
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Dependency Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: white;
+            font-family: sans-serif;
+        }
+        #viewport {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        #viewport:active {
+            cursor: grabbing;
+        }
+        #error {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: red;
+            font-family: monospace;
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+<div id="viewport"></div>
+<div id="error" hidden></div>
+<script>
+    mermaid.initialize({ startOnLoad: false });
+
+    const graphDefinition = `$mermaidGraph`;
+
+    async function loadGraph() {
+        const viewport = document.getElementById("viewport");
+        const errorDiv = document.getElementById("error");
+        try {
+            const {svg} = await mermaid.render("graphSvg", graphDefinition);
+            viewport.innerHTML = svg;
+            const svgElement = viewport.querySelector("svg");
+            svgElement.style.width = "100%";
+            svgElement.style.height = "100%";
+            svgElement.style.display = "block";
+            svgElement.removeAttribute("width");
+            svgElement.removeAttribute("height");
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            while (svgElement.firstChild)
+                g.appendChild(svgElement.firstChild);
+            svgElement.appendChild(g);
+            const zoom = d3.zoom()
+                .scaleExtent([0.2, 10])
+                .on("zoom", (event) => {
+                    g.setAttribute("transform", event.transform);
+                });
+            d3.select(svgElement).call(zoom);
+        } catch (e) {
+            errorDiv.hidden = false;
+            errorDiv.textContent = "Failed to load graph:\n\n" + e;
+        }
+    }
+
+    loadGraph();
+</script>
+</body>
+</html>"""
+}

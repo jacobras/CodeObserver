@@ -7,7 +7,7 @@ import nl.jacobras.codebaseobserver.dashboard.migrations.MigrationProgressReposi
 import nl.jacobras.codebaseobserver.dashboard.migrations.MigrationsRepository
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleGraphSettingsRepository
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleTypeIdentifiersRepository
-import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModulesRepository
+import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleGraphRepository
 import nl.jacobras.codebaseobserver.dashboard.trends.TrendsRepository
 import nl.jacobras.codebaseobserver.di.demo.DemoDataSourceLocator
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
@@ -19,8 +19,8 @@ import nl.jacobras.codebaseobserver.web.BuildConfig
 internal object RepositoryLocator {
     val dataSourceLocator = if (BuildConfig.IS_DEMO) DemoDataSourceLocator else DatabaseDataSourceLocator
 
-    val modulesRepository: ModulesRepository by lazy {
-        ModulesRepository(dataSource = dataSourceLocator.moduleGraphDataSource)
+    val modulesRepository: ModuleGraphRepository by lazy {
+        ModuleGraphRepository(dataSource = dataSourceLocator.moduleGraphDataSource)
     }
     val moduleGraphSettingsRepository: ModuleGraphSettingsRepository by lazy {
         ModuleGraphSettingsRepository(dataSource = dataSourceLocator.moduleGraphSettingsDataSource)

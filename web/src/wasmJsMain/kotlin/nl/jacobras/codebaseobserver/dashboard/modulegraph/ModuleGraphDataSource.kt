@@ -17,6 +17,13 @@ internal interface ModuleGraphDataSource {
         projectId: ProjectId,
         sortOrder: ModuleSortOrder
     ): Result<GraphModulesDto, NetworkError>
+
+    suspend fun fetchGraph(
+        projectId: ProjectId,
+        startModule: String,
+        groupingThreshold: Int,
+        layerDepth: Int
+    ): Result<String, NetworkError>
 }
 
 internal class ModuleGraphDataSourceImpl(
@@ -36,6 +43,28 @@ internal class ModuleGraphDataSourceImpl(
             }.body<GraphModulesDto>()
         }.mapError {
             Logger.e(it) { "Failed to fetch modules" }
+            NetworkError.UnknownError
+        }
+    }
+
+    override suspend fun fetchGraph(
+        projectId: ProjectId,
+        startModule: String,
+        groupingThreshold: Int,
+        layerDepth: Int
+    ): Result<String, NetworkError> {
+        Logger.i("Fetching module graph for project ${projectId.value}")
+        return runSuspendCatching {
+            client.get("/moduleGraph") {
+                url {
+                    parameters.append("projectId", projectId.value)
+                    parameters.append("startModule", startModule)
+                    parameters.append("groupingThreshold", groupingThreshold.toString())
+                    parameters.append("layerDepth", layerDepth.toString())
+                }
+            }.body<String>()
+        }.mapError {
+            Logger.e(it) { "Failed to fetch module graph" }
             NetworkError.UnknownError
         }
     }
