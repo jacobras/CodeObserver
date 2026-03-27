@@ -64,7 +64,7 @@ class MeasureGradleCommand internal constructor(
                     gitHash = gitHash,
                     gitDate = gitDate,
                     moduleCount = moduleCount,
-                    moduleTreeHeight = moduleTreeHeight,
+                    longestPath = longestPath,
                     graph = graphInfo.graph,
                     moduleDetails = moduleDetails
                 )

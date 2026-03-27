@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import nl.jacobras.codebaseobserver.dto.GraphModuleDto
+import nl.jacobras.codebaseobserver.dto.GraphModulesDto
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 import nl.jacobras.codebaseobserver.util.ui.UiState
@@ -22,7 +22,7 @@ internal class ModuleGraphViewModel(
     val projectId: StateFlow<String> = projectRepository.selectedProjectId
     val sortOrder = MutableStateFlow(ModuleSortOrder.Alphabetical)
     val uiState = modulesRepository.loadingState.map { UiState<Nothing>(loading = it) }
-    val modules = MutableStateFlow(emptyList<GraphModuleDto>())
+    val graphModules = MutableStateFlow(GraphModulesDto())
 
     init {
         viewModelScope.launch {
@@ -40,8 +40,8 @@ internal class ModuleGraphViewModel(
     }
 
     private suspend fun loadData() {
-        modulesRepository.fetchModules(projectId.value, sortOrder.value)
-            .onOk { modules.value = it }
+        modulesRepository.fetchGraphModules(projectId.value, sortOrder.value)
+            .onOk { graphModules.value = it }
     }
 
     fun refresh() = viewModelScope.launch {

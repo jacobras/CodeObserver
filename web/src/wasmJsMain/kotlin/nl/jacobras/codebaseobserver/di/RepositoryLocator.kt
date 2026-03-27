@@ -10,7 +10,7 @@ import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleGraphSettingsDat
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleGraphSettingsRepository
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleTypeIdentifiersDataSource
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleTypeIdentifiersRepository
-import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModulesDataSource
+import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleGraphDataSource
 import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModulesRepository
 import nl.jacobras.codebaseobserver.dashboard.artifacts.ArtifactSizesDataSource
 import nl.jacobras.codebaseobserver.dashboard.artifacts.ArtifactSizesRepository
@@ -40,7 +40,7 @@ internal object RepositoryLocator {
         }
     }
     val modulesRepository: ModulesRepository by lazy {
-        ModulesRepository(dataSource = ModulesDataSource(httpClient))
+        ModulesRepository(dataSource = ModuleGraphDataSource(httpClient))
     }
     val moduleGraphSettingsRepository: ModuleGraphSettingsRepository by lazy {
         ModuleGraphSettingsRepository(dataSource = ModuleGraphSettingsDataSource(httpClient))

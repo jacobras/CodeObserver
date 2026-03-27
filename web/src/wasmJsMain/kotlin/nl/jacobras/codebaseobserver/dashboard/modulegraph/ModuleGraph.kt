@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,6 +34,7 @@ import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
 import kotlinx.browser.document
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
+import nl.jacobras.codebaseobserver.dto.GraphModulesDto
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.UiState
@@ -50,7 +52,7 @@ internal fun ModuleGraph() {
         )
     }
     val projectId by viewModel.projectId.collectAsState()
-    val modules by viewModel.modules.collectAsState(emptyList())
+    val graph by viewModel.graphModules.collectAsState(GraphModulesDto())
     val state by viewModel.uiState.collectAsState(UiState())
     val sortOrder by viewModel.sortOrder.collectAsState()
 
@@ -75,9 +77,24 @@ internal fun ModuleGraph() {
             RequestState.Idle -> Unit
         }
 
+        if (graph.longestPath.isNotEmpty()) {
+            BasicText(
+                text = "Longest path",
+                style = Carbon.typography.headingCompact02.copy(color = Carbon.theme.textPrimary),
+            )
+            Spacer(Modifier.height(8.dp))
+            SelectionContainer {
+                BasicText(
+                    text = graph.longestPath.joinToString(separator = " » "),
+                    style = Carbon.typography.code01.copy(color = Carbon.theme.textSecondary),
+                )
+            }
+            Spacer(Modifier.height(32.dp))
+        }
+
         Row {
             ModuleList(
-                modules = modules,
+                modules = graph.modules,
                 startModule = startModule,
                 onSelectModule = { startModule = it },
                 groupingThreshold = groupingThreshold,
