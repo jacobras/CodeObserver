@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,27 +25,33 @@ import com.gabrieldrn.carbon.dropdown.Dropdown
 import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
-import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
+import nl.jacobras.codebaseobserver.util.data.RequestState
+import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 
 @Composable
-internal fun ModuleRules(
-    client: HttpClient,
-    projectId: String
-) {
-    val viewModel = viewModel { ModuleRulesViewModel(client) }
+internal fun ModuleRules() {
+    val viewModel = viewModel {
+        ModuleRulesViewModel(
+            moduleGraphSettingsRepository = RepositoryLocator.moduleGraphSettingsRepository,
+            projectRepository = RepositoryLocator.projectRepository
+        )
+    }
     val settings by viewModel.settings.collectAsState(emptyList())
-    val isLoading by viewModel.isLoading.collectAsState(false)
-    val loadingError by viewModel.loadingError.collectAsState("")
-    val updateError by viewModel.updateError.collectAsState("")
+    val state by viewModel.uiState.collectAsState(UiState())
     var editingId by remember { mutableStateOf<Int?>(null) }
     var formType by remember { mutableStateOf("deprecatedModule") }
     var formData by remember { mutableStateOf("") }
 
     val isEditing = editingId != null
 
-    LaunchedEffect(projectId) { viewModel.setProjectId(projectId) }
+    val isLoading = state.loading is RequestState.Working
+    val loadingError = (state.loading as? RequestState.Error)?.type?.name ?: ""
+    val updateError = (state.saving as? RequestState.Error)?.type?.name
+        ?: state.deleting.values.filterIsInstance<RequestState.Error>().firstOrNull()?.type?.name
+        ?: ""
 
     if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
         ProgressIndicator(

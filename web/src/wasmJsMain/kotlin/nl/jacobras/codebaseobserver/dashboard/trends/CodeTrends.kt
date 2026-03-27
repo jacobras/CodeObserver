@@ -6,47 +6,55 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
-import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
+import nl.jacobras.codebaseobserver.util.data.RequestState
+import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 
 @Composable
 internal fun CodeTrends(
-    client: HttpClient,
-    projectId: String,
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel { TrendsViewModel(client) }
+    val viewModel = viewModel {
+        TrendsViewModel(
+            trendsRepository = RepositoryLocator.trendsRepository,
+            projectRepository = RepositoryLocator.projectRepository
+        )
+    }
     val metrics by viewModel.metrics.collectAsState(emptyList())
-    val isLoading by viewModel.isLoading.collectAsState(false)
-    val loadingError by viewModel.loadingError.collectAsState("")
-    val updateError by viewModel.updateError.collectAsState("")
+    val state by viewModel.uiState.collectAsState(UiState())
 
-    LaunchedEffect(projectId) {
-        viewModel.setProjectId(projectId)
+    when (val loading = state.loading) {
+        is RequestState.Working -> {
+            ProgressIndicator(modifier = Modifier.fillMaxWidth(), loading = true)
+            return
+        }
+        is RequestState.Error -> {
+            ProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                error = loading.type.name,
+                onRetry = { viewModel.refresh() }
+            )
+            return
+        }
+        RequestState.Idle -> Unit
     }
 
-    if (isLoading || loadingError.isNotEmpty() || updateError.isNotEmpty()) {
-        ProgressIndicator(
-            modifier = Modifier.fillMaxWidth(),
-            loading = isLoading,
-            error = updateError.ifEmpty { loadingError },
-            onRetry = if (loadingError.isNotEmpty()) {
-                { viewModel.refresh() }
-            } else {
-                null
-            }
-        )
+    val deletingError = state.deleting.values.filterIsInstance<RequestState.Error>().firstOrNull()
+    if (deletingError != null) {
+        ProgressIndicator(modifier = Modifier.fillMaxWidth(), error = deletingError.type.name)
         return
-    } else if (metrics.isEmpty()) {
+    }
+
+    if (metrics.isEmpty()) {
         BasicText(
             modifier = Modifier.fillMaxWidth(),
             text = "No metrics found",

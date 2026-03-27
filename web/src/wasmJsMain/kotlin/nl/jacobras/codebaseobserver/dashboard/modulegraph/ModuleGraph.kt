@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,47 +30,49 @@ import androidx.compose.ui.viewinterop.WebElementView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
-import io.ktor.client.HttpClient
 import kotlinx.browser.document
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.GraphModuleDto
 import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
+import nl.jacobras.codebaseobserver.util.data.RequestState
+import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.carbon.IntSelector
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 import org.w3c.dom.HTMLIFrameElement
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-internal fun DependencyGraph(
-    client: HttpClient,
-    projectId: String
-) {
-    val viewModel = viewModel { DependencyGraphViewModel(client) }
-    val modules by viewModel.modules.collectAsState(emptyList())
-    val isLoading by viewModel.isLoading.collectAsState(false)
-    val loadingError by viewModel.loadingError.collectAsState("")
-    val sortOrder by viewModel.sortOrder.collectAsState()
-
-    LaunchedEffect(projectId) {
-        viewModel.setProjectId(projectId)
+internal fun ModuleGraph() {
+    val viewModel = viewModel {
+        ModuleGraphViewModel(
+            modulesRepository = RepositoryLocator.modulesRepository,
+            projectRepository = RepositoryLocator.projectRepository
+        )
     }
+    val projectId by viewModel.projectId.collectAsState()
+    val modules by viewModel.modules.collectAsState(emptyList())
+    val state by viewModel.uiState.collectAsState(UiState())
+    val sortOrder by viewModel.sortOrder.collectAsState()
 
     Column(modifier = Modifier) {
         var startModule by remember { mutableStateOf("") }
         var groupingThreshold by remember { mutableIntStateOf(DEFAULT_GROUPING_THRESHOLD) }
         var layerDepth by remember { mutableIntStateOf(DEFAULT_LAYER_DEPTH) }
 
-        if (isLoading || loadingError.isNotEmpty()) {
-            ProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                loading = isLoading,
-                error = loadingError,
-                onRetry = if (loadingError.isNotEmpty()) {
-                    { viewModel.refresh() }
-                } else {
-                    null
-                }
-            )
-            return@Column
+        when (val loading = state.loading) {
+            is RequestState.Working -> {
+                ProgressIndicator(modifier = Modifier.fillMaxWidth(), loading = true)
+                return@Column
+            }
+            is RequestState.Error -> {
+                ProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    error = loading.type.name,
+                    onRetry = { viewModel.refresh() }
+                )
+                return@Column
+            }
+            RequestState.Idle -> Unit
         }
 
         Row {

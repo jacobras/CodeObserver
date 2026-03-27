@@ -1,6 +1,7 @@
 package nl.jacobras.codebaseobserver.dashboard.buildtimes
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,8 +20,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
-import io.ktor.client.HttpClient
+import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.BuildTimeDto
+import nl.jacobras.codebaseobserver.util.data.RequestState
+import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.chart.ChartColor
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeChart
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
@@ -34,73 +36,77 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 internal fun BuildTimes(
-    client: HttpClient,
-    projectId: String,
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel { BuildTimesViewModel(client) }
+    val viewModel = viewModel {
+        BuildTimesViewModel(
+            buildTimesRepository = RepositoryLocator.buildTimesRepository,
+            projectRepository = RepositoryLocator.projectRepository
+        )
+    }
+    val uiState by viewModel.uiState.collectAsState(UiState())
     val buildTimes by viewModel.buildTimes.collectAsState(emptyList())
-    val isLoading by viewModel.isLoading.collectAsState(false)
-    val loadingError by viewModel.loadingError.collectAsState("")
+    val isLoading = uiState.loading == RequestState.Working
+    val loadingError = uiState.loading.let { (it as? RequestState.Error)?.type?.name } ?: ""
 
-    LaunchedEffect(projectId) {
-        viewModel.setProjectId(projectId)
-    }
+    Column {
+        if (isLoading || loadingError.isNotEmpty()) {
+            ProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                loading = isLoading,
+                error = loadingError,
+                onRetry = if (loadingError.isNotEmpty()) {
+                    { viewModel.refresh() }
+                } else {
+                    null
+                }
+            )
+            return
+        }
 
-    if (isLoading || loadingError.isNotEmpty()) {
-        ProgressIndicator(
-            modifier = Modifier.fillMaxWidth(),
-            loading = isLoading,
-            error = loadingError,
-            onRetry = if (loadingError.isNotEmpty()) {
-                { viewModel.refresh() }
-            } else {
-                null
-            }
-        )
-        return
-    }
+        if (buildTimes.isEmpty()) {
+            BasicText(
+                modifier = Modifier.fillMaxWidth(),
+                text = "No build times found",
+                style = Carbon.typography.body02
+            )
+            return
+        }
 
-    if (buildTimes.isEmpty()) {
-        BasicText(
-            modifier = Modifier.fillMaxWidth(),
-            text = "No build times found",
-            style = Carbon.typography.body02
-        )
-        return
-    }
+        val buildNames = buildTimes.map { it.buildName }.distinct()
+        var selectedBuild by remember(buildNames) { mutableStateOf(buildNames.first()) }
 
-    val buildNames = buildTimes.map { it.buildName }.distinct()
-    var selectedBuild by remember(buildNames) { mutableStateOf(buildNames.first()) }
+        if (buildNames.size > 1) {
+            val tabs = buildNames.map { TabItem(label = it) }
 
-    if (buildNames.size > 1) {
-        val tabs = buildNames.map { TabItem(label = it) }
+            TabList(
+                tabs = tabs,
+                selectedTab = tabs.firstOrNull { it.label == selectedBuild } ?: tabs.first(),
+                onTabSelected = { tab ->
+                    selectedBuild = buildNames.first { it == tab.label }
+                }
+            )
+            Spacer(Modifier.height(16.dp))
+        }
 
-        TabList(
-            tabs = tabs,
-            selectedTab = tabs.firstOrNull { it.label == selectedBuild } ?: tabs.first(),
-            onTabSelected = { tab ->
-                selectedBuild = buildNames.first { it == tab.label }
-            }
+        TimeViewSelector(
+            selected = timeView,
+            onSelect = onSelectTimeView
         )
         Spacer(Modifier.height(16.dp))
+
+        BuildDetail(
+            buildName = selectedBuild,
+            buildTimes = buildTimes.filter { it.buildName == selectedBuild },
+            timeView = timeView
+        )
     }
-
-    TimeViewSelector(
-        selected = timeView,
-        onSelect = onSelectTimeView
-    )
-    Spacer(Modifier.height(16.dp))
-
-    BuildDetail(
-        buildTimes = buildTimes.filter { it.buildName == selectedBuild },
-        timeView = timeView
-    )
 }
 
 @Composable
 private fun BuildDetail(
+    buildName: String,
     buildTimes: List<BuildTimeDto>,
     timeView: TimeView
 ) {
@@ -113,7 +119,7 @@ private fun BuildDetail(
     ) {
         TimeChart(
             modifier = Modifier.weight(1f),
-            title = "Build time",
+            title = buildName,
             records = buildTimesOldestFirst,
             dateField = { it.gitDate },
             metricField = { it.timeSeconds },
