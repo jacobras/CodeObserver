@@ -25,11 +25,12 @@ import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.TextInput
-import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.button.SmallProgressButton
+import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 
@@ -146,6 +147,18 @@ private fun ProjectsTable(
         return
     }
 
+    var requestDeleteProjectId by remember { mutableStateOf("") }
+    if (requestDeleteProjectId.isNotBlank()) {
+        DeleteDialog(
+            message = "Are you sure you want to delete this project?",
+            onCancel = { requestDeleteProjectId = "" },
+            onDelete = {
+                onDelete(requestDeleteProjectId)
+                requestDeleteProjectId = ""
+            }
+        )
+    }
+
     DataTable(
         columnHeadings = listOf("Project ID", "Name", "Actions"),
         rowCount = projects.size,
@@ -180,7 +193,7 @@ private fun ProjectsTable(
                         label = "Delete",
                         buttonType = ButtonType.GhostDanger,
                         loading = isDeleting,
-                        onClick = { onDelete(project.id) }
+                        onClick = { requestDeleteProjectId = project.id }
                     )
                 }
             }
