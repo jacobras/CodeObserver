@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ModuleGraphSettingRequest(
-    val projectId: String,
+    val projectId: ProjectId,
     val type: String,
     val data: String
 )

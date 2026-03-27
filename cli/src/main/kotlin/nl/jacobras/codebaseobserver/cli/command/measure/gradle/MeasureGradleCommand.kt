@@ -11,6 +11,7 @@ import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
 import nl.jacobras.codebaseobserver.dto.MigrationDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -60,7 +61,7 @@ class MeasureGradleCommand internal constructor(
                 }
                 val moduleDetails = buildModuleDetails(graphInfo.modulePlugins, moduleIdentifiers)
                 val payload = GradleMetricsRequest(
-                    projectId = projectId,
+                    projectId = ProjectId(projectId),
                     gitHash = gitHash,
                     gitDate = gitDate,
                     moduleCount = moduleCount,

@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import nl.jacobras.codebaseobserver.cli.util.GitInfoCollector
 import nl.jacobras.codebaseobserver.cli.util.ServerUploader
 import nl.jacobras.codebaseobserver.dto.DetektReportRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import java.io.File
 
 class ReportDetektCommand internal constructor(
@@ -48,7 +49,7 @@ class ReportDetektCommand internal constructor(
                 serverUrl = serverUrl,
                 endpoint = "detektReports",
                 payload = DetektReportRequest(
-                    projectId = projectId,
+                    projectId = ProjectId(projectId),
                     gitHash = gitHash,
                     gitDate = gitDate,
                     findings = findings,

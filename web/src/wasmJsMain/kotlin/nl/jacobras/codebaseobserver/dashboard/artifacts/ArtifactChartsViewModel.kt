@@ -23,7 +23,7 @@ internal class ArtifactChartsViewModel(
     init {
         viewModelScope.launch {
             projectId.collectLatest { id ->
-                if (id.isNotEmpty()) {
+                if (id != null) {
                     loadData()
                 }
             }
@@ -31,7 +31,8 @@ internal class ArtifactChartsViewModel(
     }
 
     private suspend fun loadData() {
-        artifactSizesRepository.fetchArtifactSizes(projectId.value)
+        val id = projectId.value ?: return
+        artifactSizesRepository.fetchArtifactSizes(id)
             .onOk { artifactSizes.value = it }
     }
 

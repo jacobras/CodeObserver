@@ -5,9 +5,9 @@ import kotlin.time.Instant
 
 @Serializable
 data class CodeMetricsDto(
-    val projectId: String,
+    val projectId: ProjectId,
     val createdAt: Instant,
-    val gitHash: String,
+    val gitHash: GitHash,
     val gitDate: Instant,
     val linesOfCode: Int,
     val moduleCount: Int,

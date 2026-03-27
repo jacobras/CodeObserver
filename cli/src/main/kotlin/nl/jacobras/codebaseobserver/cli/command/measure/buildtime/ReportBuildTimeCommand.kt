@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import nl.jacobras.codebaseobserver.cli.util.GitInfoCollector
 import nl.jacobras.codebaseobserver.cli.util.ServerUploader
 import nl.jacobras.codebaseobserver.dto.BuildTimeRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.humanreadable.HumanReadable
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
@@ -43,7 +44,7 @@ class ReportBuildTimeCommand internal constructor(
                 serverUrl = serverUrl,
                 endpoint = "buildTimes",
                 payload = BuildTimeRequest(
-                    projectId = projectId,
+                    projectId = ProjectId(projectId),
                     buildName = name,
                     gitHash = gitHash,
                     gitDate = gitDate,

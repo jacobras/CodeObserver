@@ -5,6 +5,7 @@ import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
 import nl.jacobras.codebaseobserver.dto.ArtifactSizeDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 import nl.jacobras.codebaseobserver.util.data.RequestState
 
@@ -13,7 +14,7 @@ internal class ArtifactSizesRepository(
 ) {
     val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
 
-    suspend fun fetchArtifactSizes(projectId: String): Result<List<ArtifactSizeDto>, NetworkError> {
+    suspend fun fetchArtifactSizes(projectId: ProjectId): Result<List<ArtifactSizeDto>, NetworkError> {
         loadingState.value = RequestState.Working
         return dataSource.fetchArtifactSizes(projectId)
             .onOk { loadingState.value = RequestState.Idle }

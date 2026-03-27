@@ -14,18 +14,20 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingDto
+import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingId
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingRequest
 import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingUpdateRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
 internal class ModuleGraphSettingsDataSource(
     private val client: HttpClient
 ) {
-    suspend fun fetchSettings(projectId: String): Result<List<ModuleGraphSettingDto>, NetworkError> {
-        Logger.i("Fetching module graph settings for project $projectId")
+    suspend fun fetchSettings(projectId: ProjectId): Result<List<ModuleGraphSettingDto>, NetworkError> {
+        Logger.i("Fetching module graph settings for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/moduleGraphSettings") {
-                url { parameters.append("projectId", projectId) }
+                url { parameters.append("projectId", projectId.value) }
             }.body<List<ModuleGraphSettingDto>>()
         }.mapError {
             Logger.e(it) { "Failed to fetch module graph settings" }
@@ -33,8 +35,8 @@ internal class ModuleGraphSettingsDataSource(
         }
     }
 
-    suspend fun create(projectId: String, type: String, data: String): Result<Unit, NetworkError> {
-        Logger.i("Creating module graph setting for project $projectId")
+    suspend fun create(projectId: ProjectId, type: String, data: String): Result<Unit, NetworkError> {
+        Logger.i("Creating module graph setting for project ${projectId.value}")
         return runSuspendCatching {
             client.post("/moduleGraphSettings") {
                 contentType(ContentType.Application.Json)
@@ -47,10 +49,10 @@ internal class ModuleGraphSettingsDataSource(
         }
     }
 
-    suspend fun update(id: Int, type: String, data: String): Result<Unit, NetworkError> {
-        Logger.i("Updating module graph setting $id")
+    suspend fun update(id: ModuleGraphSettingId, type: String, data: String): Result<Unit, NetworkError> {
+        Logger.i("Updating module graph setting ${id.value}")
         return runSuspendCatching {
-            client.patch("/moduleGraphSettings/$id") {
+            client.patch("/moduleGraphSettings/${id.value}") {
                 contentType(ContentType.Application.Json)
                 setBody(ModuleGraphSettingUpdateRequest(type = type, data = data))
             }
@@ -61,11 +63,11 @@ internal class ModuleGraphSettingsDataSource(
         }
     }
 
-    suspend fun delete(id: Int): Result<Unit, NetworkError> {
-        Logger.i("Deleting module graph setting $id")
+    suspend fun delete(id: ModuleGraphSettingId): Result<Unit, NetworkError> {
+        Logger.i("Deleting module graph setting ${id.value}")
         return runSuspendCatching {
-            client.delete("/moduleGraphSettings/$id")
-            Logger.i("Module graph setting $id deleted")
+            client.delete("/moduleGraphSettings/${id.value}")
+            Logger.i("Module graph setting ${id.value} deleted")
         }.mapError {
             Logger.e(it) { "Failed to delete module graph setting" }
             NetworkError.UnknownError

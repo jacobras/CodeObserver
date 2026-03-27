@@ -3,7 +3,7 @@ package nl.jacobras.codebaseobserver.dto
 import kotlin.time.Instant
 
 interface ProjectAndGitInfo {
-    val projectId: String
-    val gitHash: String
+    val projectId: ProjectId
+    val gitHash: GitHash
     val gitDate: Instant
 }

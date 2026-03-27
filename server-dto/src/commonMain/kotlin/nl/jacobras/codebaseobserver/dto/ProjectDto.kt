@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ProjectDto(
-    val id: String,
+    val id: ProjectId,
     val name: String
 )

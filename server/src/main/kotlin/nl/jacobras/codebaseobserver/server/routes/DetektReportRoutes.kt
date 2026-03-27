@@ -9,8 +9,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import nl.jacobras.codebaseobserver.dto.DetektMetricDto
 import nl.jacobras.codebaseobserver.dto.DetektReportRequest
+import nl.jacobras.codebaseobserver.dto.GitHash
+import nl.jacobras.codebaseobserver.dto.ProjectId
+import nl.jacobras.codebaseobserver.dto.ReportId
 import nl.jacobras.codebaseobserver.server.entity.DetektReportsTable
-import nl.jacobras.codebaseobserver.server.verifyGitInfo
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -32,9 +34,9 @@ internal fun Route.detektReportRoutes() {
                 .orderBy(DetektReportsTable.gitDate to SortOrder.ASC)
                 .map {
                     DetektMetricDto(
-                        id = it[DetektReportsTable.id],
-                        projectId = it[DetektReportsTable.projectId],
-                        gitHash = it[DetektReportsTable.gitHash],
+                        id = ReportId(it[DetektReportsTable.id]),
+                        projectId = ProjectId(it[DetektReportsTable.projectId]),
+                        gitHash = GitHash(it[DetektReportsTable.gitHash]),
                         gitDate = Instant.fromEpochSeconds(it[DetektReportsTable.gitDate]),
                         findings = it[DetektReportsTable.findings],
                         smellsPer1000 = it[DetektReportsTable.smellsPer1000]
@@ -64,15 +66,10 @@ internal fun Route.detektReportRoutes() {
     }
     post("/detektReports") {
         val request = call.receive<DetektReportRequest>()
-        val error = verifyGitInfo(projectId = request.projectId, gitHash = request.gitHash)
-        if (error.isNotEmpty()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to error))
-            return@post
-        }
         transaction {
             DetektReportsTable.upsert {
-                it[projectId] = request.projectId
-                it[gitHash] = request.gitHash
+                it[projectId] = request.projectId.value
+                it[gitHash] = request.gitHash.value
                 it[gitDate] = request.gitDate.epochSeconds
                 it[findings] = request.findings
                 it[smellsPer1000] = request.smellsPer1000

@@ -10,7 +10,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,16 +24,17 @@ import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationId
 import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
 
 @Composable
 internal fun MigrationsOverview(
     migrations: List<MigrationDto>,
-    onSave: (id: Int?, name: String, description: String, type: String, rule: String) -> Unit,
-    onDelete: (id: Int) -> Unit
+    onSave: (id: MigrationId?, name: String, description: String, type: String, rule: String) -> Unit,
+    onDelete: (id: MigrationId) -> Unit
 ) {
-    var editingId by remember { mutableStateOf<Int?>(null) }
+    var editingId by remember { mutableStateOf<MigrationId?>(null) }
     var formName by remember { mutableStateOf("") }
     var formDescription by remember { mutableStateOf("") }
     var formType by remember { mutableStateOf("moduleUsage") }
@@ -114,14 +114,14 @@ internal fun MigrationsOverview(
                 style = Carbon.typography.body02
             )
         } else {
-            var requestDeleteId by remember { mutableIntStateOf(0) }
-            if (requestDeleteId > 0) {
+            var requestDeleteId by remember { mutableStateOf<MigrationId?>(null) }
+            requestDeleteId?.let {
                 DeleteDialog(
                     message = "Are you sure you want to delete this migration?",
-                    onCancel = { requestDeleteId = 0 },
+                    onCancel = { requestDeleteId = null },
                     onDelete = {
-                        onDelete(requestDeleteId)
-                        requestDeleteId = 0
+                        onDelete(it)
+                        requestDeleteId = null
                     }
                 )
             }

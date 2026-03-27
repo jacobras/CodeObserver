@@ -14,18 +14,20 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import nl.jacobras.codebaseobserver.dto.MigrationDto
+import nl.jacobras.codebaseobserver.dto.MigrationId
 import nl.jacobras.codebaseobserver.dto.MigrationRequest
 import nl.jacobras.codebaseobserver.dto.MigrationUpdateRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
 internal class MigrationsDataSource(
     private val client: HttpClient
 ) {
-    suspend fun fetchMigrations(projectId: String): Result<List<MigrationDto>, NetworkError> {
-        Logger.i("Fetching migrations for project $projectId")
+    suspend fun fetchMigrations(projectId: ProjectId): Result<List<MigrationDto>, NetworkError> {
+        Logger.i("Fetching migrations for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/migrations") {
-                url { parameters.append("projectId", projectId) }
+                url { parameters.append("projectId", projectId.value) }
             }.body<List<MigrationDto>>()
         }.mapError {
             Logger.e(it) { "Failed to fetch migrations" }
@@ -34,17 +36,25 @@ internal class MigrationsDataSource(
     }
 
     suspend fun create(
-        projectId: String,
+        projectId: ProjectId,
         name: String,
         description: String,
         type: String,
         rule: String
     ): Result<Unit, NetworkError> {
-        Logger.i("Creating migration for project $projectId")
+        Logger.i("Creating migration for project ${projectId.value}")
         return runSuspendCatching {
             client.post("/migrations") {
                 contentType(ContentType.Application.Json)
-                setBody(MigrationRequest(projectId = projectId, name = name, description = description, type = type, rule = rule))
+                setBody(
+                    MigrationRequest(
+                        projectId = projectId,
+                        name = name,
+                        description = description,
+                        type = type,
+                        rule = rule
+                    )
+                )
             }
             Unit
         }.mapError {
@@ -53,10 +63,10 @@ internal class MigrationsDataSource(
         }
     }
 
-    suspend fun update(id: Int, name: String, description: String): Result<Unit, NetworkError> {
-        Logger.i("Updating migration $id")
+    suspend fun update(id: MigrationId, name: String, description: String): Result<Unit, NetworkError> {
+        Logger.i("Updating migration ${id.value}")
         return runSuspendCatching {
-            client.patch("/migrations/$id") {
+            client.patch("/migrations/${id.value}") {
                 contentType(ContentType.Application.Json)
                 setBody(MigrationUpdateRequest(name = name, description = description))
             }
@@ -67,11 +77,11 @@ internal class MigrationsDataSource(
         }
     }
 
-    suspend fun delete(id: Int): Result<Unit, NetworkError> {
-        Logger.i("Deleting migration $id")
+    suspend fun delete(id: MigrationId): Result<Unit, NetworkError> {
+        Logger.i("Deleting migration ${id.value}")
         return runSuspendCatching {
-            client.delete("/migrations/$id")
-            Logger.i("Migration $id deleted")
+            client.delete("/migrations/${id.value}")
+            Logger.i("Migration ${id.value} deleted")
         }.mapError {
             Logger.e(it) { "Failed to delete migration" }
             NetworkError.UnknownError

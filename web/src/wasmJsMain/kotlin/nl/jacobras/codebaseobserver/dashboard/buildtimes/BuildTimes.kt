@@ -30,7 +30,7 @@ import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeViewSelector
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
-import nl.jacobras.codebaseobserver.util.ui.text.gitHashExcerpt
+import nl.jacobras.codebaseobserver.util.ui.text.excerpt
 import nl.jacobras.humanreadable.HumanReadable
 import kotlin.time.Duration.Companion.seconds
 
@@ -142,7 +142,7 @@ private fun BuildDetail(
                     }
                     1 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = item.gitHash.gitHashExcerpt(),
+                            text = item.gitHash.excerpt(),
                             style = Carbon.typography.code01,
                         )
                     }

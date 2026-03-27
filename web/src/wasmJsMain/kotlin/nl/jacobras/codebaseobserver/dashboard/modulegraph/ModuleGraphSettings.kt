@@ -11,7 +11,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,6 +26,7 @@ import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
+import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingId
 import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
@@ -43,7 +43,7 @@ internal fun ModuleRules() {
     }
     val settings by viewModel.settings.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
-    var editingId by remember { mutableStateOf<Int?>(null) }
+    var editingId by remember { mutableStateOf<ModuleGraphSettingId?>(null) }
     var formType by remember { mutableStateOf("deprecatedModule") }
     var formData by remember { mutableStateOf("") }
 
@@ -124,14 +124,14 @@ internal fun ModuleRules() {
                 style = Carbon.typography.body02
             )
         } else {
-            var requestDeleteId by remember { mutableIntStateOf(0) }
-            if (requestDeleteId > 0) {
+            var requestDeleteId by remember { mutableStateOf<ModuleGraphSettingId?>(null) }
+            requestDeleteId?.let {
                 DeleteDialog(
                     message = "Are you sure you want to delete this setting?",
-                    onCancel = { requestDeleteId = 0 },
+                    onCancel = { requestDeleteId = null },
                     onDelete = {
-                        viewModel.delete(requestDeleteId)
-                        requestDeleteId = 0
+                        viewModel.delete(it)
+                        requestDeleteId = null
                     }
                 )
             }

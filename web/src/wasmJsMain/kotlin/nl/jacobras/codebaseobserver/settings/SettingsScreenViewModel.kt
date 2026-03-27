@@ -7,6 +7,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 import nl.jacobras.codebaseobserver.util.ui.UiState
 
@@ -28,7 +29,7 @@ internal class SettingsScreenViewModel(
         projectRepository.refresh()
     }
 
-    fun saveProject(projectId: String, name: String, onSuccess: () -> Unit) = viewModelScope.launch {
+    fun saveProject(projectId: ProjectId, name: String, onSuccess: () -> Unit) = viewModelScope.launch {
         projectRepository.save(
             ProjectDto(
                 id = projectId,
@@ -40,7 +41,7 @@ internal class SettingsScreenViewModel(
         }
     }
 
-    fun deleteProject(projectId: String) = viewModelScope.launch {
+    fun deleteProject(projectId: ProjectId) = viewModelScope.launch {
         projectRepository.delete(projectId)
     }
 }

@@ -11,6 +11,7 @@ import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
 import nl.jacobras.codebaseobserver.dto.MigrationDto
 import nl.jacobras.codebaseobserver.dto.MigrationProgressRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -88,7 +89,7 @@ class MeasureCodeCommand internal constructor(
                     serverUrl = url,
                     endpoint = "metrics/code",
                     payload = CodeMetricsRequest(
-                        projectId = projectId,
+                        projectId = ProjectId(projectId),
                         gitHash = gitHash,
                         gitDate = gitDate,
                         linesOfCode = linesOfCode

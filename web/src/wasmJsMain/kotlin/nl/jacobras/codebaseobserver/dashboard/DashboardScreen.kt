@@ -42,13 +42,14 @@ import nl.jacobras.codebaseobserver.dashboard.modulegraph.ModuleTypes
 import nl.jacobras.codebaseobserver.dashboard.trends.CodeTrends
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.ui.chart.TimeView
 
 @Composable
 internal fun DashboardScreen() {
     val viewModel = viewModel { AppViewModel(RepositoryLocator.projectRepository) }
     val projects by viewModel.projects.collectAsState(emptyList())
-    val selectedProjectId by viewModel.selectedProjectId.collectAsState("")
+    val selectedProjectId by viewModel.selectedProjectId.collectAsState(null)
     val loadingError by viewModel.loadingError.collectAsState("")
 
     DashboardScreen(
@@ -63,8 +64,8 @@ internal fun DashboardScreen() {
 private fun DashboardScreen(
     error: String,
     projects: List<ProjectDto>,
-    selectedProjectId: String,
-    onSelectProject: (String) -> Unit
+    selectedProjectId: ProjectId?,
+    onSelectProject: (ProjectId) -> Unit
 ) {
     Column {
         Dropdown(
@@ -73,7 +74,7 @@ private fun DashboardScreen(
             options = projects
                 .sortedBy { it.name }
                 .associate { project ->
-                    project.id to DropdownOption("${project.name} (${project.id})")
+                    project.id to DropdownOption("${project.name} (${project.id.value})")
                 },
             selectedOption = selectedProjectId,
             onOptionSelected = { onSelectProject(it) },
@@ -117,7 +118,7 @@ private fun DashboardScreen(
                         style = Carbon.typography.body02.copy(color = Carbon.theme.supportError)
                     )
                 }
-                if (selectedProjectId.isEmpty()) {
+                if (selectedProjectId == null) {
                     BasicText(
                         modifier = Modifier.fillMaxWidth(),
                         text = "Select a project to see the dashboard",

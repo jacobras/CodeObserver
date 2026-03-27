@@ -26,6 +26,7 @@ import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
+import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierId
 import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
@@ -42,7 +43,7 @@ internal fun ModuleTypes() {
     }
     val typeIdentifiers by viewModel.moduleTypeIdentifiers.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
-    var editingId by remember { mutableStateOf<Int?>(null) }
+    var editingId by remember { mutableStateOf<ModuleTypeIdentifierId?>(null) }
     var formTypeName by remember { mutableStateOf("") }
     var formPlugin by remember { mutableStateOf("") }
     var formOrder by remember { mutableStateOf("0") }
@@ -145,13 +146,13 @@ internal fun ModuleTypes() {
                 style = Carbon.typography.body02
             )
         } else {
-            var requestDeleteId by remember { mutableStateOf<Int?>(null) }
-            if (requestDeleteId != null) {
+            var requestDeleteId by remember { mutableStateOf<ModuleTypeIdentifierId?>(null) }
+            requestDeleteId?.let {
                 DeleteDialog(
                     message = "Are you sure you want to delete this identifier?",
                     onCancel = { requestDeleteId = null },
                     onDelete = {
-                        viewModel.delete(requestDeleteId!!)
+                        viewModel.delete(it)
                         requestDeleteId = null
                     }
                 )

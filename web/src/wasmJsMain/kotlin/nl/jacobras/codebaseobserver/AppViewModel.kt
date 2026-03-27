@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 import nl.jacobras.codebaseobserver.util.data.RequestState
 
@@ -20,7 +21,7 @@ internal class AppViewModel(
         (it as? RequestState.Error)?.type?.name ?: ""
     }
 
-    fun selectProject(projectId: String) {
+    fun selectProject(projectId: ProjectId) {
         projectRepository.setSelectedProjectId(projectId)
     }
 

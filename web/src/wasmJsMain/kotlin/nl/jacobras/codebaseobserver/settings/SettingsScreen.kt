@@ -27,6 +27,7 @@ import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.ProjectDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.button.SmallProgressButton
@@ -40,15 +41,15 @@ internal fun SettingsScreen() {
     val projects by viewModel.projects.collectAsState(emptyList())
     val state by viewModel.state.collectAsState(UiState())
 
-    var editProjectId by remember { mutableStateOf("") }
+    var editProjectId by remember { mutableStateOf<ProjectId?>(null) }
     var editName by remember { mutableStateOf("") }
 
     fun clearForm() {
-        editProjectId = ""
+        editProjectId = null
         editName = ""
     }
 
-    val isEditing = projects.any { it.id == editProjectId.trim() }
+    val isEditing = projects.any { it.id == editProjectId }
     CarbonLayer {
         Column(
             modifier = Modifier
@@ -80,8 +81,14 @@ internal fun SettingsScreen() {
 
             TextInput(
                 label = "Project ID",
-                value = editProjectId,
-                onValueChange = { editProjectId = it },
+                value = editProjectId?.value ?: "",
+                onValueChange = { newValue ->
+                    editProjectId = if (newValue.isNotEmpty()) {
+                        ProjectId(newValue)
+                    } else {
+                        null
+                    }
+                },
                 placeholderText = "my-app"
             )
             Spacer(Modifier.height(8.dp))
@@ -99,11 +106,12 @@ internal fun SettingsScreen() {
                 SmallProgressButton(
                     label = if (isEditing) "Update project" else "Add project",
                     buttonType = ButtonType.Primary,
-                    isEnabled = editProjectId.trim().isNotEmpty() && editName.trim().isNotEmpty(),
+                    isEnabled = editProjectId != null && editName.trim().isNotEmpty(),
                     loading = saving is RequestState.Working,
                     onClick = {
+                        val id = editProjectId ?: return@SmallProgressButton
                         viewModel.saveProject(
-                            projectId = editProjectId.trim(),
+                            projectId = id,
                             name = editName.trim(),
                             onSuccess = { clearForm() }
                         )
@@ -113,7 +121,7 @@ internal fun SettingsScreen() {
                     label = "Clear",
                     buttonType = ButtonType.Tertiary,
                     buttonSize = ButtonSize.Small,
-                    isEnabled = editProjectId.isNotEmpty() || editName.isNotEmpty(),
+                    isEnabled = editProjectId != null || editName.isNotEmpty(),
                     onClick = { clearForm() }
                 )
             }
@@ -135,9 +143,9 @@ internal fun SettingsScreen() {
 @Composable
 private fun ProjectsTable(
     projects: List<ProjectDto>,
-    deleting: Map<String, RequestState>,
+    deleting: Map<ProjectId, RequestState>,
     onEdit: (ProjectDto) -> Unit,
-    onDelete: (projectId: String) -> Unit
+    onDelete: (projectId: ProjectId) -> Unit
 ) {
     if (projects.isEmpty()) {
         BasicText(
@@ -147,14 +155,14 @@ private fun ProjectsTable(
         return
     }
 
-    var requestDeleteProjectId by remember { mutableStateOf("") }
-    if (requestDeleteProjectId.isNotBlank()) {
+    var requestDeleteProjectId by remember { mutableStateOf<ProjectId?>(null) }
+    requestDeleteProjectId?.let { projectId ->
         DeleteDialog(
             message = "Are you sure you want to delete this project?",
-            onCancel = { requestDeleteProjectId = "" },
+            onCancel = { requestDeleteProjectId = null },
             onDelete = {
-                onDelete(requestDeleteProjectId)
-                requestDeleteProjectId = ""
+                onDelete(projectId)
+                requestDeleteProjectId = null
             }
         )
     }
@@ -167,7 +175,7 @@ private fun ProjectsTable(
             when (columnIndex) {
                 0 -> SelectionContainer(modifier) {
                     BasicText(
-                        text = project.id,
+                        text = project.id.value,
                         style = Carbon.typography.code01
                     )
                 }

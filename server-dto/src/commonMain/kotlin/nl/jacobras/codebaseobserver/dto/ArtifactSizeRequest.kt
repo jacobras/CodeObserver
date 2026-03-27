@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ArtifactSizeRequest(
-    val projectId: String,
+    val projectId: ProjectId,
     val name: String,
     val semVer: String,
     val size: Long

@@ -5,9 +5,9 @@ import kotlin.time.Instant
 
 @Serializable
 data class BuildTimeDto(
-    val projectId: String,
+    val projectId: ProjectId,
     val buildName: String,
-    val gitHash: String,
+    val gitHash: GitHash,
     val gitDate: Instant,
     val timeSeconds: Int
 )

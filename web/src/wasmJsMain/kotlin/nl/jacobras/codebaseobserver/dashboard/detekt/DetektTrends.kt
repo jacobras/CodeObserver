@@ -23,6 +23,7 @@ import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.ButtonType
 import nl.jacobras.codebaseobserver.di.RepositoryLocator
 import nl.jacobras.codebaseobserver.dto.DetektMetricDto
+import nl.jacobras.codebaseobserver.dto.ReportId
 import nl.jacobras.codebaseobserver.util.data.RequestState
 import nl.jacobras.codebaseobserver.util.ui.UiState
 import nl.jacobras.codebaseobserver.util.ui.button.SmallProgressButton
@@ -33,7 +34,7 @@ import nl.jacobras.codebaseobserver.util.ui.chart.TimeViewSelector
 import nl.jacobras.codebaseobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codebaseobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codebaseobserver.util.ui.table.DataTable
-import nl.jacobras.codebaseobserver.util.ui.text.gitHashExcerpt
+import nl.jacobras.codebaseobserver.util.ui.text.excerpt
 
 @Composable
 internal fun DetektTrends(
@@ -94,7 +95,7 @@ internal fun DetektTrends(
 @Composable
 private fun DetektChartsAndTable(
     reports: List<DetektMetricDto>,
-    deleting: Map<Int, RequestState>,
+    deleting: Map<ReportId, RequestState>,
     timeView: TimeView,
     onDelete: (DetektMetricDto) -> Unit
 ) {
@@ -153,7 +154,7 @@ private fun DetektChartsAndTable(
                     }
                     1 -> SelectionContainer(modifier) {
                         BasicText(
-                            text = record.gitHash.gitHashExcerpt(),
+                            text = record.gitHash.excerpt(),
                             style = Carbon.typography.code01
                         )
                     }

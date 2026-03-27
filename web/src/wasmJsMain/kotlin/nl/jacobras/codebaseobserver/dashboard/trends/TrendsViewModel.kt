@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.projects.ProjectRepository
 import nl.jacobras.codebaseobserver.util.ui.UiState
 
@@ -28,24 +29,26 @@ internal class TrendsViewModel(
     init {
         viewModelScope.launch {
             projectId.collectLatest { id ->
-                if (id.isNotEmpty()) {
-                    loadData()
+                if (id != null) {
+                    loadData(id)
                 }
             }
         }
     }
 
-    private suspend fun loadData() {
-        trendsRepository.fetchMetrics(projectId.value)
+    private suspend fun loadData(projectId: ProjectId) {
+        trendsRepository.fetchMetrics(projectId)
             .onOk { metrics.value = it }
     }
 
     fun refresh() = viewModelScope.launch {
-        loadData()
+        val id = projectId.value ?: return@launch
+        loadData(id)
     }
 
     fun delete(record: CodeMetricsDto) = viewModelScope.launch {
-        trendsRepository.delete(projectId = projectId.value, gitHash = record.gitHash)
+        val id = projectId.value ?: return@launch
+        trendsRepository.delete(projectId = id, gitHash = record.gitHash)
             .onOk { refresh() }
     }
 }

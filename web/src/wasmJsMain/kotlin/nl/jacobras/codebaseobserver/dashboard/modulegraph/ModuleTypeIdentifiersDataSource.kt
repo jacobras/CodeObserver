@@ -14,33 +14,35 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierDto
+import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierId
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierRequest
 import nl.jacobras.codebaseobserver.dto.ModuleTypeIdentifierUpdateRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
 internal class ModuleTypeIdentifiersDataSource(
     private val client: HttpClient
 ) {
-    suspend fun fetchIdentifiers(projectId: String): Result<List<ModuleTypeIdentifierDto>, NetworkError> {
-        Logger.i("Fetching module type identifiers for project $projectId")
+    suspend fun fetchIdentifiers(projectId: ProjectId): Result<List<ModuleTypeIdentifierDto>, NetworkError> {
+        Logger.i("Fetching module type identifiers for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/moduleTypeIdentifiers") {
-                url { parameters.append("projectId", projectId) }
+                url { parameters.append("projectId", projectId.value) }
             }.body<List<ModuleTypeIdentifierDto>>()
         }.mapError {
-            Logger.e(it) { "Failed to fetch module type identifiers" }
+            Logger.e(it) { "Failed to fetch module type identifiers for project ${projectId.value}" }
             NetworkError.UnknownError
         }
     }
 
     suspend fun create(
-        projectId: String,
+        projectId: ProjectId,
         typeName: String,
         plugin: String,
         order: Int,
         color: String
     ): Result<Unit, NetworkError> {
-        Logger.i("Creating module type identifier for project $projectId")
+        Logger.i("Creating module type identifier for project ${projectId.value}")
         return runSuspendCatching {
             client.post("/moduleTypeIdentifiers") {
                 contentType(ContentType.Application.Json)
@@ -62,15 +64,15 @@ internal class ModuleTypeIdentifiersDataSource(
     }
 
     suspend fun update(
-        id: Int,
+        id: ModuleTypeIdentifierId,
         typeName: String,
         plugin: String,
         order: Int,
         color: String
     ): Result<Unit, NetworkError> {
-        Logger.i("Updating module type identifier $id")
+        Logger.i("Updating module type identifier ${id.value}")
         return runSuspendCatching {
-            client.patch("/moduleTypeIdentifiers/$id") {
+            client.patch("/moduleTypeIdentifiers/${id.value}") {
                 contentType(ContentType.Application.Json)
                 setBody(
                     ModuleTypeIdentifierUpdateRequest(
@@ -88,11 +90,11 @@ internal class ModuleTypeIdentifiersDataSource(
         }
     }
 
-    suspend fun delete(id: Int): Result<Unit, NetworkError> {
-        Logger.i("Deleting module type identifier $id")
+    suspend fun delete(id: ModuleTypeIdentifierId): Result<Unit, NetworkError> {
+        Logger.i("Deleting module type identifier ${id.value}")
         return runSuspendCatching {
-            client.delete("/moduleTypeIdentifiers/$id")
-            Logger.i("Module type identifier $id deleted")
+            client.delete("/moduleTypeIdentifiers/${id.value}")
+            Logger.i("Module type identifier ${id.value} deleted")
         }.mapError {
             Logger.e(it) { "Failed to delete module type identifier" }
             NetworkError.UnknownError

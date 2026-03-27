@@ -10,10 +10,11 @@ import io.ktor.server.routing.post
 import kotlinx.serialization.json.Json
 import nl.jacobras.codebaseobserver.dto.CodeMetricsDto
 import nl.jacobras.codebaseobserver.dto.CodeMetricsRequest
+import nl.jacobras.codebaseobserver.dto.GitHash
 import nl.jacobras.codebaseobserver.dto.GradleMetricsRequest
+import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.server.entity.MetricsTable
 import nl.jacobras.codebaseobserver.server.entity.ModuleGraphTable
-import nl.jacobras.codebaseobserver.server.verifyGitInfo
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -37,9 +38,9 @@ internal fun Route.metricRoutes() {
                 .orderBy(MetricsTable.gitDate to SortOrder.ASC)
                 .map {
                     CodeMetricsDto(
-                        projectId = it[MetricsTable.projectId],
+                        projectId = ProjectId(it[MetricsTable.projectId]),
                         createdAt = Instant.fromEpochSeconds(it[MetricsTable.createdAt]),
-                        gitHash = it[MetricsTable.gitHash],
+                        gitHash = GitHash(it[MetricsTable.gitHash]),
                         gitDate = Instant.fromEpochSeconds(it[MetricsTable.gitDate]),
                         linesOfCode = it[MetricsTable.linesOfCode],
                         moduleCount = it[MetricsTable.moduleCount],
@@ -51,11 +52,6 @@ internal fun Route.metricRoutes() {
     }
     post("/metrics/code") {
         val request = call.receive<CodeMetricsRequest>()
-        val error = verifyGitInfo(projectId = request.projectId, gitHash = request.gitHash)
-        if (error.isNotEmpty()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to error))
-            return@post
-        }
         transaction {
             MetricsTable.upsert(
                 onUpdateExclude = listOf(
@@ -64,9 +60,9 @@ internal fun Route.metricRoutes() {
                     MetricsTable.moduleTreeHeight
                 )
             ) {
-                it[projectId] = request.projectId
+                it[projectId] = request.projectId.value
                 it[createdAt] = Clock.System.now().epochSeconds
-                it[gitHash] = request.gitHash
+                it[gitHash] = request.gitHash.value
                 it[gitDate] = request.gitDate.epochSeconds
                 it[linesOfCode] = request.linesOfCode
             }
@@ -75,11 +71,6 @@ internal fun Route.metricRoutes() {
     }
     post("/metrics/gradle") {
         val request = call.receive<GradleMetricsRequest>()
-        val error = verifyGitInfo(projectId = request.projectId, gitHash = request.gitHash)
-        if (error.isNotEmpty()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to error))
-            return@post
-        }
         transaction {
             MetricsTable.upsert(
                 onUpdateExclude = listOf(
@@ -87,9 +78,9 @@ internal fun Route.metricRoutes() {
                     MetricsTable.linesOfCode
                 )
             ) {
-                it[projectId] = request.projectId
+                it[projectId] = request.projectId.value
                 it[createdAt] = Clock.System.now().epochSeconds
-                it[gitHash] = request.gitHash
+                it[gitHash] = request.gitHash.value
                 it[gitDate] = request.gitDate.epochSeconds
                 it[moduleCount] = request.moduleCount
                 it[moduleTreeHeight] = request.longestPath.size
@@ -97,9 +88,9 @@ internal fun Route.metricRoutes() {
             ModuleGraphTable.upsert(
                 onUpdateExclude = listOf(ModuleGraphTable.createdAt)
             ) {
-                it[projectId] = request.projectId
+                it[projectId] = request.projectId.value
                 it[createdAt] = Clock.System.now().epochSeconds
-                it[gitHash] = request.gitHash
+                it[gitHash] = request.gitHash.value
                 it[gitDate] = request.gitDate.epochSeconds
                 it[graph] = Json.encodeToString(request.graph)
                 it[moduleDetails] = request.moduleDetails
@@ -111,11 +102,6 @@ internal fun Route.metricRoutes() {
     delete("/metrics/{gitHash}") {
         val gitHash = call.parameters["gitHash"]?.trim().orEmpty()
         val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
-        val error = verifyGitInfo(projectId = projectId, gitHash = gitHash)
-        if (error.isNotEmpty()) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to error))
-            return@delete
-        }
         val deletedRows = transaction {
             MetricsTable.deleteWhere { (MetricsTable.projectId eq projectId) and (MetricsTable.gitHash eq gitHash) }
         }

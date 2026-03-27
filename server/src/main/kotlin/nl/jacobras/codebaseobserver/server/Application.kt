@@ -94,17 +94,3 @@ fun Application.module() {
         moduleTypeIdentifierRoutes()
     }
 }
-
-/**
- * Verifies that the request contains all required fields.
- * @return error message.
- */
-internal fun verifyGitInfo(projectId: String, gitHash: String): String {
-    if (projectId.isEmpty()) {
-        return "Missing projectId"
-    }
-    if (gitHash.isEmpty()) {
-        return "Missing gitHash"
-    }
-    return ""
-}
