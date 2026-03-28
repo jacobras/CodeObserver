@@ -287,14 +287,15 @@ private fun buildGraphSrcdoc(
 <body>
 <div id="viewport"></div>
 <div id="error" hidden></div>
+<div id="graph-data" hidden>$mermaidGraph</div>
 <script>
     mermaid.initialize({ startOnLoad: false });
-
-    const graphDefinition = `$mermaidGraph`;
 
     async function loadGraph() {
         const viewport = document.getElementById("viewport");
         const errorDiv = document.getElementById("error");
+        const graphDataElement = document.getElementById("graph-data");
+        const graphDefinition = graphDataElement ? graphDataElement.textContent : "";
         try {
             const {svg} = await mermaid.render("graphSvg", graphDefinition);
             viewport.innerHTML = svg;
