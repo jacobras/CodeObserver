@@ -46,3 +46,9 @@ Then run CLI commands:
 ### CLI
 
 `./gradlew :cli:shadowJar`
+
+### Demo web app
+
+`./gradlew :web:clean :web:wasmJsBrowserDevelopmentRun -Pdemo=true`
+
+It'll be available at http://localhost:8080/.

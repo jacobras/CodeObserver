@@ -127,7 +127,7 @@ private fun DashboardScreen(
                     return@Column
                 }
 
-                var timeView by remember { mutableStateOf(TimeView.Last7Days) }
+                var timeView by remember { mutableStateOf(TimeView.Last3Months) }
 
                 NavHost(
                     navController = navController,

@@ -13,10 +13,16 @@ import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.dto.ReportId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class DetektReportDataSource(
+internal interface DetektReportDataSource {
+    suspend fun fetchReport(reportId: ReportId): Result<String, NetworkError>
+    suspend fun fetchMetrics(projectId: ProjectId): Result<List<DetektMetricDto>, NetworkError>
+    suspend fun delete(reportId: ReportId): Result<Unit, NetworkError>
+}
+
+internal class DetektReportDataSourceImpl(
     private val client: HttpClient
-) {
-    suspend fun fetchReport(reportId: ReportId): Result<String, NetworkError> {
+) : DetektReportDataSource {
+    override suspend fun fetchReport(reportId: ReportId): Result<String, NetworkError> {
         Logger.i("Fetching Detekt report ${reportId.value}")
         return runSuspendCatching {
             client.get("/detektReports/${reportId.value}").body<String>()
@@ -26,7 +32,7 @@ internal class DetektReportDataSource(
         }
     }
 
-    suspend fun fetchMetrics(projectId: ProjectId): Result<List<DetektMetricDto>, NetworkError> {
+    override suspend fun fetchMetrics(projectId: ProjectId): Result<List<DetektMetricDto>, NetworkError> {
         Logger.i("Fetching Detekt metrics for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/detektMetrics") {
@@ -38,7 +44,7 @@ internal class DetektReportDataSource(
         }
     }
 
-    suspend fun delete(reportId: ReportId): Result<Unit, NetworkError> {
+    override suspend fun delete(reportId: ReportId): Result<Unit, NetworkError> {
         Logger.i("Deleting Detekt report for report ID ${reportId.value}")
         return runSuspendCatching {
             client.delete("/detektReports/${reportId.value}")

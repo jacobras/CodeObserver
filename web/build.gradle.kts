@@ -47,4 +47,9 @@ kotlin {
 
 buildConfig {
     buildConfigField("VERSION", version.toString())
+
+    val isDemo = providers.gradleProperty("demo")
+        .map { it.toBoolean() }
+        .getOrElse(false)
+    buildConfigField("IS_DEMO", isDemo)
 }

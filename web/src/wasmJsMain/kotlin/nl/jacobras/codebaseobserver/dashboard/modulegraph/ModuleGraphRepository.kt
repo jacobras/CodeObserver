@@ -10,7 +10,7 @@ import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 import nl.jacobras.codebaseobserver.util.data.RequestState
 
-internal class ModulesRepository(
+internal class ModuleGraphRepository(
     private val dataSource: ModuleGraphDataSource
 ) {
     val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
@@ -21,6 +21,23 @@ internal class ModulesRepository(
     ): Result<GraphModulesDto, NetworkError> {
         loadingState.value = RequestState.Working
         return dataSource.fetchGraphModules(projectId, sortOrder)
+            .onOk { loadingState.value = RequestState.Idle }
+            .onErr { loadingState.value = RequestState.Error(it) }
+    }
+
+    suspend fun fetchGraph(
+        projectId: ProjectId,
+        startModule: String,
+        groupingThreshold: Int,
+        layerDepth: Int
+    ): Result<String, NetworkError> {
+        loadingState.value = RequestState.Working
+        return dataSource.fetchGraph(
+            projectId = projectId,
+            startModule = startModule,
+            groupingThreshold = groupingThreshold,
+            layerDepth = layerDepth
+        )
             .onOk { loadingState.value = RequestState.Idle }
             .onErr { loadingState.value = RequestState.Error(it) }
     }

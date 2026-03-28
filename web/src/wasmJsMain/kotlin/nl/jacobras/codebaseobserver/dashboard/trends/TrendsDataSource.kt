@@ -13,10 +13,15 @@ import nl.jacobras.codebaseobserver.dto.GitHash
 import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class TrendsDataSource(
+internal interface TrendsDataSource {
+    suspend fun fetchMetrics(projectId: ProjectId): Result<List<CodeMetricsDto>, NetworkError>
+    suspend fun delete(projectId: ProjectId, gitHash: GitHash): Result<Unit, NetworkError>
+}
+
+internal class TrendsDataSourceImpl(
     private val client: HttpClient
-) {
-    suspend fun fetchMetrics(projectId: ProjectId): Result<List<CodeMetricsDto>, NetworkError> {
+) : TrendsDataSource {
+    override suspend fun fetchMetrics(projectId: ProjectId): Result<List<CodeMetricsDto>, NetworkError> {
         Logger.i("Fetching metrics for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/metrics") {
@@ -28,7 +33,7 @@ internal class TrendsDataSource(
         }
     }
 
-    suspend fun delete(projectId: ProjectId, gitHash: GitHash): Result<Unit, NetworkError> {
+    override suspend fun delete(projectId: ProjectId, gitHash: GitHash): Result<Unit, NetworkError> {
         Logger.i("Deleting metrics for project ${projectId.value}, git hash ${gitHash.value}")
         return runSuspendCatching {
             client.delete("/metrics/${gitHash.value}") {

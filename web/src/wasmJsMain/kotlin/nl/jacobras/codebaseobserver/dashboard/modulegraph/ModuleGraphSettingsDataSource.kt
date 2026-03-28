@@ -20,10 +20,17 @@ import nl.jacobras.codebaseobserver.dto.ModuleGraphSettingUpdateRequest
 import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class ModuleGraphSettingsDataSource(
+internal interface ModuleGraphSettingsDataSource {
+    suspend fun fetchSettings(projectId: ProjectId): Result<List<ModuleGraphSettingDto>, NetworkError>
+    suspend fun create(projectId: ProjectId, type: String, data: String): Result<Unit, NetworkError>
+    suspend fun update(id: ModuleGraphSettingId, type: String, data: String): Result<Unit, NetworkError>
+    suspend fun delete(id: ModuleGraphSettingId): Result<Unit, NetworkError>
+}
+
+internal class ModuleGraphSettingsDataSourceImpl(
     private val client: HttpClient
-) {
-    suspend fun fetchSettings(projectId: ProjectId): Result<List<ModuleGraphSettingDto>, NetworkError> {
+) : ModuleGraphSettingsDataSource {
+    override suspend fun fetchSettings(projectId: ProjectId): Result<List<ModuleGraphSettingDto>, NetworkError> {
         Logger.i("Fetching module graph settings for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/moduleGraphSettings") {
@@ -35,7 +42,7 @@ internal class ModuleGraphSettingsDataSource(
         }
     }
 
-    suspend fun create(projectId: ProjectId, type: String, data: String): Result<Unit, NetworkError> {
+    override suspend fun create(projectId: ProjectId, type: String, data: String): Result<Unit, NetworkError> {
         Logger.i("Creating module graph setting for project ${projectId.value}")
         return runSuspendCatching {
             client.post("/moduleGraphSettings") {
@@ -49,7 +56,7 @@ internal class ModuleGraphSettingsDataSource(
         }
     }
 
-    suspend fun update(id: ModuleGraphSettingId, type: String, data: String): Result<Unit, NetworkError> {
+    override suspend fun update(id: ModuleGraphSettingId, type: String, data: String): Result<Unit, NetworkError> {
         Logger.i("Updating module graph setting ${id.value}")
         return runSuspendCatching {
             client.patch("/moduleGraphSettings/${id.value}") {
@@ -63,7 +70,7 @@ internal class ModuleGraphSettingsDataSource(
         }
     }
 
-    suspend fun delete(id: ModuleGraphSettingId): Result<Unit, NetworkError> {
+    override suspend fun delete(id: ModuleGraphSettingId): Result<Unit, NetworkError> {
         Logger.i("Deleting module graph setting ${id.value}")
         return runSuspendCatching {
             client.delete("/moduleGraphSettings/${id.value}")

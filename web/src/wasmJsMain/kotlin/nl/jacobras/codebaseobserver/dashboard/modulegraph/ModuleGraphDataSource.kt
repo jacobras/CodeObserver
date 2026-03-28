@@ -12,10 +12,24 @@ import nl.jacobras.codebaseobserver.dto.ModuleSortOrder
 import nl.jacobras.codebaseobserver.dto.ProjectId
 import nl.jacobras.codebaseobserver.util.data.NetworkError
 
-internal class ModuleGraphDataSource(
-    private val client: HttpClient
-) {
+internal interface ModuleGraphDataSource {
     suspend fun fetchGraphModules(
+        projectId: ProjectId,
+        sortOrder: ModuleSortOrder
+    ): Result<GraphModulesDto, NetworkError>
+
+    suspend fun fetchGraph(
+        projectId: ProjectId,
+        startModule: String,
+        groupingThreshold: Int,
+        layerDepth: Int
+    ): Result<String, NetworkError>
+}
+
+internal class ModuleGraphDataSourceImpl(
+    private val client: HttpClient
+) : ModuleGraphDataSource {
+    override suspend fun fetchGraphModules(
         projectId: ProjectId,
         sortOrder: ModuleSortOrder
     ): Result<GraphModulesDto, NetworkError> {
@@ -29,6 +43,28 @@ internal class ModuleGraphDataSource(
             }.body<GraphModulesDto>()
         }.mapError {
             Logger.e(it) { "Failed to fetch modules" }
+            NetworkError.UnknownError
+        }
+    }
+
+    override suspend fun fetchGraph(
+        projectId: ProjectId,
+        startModule: String,
+        groupingThreshold: Int,
+        layerDepth: Int
+    ): Result<String, NetworkError> {
+        Logger.i("Fetching module graph for project ${projectId.value}")
+        return runSuspendCatching {
+            client.get("/moduleGraph") {
+                url {
+                    parameters.append("projectId", projectId.value)
+                    parameters.append("startModule", startModule)
+                    parameters.append("groupingThreshold", groupingThreshold.toString())
+                    parameters.append("layerDepth", layerDepth.toString())
+                }
+            }.body<String>()
+        }.mapError {
+            Logger.e(it) { "Failed to fetch module graph" }
             NetworkError.UnknownError
         }
     }
