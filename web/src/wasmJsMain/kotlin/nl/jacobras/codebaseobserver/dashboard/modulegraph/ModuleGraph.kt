@@ -53,8 +53,8 @@ internal fun ModuleGraph() {
     val sortOrder by viewModel.sortOrder.collectAsState()
 
     val startModule by viewModel.startModule.collectAsState("")
-    val groupingThreshold by viewModel.groupingThreshold.collectAsState(10)
-    val layerDepth by viewModel.layerDepth.collectAsState(10)
+    val groupingThreshold by viewModel.groupingThreshold.collectAsState()
+    val layerDepth by viewModel.layerDepth.collectAsState()
     val graph by viewModel.graph.collectAsState("")
 
     Column(modifier = Modifier) {

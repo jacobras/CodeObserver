@@ -46,7 +46,7 @@ internal class DemoMigrationsDataSource : MigrationsDataSource {
     ): Result<Unit, NetworkError> {
         migrations.add(
             MigrationDto(
-                id = MigrationId(migrations.maxOf { it.id.value } + 1),
+                id = MigrationId((migrations.maxOfOrNull { it.id.value } ?: 0) + 1),
                 createdAt = Clock.System.now(),
                 name = name,
                 description = description,

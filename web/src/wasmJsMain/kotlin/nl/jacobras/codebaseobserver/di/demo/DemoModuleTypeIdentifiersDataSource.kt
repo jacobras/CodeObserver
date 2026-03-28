@@ -29,7 +29,7 @@ internal class DemoModuleTypeIdentifiersDataSource : ModuleTypeIdentifiersDataSo
             ModuleColors.Green.hex
         ),
         ModuleTypeIdentifierDto(
-            ModuleTypeIdentifierId(2),
+            ModuleTypeIdentifierId(3),
             ProjectId("myApp"),
             "Library",
             "myApp.convention.library",
@@ -37,7 +37,7 @@ internal class DemoModuleTypeIdentifiersDataSource : ModuleTypeIdentifiersDataSo
             ModuleColors.Green.hex
         ),
         ModuleTypeIdentifierDto(
-            ModuleTypeIdentifierId(1),
+            ModuleTypeIdentifierId(4),
             ProjectId("myApp"),
             "KMP",
             "org.jetbrains.kotlin.jvm",

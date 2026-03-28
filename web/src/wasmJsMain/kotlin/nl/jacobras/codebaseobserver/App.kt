@@ -84,7 +84,6 @@ private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
         } else {
             ""
         }
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {}
         BasicText(
             text = "CodebaseObserver ${BuildConfig.VERSION}$demoSuffix",
             style = Carbon.typography.headingCompact02.copy(color = Color(0xFFF5F2EA))

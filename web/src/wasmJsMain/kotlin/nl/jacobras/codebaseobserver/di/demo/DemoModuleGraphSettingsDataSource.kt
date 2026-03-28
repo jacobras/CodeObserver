@@ -36,7 +36,7 @@ internal class DemoModuleGraphSettingsDataSource : ModuleGraphSettingsDataSource
     override suspend fun create(projectId: ProjectId, type: String, data: String): Result<Unit, NetworkError> {
         settings.add(
             ModuleGraphSettingDto(
-                id = ModuleGraphSettingId(settings.maxOf { it.id.value } + 1),
+                id = ModuleGraphSettingId((settings.maxOfOrNull { it.id.value } ?: 0) + 1),
                 createdAt = Clock.System.now(),
                 projectId = projectId,
                 type = type,
