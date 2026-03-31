@@ -1,0 +1,45 @@
+site_name: CodeObserver Docs
+theme:
+  name: material
+  logo: images/icon.svg
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      media: "(prefers-color-scheme: light)"
+      primary: custom
+      accent: 'blue'
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      media: "(prefers-color-scheme: dark)"
+      primary: custom
+      accent: 'blue'
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.action.edit
+    - content.action.view
+    - navigation.tabs
+repo_name: CodeObserver
+repo_url: https://github.com/jacobras/CodeObserver
+
+plugins:
+  - search
+  - callouts
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+nav:
+  - 'Introduction':
+      - 'Welcome': 'README.md'

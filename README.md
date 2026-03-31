@@ -54,3 +54,7 @@ Then run CLI commands:
 `./gradlew :web:clean :web:wasmJsBrowserDevelopmentRun -Pdemo=true`
 
 It'll be available at http://localhost:8080/.
+
+### Release
+
+Happens in `publish-docs.yml` workflow.
