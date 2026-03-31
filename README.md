@@ -39,15 +39,17 @@ Then run CLI commands:
 
 1. Build the web app: `./gradlew :web:wasmJsBrowserDistribution`
 2. Build the server: `./gradlew :server:shadowJar`
-3. Build the image: `docker build -t mrras/code-observer:0.4.0 .`
+3. Build the image: `docker build -t mrras/code-observer:0.5.0 .`
 4. Now run with `docker compose up`
-5. Push the image: `docker push mrras/code-observer:0.4.0`
+5. Push the image: `docker push mrras/code-observer:0.5.0`
 
 ### CLI
 
 `./gradlew :cli:shadowJar`
 
-### Demo web app
+## Demo web app
+
+### Run locally
 
 `./gradlew :web:clean :web:wasmJsBrowserDevelopmentRun -Pdemo=true`
 
