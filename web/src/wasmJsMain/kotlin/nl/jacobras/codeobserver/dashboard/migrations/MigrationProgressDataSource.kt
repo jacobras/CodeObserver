@@ -1,0 +1,32 @@
+package nl.jacobras.codeobserver.dashboard.migrations
+
+import co.touchlab.kermit.Logger
+import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.coroutines.runSuspendCatching
+import com.github.michaelbull.result.mapError
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import nl.jacobras.codeobserver.dto.MigrationId
+import nl.jacobras.codeobserver.dto.MigrationProgressDto
+import nl.jacobras.codeobserver.util.data.NetworkError
+
+internal interface MigrationProgressDataSource {
+    suspend fun fetchProgress(migrationId: MigrationId): Result<List<MigrationProgressDto>, NetworkError>
+}
+
+internal class MigrationProgressDataSourceImpl(
+    private val client: HttpClient
+) : MigrationProgressDataSource {
+    override suspend fun fetchProgress(migrationId: MigrationId): Result<List<MigrationProgressDto>, NetworkError> {
+        Logger.i("Fetching migration progress for migration ${migrationId.value}")
+        return runSuspendCatching {
+            client.get("/migrationProgress") {
+                url { parameters.append("migrationId", migrationId.value.toString()) }
+            }.body<List<MigrationProgressDto>>()
+        }.mapError {
+            Logger.e(it) { "Failed to fetch migration progress for migration ${migrationId.value}" }
+            NetworkError.UnknownError
+        }
+    }
+}

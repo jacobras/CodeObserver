@@ -9,7 +9,7 @@ plugins {
 }
 
 application {
-    mainClass.set("nl.jacobras.codebaseobserver.server.ApplicationKt")
+    mainClass.set("nl.jacobras.codeobserver.server.ApplicationKt")
 }
 
 java {

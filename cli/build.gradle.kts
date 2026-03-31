@@ -25,7 +25,7 @@ dependencies {
 }
 
 application {
-    mainClass = "nl.jacobras.codebaseobserver.cli.MainKt"
+    mainClass = "nl.jacobras.codeobserver.cli.MainKt"
 }
 
 tasks.named<ShadowJar>("shadowJar") {

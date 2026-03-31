@@ -4,7 +4,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "nl.jacobras.codebaseobserver.buildlogic"
+group = "nl.jacobras.codeobserver.buildlogic"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -31,7 +31,7 @@ tasks {
 gradlePlugin {
     plugins {
         register("detekt") {
-            id = "codebaseobserver-detekt"
+            id = "codeobserver-detekt"
             implementationClass = "DetektConventionPlugin"
         }
     }

@@ -1,4 +1,4 @@
-# CodebaseObserver Specification
+# CodeObserver Specification
 
 ## Project structure
 

@@ -1,4 +1,4 @@
-# CodebaseObserver
+# CodeObserver
 
 > ⚠️ Under development, not ready for use.
 
@@ -39,9 +39,9 @@ Then run CLI commands:
 
 1. Build the web app: `./gradlew :web:wasmJsBrowserDistribution`
 2. Build the server: `./gradlew :server:shadowJar`
-3. Build the image: `docker build -t mrras/codebase-observer:0.4.0 .`
+3. Build the image: `docker build -t mrras/code-observer:0.4.0 .`
 4. Now run with `docker compose up`
-5. Push the image: `docker push mrras/codebase-observer:0.4.0`
+5. Push the image: `docker push mrras/code-observer:0.4.0`
 
 ### CLI
 

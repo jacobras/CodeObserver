@@ -47,7 +47,7 @@ detekt-gradlePlugin = { group = "io.gitlab.arturbosch.detekt", name = "io.gitlab
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
-codebaseobserver-detekt = { id = "codebaseobserver-detekt" }
+codeobserver-detekt = { id = "codeobserver-detekt" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

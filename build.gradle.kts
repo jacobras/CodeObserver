@@ -3,10 +3,10 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.compose) apply false
-    alias(libs.plugins.codebaseobserver.detekt) apply true
+    alias(libs.plugins.codeobserver.detekt) apply true
 }
 
 subprojects {
-    group = "nl.jacobras.codebaseobserver"
+    group = "nl.jacobras.codeobserver"
     version = "0.4.0"
 }
