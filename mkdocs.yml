@@ -1,7 +1,6 @@
 site_name: CodeObserver Docs
 theme:
   name: material
-  logo: images/icon.svg
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -43,3 +42,4 @@ markdown_extensions:
 nav:
   - 'Introduction':
       - 'Welcome': 'README.md'
+  - 'Online demo': 'https://tweakers.net'
