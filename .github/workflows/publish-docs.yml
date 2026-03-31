@@ -18,9 +18,9 @@ jobs:
 
       - name: Build demo app distribution
         run: |
-          ./gradlew :web:clean :web:wasmJsBrowserDistribution --no-configuration-cache
-          mkdir -p docs/demosite
-          cp -r web/build/dist/wasmJs/productionExecutable/* docs/demosite
+          ./gradlew :web:clean :web:wasmJsBrowserDistribution -Pdemo=true
+          mkdir -p docs/demo
+          cp -r web/build/dist/wasmJs/productionExecutable/* docs/demo
 
       - name: Configure Git Credentials
         run: |

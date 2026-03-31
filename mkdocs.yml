@@ -42,4 +42,4 @@ markdown_extensions:
 nav:
   - 'Introduction':
       - 'Welcome': 'README.md'
-  - 'Online demo': 'https://tweakers.net'
+  - 'Online demo': '/demo/'
