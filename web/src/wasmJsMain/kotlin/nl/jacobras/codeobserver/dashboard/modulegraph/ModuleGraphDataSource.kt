@@ -8,6 +8,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import nl.jacobras.codeobserver.dto.GraphModulesDto
+import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.data.NetworkError
@@ -18,12 +19,9 @@ internal interface ModuleGraphDataSource {
         sortOrder: ModuleSortOrder
     ): Result<GraphModulesDto, NetworkError>
 
-    suspend fun fetchGraph(
-        projectId: ProjectId,
-        startModule: String,
-        groupingThreshold: Int,
-        layerDepth: Int
-    ): Result<String, NetworkError>
+    suspend fun fetchGraphInfo(
+        projectId: ProjectId
+    ): Result<GraphVisualInfoDto, NetworkError>
 }
 
 internal class ModuleGraphDataSourceImpl(
@@ -47,24 +45,18 @@ internal class ModuleGraphDataSourceImpl(
         }
     }
 
-    override suspend fun fetchGraph(
-        projectId: ProjectId,
-        startModule: String,
-        groupingThreshold: Int,
-        layerDepth: Int
-    ): Result<String, NetworkError> {
-        Logger.i("Fetching module graph for project ${projectId.value}")
+    override suspend fun fetchGraphInfo(
+        projectId: ProjectId
+    ): Result<GraphVisualInfoDto, NetworkError> {
+        Logger.i("Fetching graph visual info for project ${projectId.value}")
         return runSuspendCatching {
-            client.get("/moduleGraph") {
+            client.get("/graphVisualInfo") {
                 url {
                     parameters.append("projectId", projectId.value)
-                    parameters.append("startModule", startModule)
-                    parameters.append("groupingThreshold", groupingThreshold.toString())
-                    parameters.append("layerDepth", layerDepth.toString())
                 }
-            }.body<String>()
+            }.body<GraphVisualInfoDto>()
         }.mapError {
-            Logger.e(it) { "Failed to fetch module graph" }
+            Logger.e(it) { "Failed to fetch graph visual info" }
             NetworkError.UnknownError
         }
     }
