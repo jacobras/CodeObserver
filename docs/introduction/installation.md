@@ -11,8 +11,8 @@ Example `docker-compose.yml`:
 ```yaml
 services:
     app:
-        image: mrras/codebase-observer:0.5.0
-        container_name: codebase-observer
+        image: mrras/code-observer:0.5.0
+        container_name: code-observer
         ports:
             - "8080:8080" # Update this to your desired port ('external:internal', where 'internal' needs to be 8080)
         volumes:
@@ -27,4 +27,4 @@ Now start the server with `docker-compose up -d`.
 ## CLI tool
 
 > [!INFO]
->Coming soon.
+> Coming soon.
