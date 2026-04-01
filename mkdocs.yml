@@ -25,6 +25,7 @@ theme:
     - navigation.tabs
 repo_name: CodeObserver
 repo_url: https://github.com/jacobras/CodeObserver
+edit_uri: edit/main/docs/
 
 plugins:
   - search
