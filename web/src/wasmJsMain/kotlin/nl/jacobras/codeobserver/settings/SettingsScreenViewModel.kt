@@ -33,7 +33,7 @@ internal class SettingsScreenViewModel(
             .onErr {
                 Notifier.show(
                     title = "Error loading projects",
-                    message = "Failed to loading projects",
+                    message = "Failed to load projects",
                     status = NotificationStatus.Error
                 )
             }
