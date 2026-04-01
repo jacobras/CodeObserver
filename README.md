@@ -1,60 +1,50 @@
 # CodeObserver
 
-> ⚠️ Under development, not ready for use.
+> [!WARNING]
+> ⚠️ Under development, expect breaking changes.
 
-Track codebase health metrics over time.
+CodeObserver is a CLI tool plus a dashboard to measure codebase metrics over time. Current supported metrics:
 
-Current supported metrics:
+- 📦 **Artifacts**
+    - Artifact size per version (e.g., release build size, debug build size).
+- 🕰️ **Builds**
+    - Build time (e.g., Gradle sync time, release build time, ...).
+- 📜 **Code**
+    - Lines of code (simple count, no comment/blank line exclusion).
+- ☑️ **Code quality (from Detekt)**
+    - Detekt trends (total findings and smells per 1,000 lines of code).
+    - Latest Detekt HTML report.
+- 🐘 **Gradle**
+    - Number of Gradle modules.
+    - Height of the Gradle dependency tree (the longest path from a module to its root consumer).
+    - Module graph with type highlighting (e.g., Android module, KMP module, JVM module, ...).
+- 🏗️ **Tech debt migrations**
+    - Usage of deprecated modules and imports.
 
-- Lines of code (including comments, imports, blank lines).
-- Number of Gradle modules.
-- Height of the Gradle dependency tree (the longest path from a module to its root consumer).
+A demo dashboard is available online at <https://jacobras.github.io/CodeObserver/demo/>.
 
-## Run locally
+Everything's Kotlin. The Ktor server is bundled into a Docker image. The dashboard UI is built with Compose
+Multiplatform.
 
-1. Run server: `./gradlew :server:run`
-2. Build web app: `./gradlew :web:clean :web:wasmJsBrowserDevelopmentExecutableDistribution`
+A full technical and functional overview is available in the [specification document](SPEC.md).
 
-When the server is running, the web development build will be accessible at http://localhost:8080/dev/.
+## Documentation/Quickstart
 
-Then run CLI commands:
+All documentation is available to read online at <https://jacobras.github.io/CodeObserver/>.
 
-- General help: `./gradlew :cli:run`
-- Measure code help: `./gradlew :cli:run --args="measure-code --help"`
-- Measure code execute: `./gradlew :cli:run --args="measure-code --path=.. "`
-- Measure code execute and upload:
-  `./gradlew :cli:run --args="measure-code --project=test --path=.. --server=http://localhost:8080"`
-- Measure Gradle help: `./gradlew :cli:run --args="measure-gradle --help"`
-- Measure Gradle execute: `./gradlew :cli:run --args="measure-gradle --path=.. "`
-- Measure Gradle execute and upload:
-  `./gradlew :cli:run --args="measure-gradle --project=test --path=.. --server=http://localhost:8080"`
-- Report build time:
-  `./gradlew :cli:run --args="report-build-time --project=test --name=mainBuild --time=123 --server=http://localhost:8080"`
-- Report Detekt:
-  `./gradlew :cli:run --args="report-detekt --project=test --htmlFile=../build/reports/detekt/detekt.html --server=http://localhost:8080"`
+### Installation
 
-## Release
+See [installation instructions](docs/introduction/installation.md).
 
-### Docker
+### Contributing
 
-1. Build the web app: `./gradlew :web:wasmJsBrowserDistribution`
-2. Build the server: `./gradlew :server:shadowJar`
-3. Build the image: `docker build -t mrras/code-observer:0.5.0 .`
-4. Now run with `docker compose up`
-5. Push the image: `docker push mrras/code-observer:0.5.0`
+See [contributing guidelines](docs/introduction/contributing.md).
 
-### CLI
+## Assisted coding policy
 
-`./gradlew :cli:shadowJar`
+Coding LLMs were and are allowed to use for bootstrapping features and reviewing code. Polishing was done manually.
 
-## Demo web app
+The specification in `SPEC.md` needs to stay up to date with the latest changes to the codebase. This is also used to
+review changes in PRs.
 
-### Run locally
-
-`./gradlew :web:clean :web:wasmJsBrowserDevelopmentRun -Pdemo=true`
-
-It'll be available at http://localhost:8080/.
-
-### Release
-
-Happens in `publish-docs.yml` workflow.
+Every generated line of code still needs to be reviewed by a human developer.

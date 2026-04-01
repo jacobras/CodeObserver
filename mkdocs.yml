@@ -42,4 +42,6 @@ markdown_extensions:
 nav:
   - 'Introduction':
       - 'Welcome': 'README.md'
-  - 'Online demo': '/demo/'
+      - 'Installation': 'introduction/installation.md'
+      - 'Contributing': 'introduction/contributing.md'
+  - 'Online demo': 'https://jacobras.github.io/CodeObserver/demo/'
