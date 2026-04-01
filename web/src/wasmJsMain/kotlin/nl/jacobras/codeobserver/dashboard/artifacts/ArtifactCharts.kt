@@ -1,8 +1,6 @@
 package nl.jacobras.codeobserver.dashboard.artifacts
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +25,7 @@ import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.chart.ChartColor
 import nl.jacobras.codeobserver.util.ui.chart.VersionChart
+import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
 import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.humanreadable.HumanReadable
@@ -105,47 +104,46 @@ private fun ArtifactDetail(
         }
     val artifactSizesNewestFirst = artifactSizesOldestFirst.reversed()
 
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        VersionChart(
-            title = "Artifact size",
-            records = artifactSizesOldestFirst,
-            versionField = { it.semVer.toVersion() },
-            metricField = { it.size },
-            color = ChartColor.Goldenrod,
-            modifier = Modifier
-                .weight(1f)
-                .height(240.dp)
-        )
-        DataTable(
-            modifier = Modifier.weight(1f),
-            columnHeadings = listOf("Artifact", "Version", "Size"),
-            rowCount = artifactSizesNewestFirst.size,
-            cellContent = { rowIndex, columnIndex, modifier ->
-                val item = artifactSizesNewestFirst[rowIndex]
-                when (columnIndex) {
-                    0 -> SelectionContainer(modifier) {
-                        BasicText(
-                            text = item.name,
-                            style = Carbon.typography.body02
-                        )
-                    }
-                    1 -> SelectionContainer(modifier) {
-                        BasicText(
-                            text = item.semVer,
-                            style = Carbon.typography.code02,
-                        )
-                    }
-                    2 -> SelectionContainer(modifier) {
-                        BasicText(
-                            text = HumanReadable.fileSize(item.size, decimals = 1),
-                            style = Carbon.typography.body02,
-                        )
+    SingleChartWithDataTable(
+        modifier = Modifier.fillMaxWidth(),
+        chart = { modifier ->
+            VersionChart(
+                modifier = modifier,
+                title = "Artifact size",
+                records = artifactSizesOldestFirst,
+                versionField = { it.semVer.toVersion() },
+                metricField = { it.size },
+                color = ChartColor.Goldenrod
+            )
+        }, dataTable = { modifier ->
+            DataTable(
+                modifier = modifier,
+                columnHeadings = listOf("Artifact", "Version", "Size"),
+                rowCount = artifactSizesNewestFirst.size,
+                cellContent = { rowIndex, columnIndex, modifier ->
+                    val item = artifactSizesNewestFirst[rowIndex]
+                    when (columnIndex) {
+                        0 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = item.name,
+                                style = Carbon.typography.body02
+                            )
+                        }
+                        1 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = item.semVer,
+                                style = Carbon.typography.code02,
+                            )
+                        }
+                        2 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = HumanReadable.fileSize(item.size, decimals = 1),
+                                style = Carbon.typography.body02,
+                            )
+                        }
                     }
                 }
-            }
-        )
-    }
+            )
+        }
+    )
 }
