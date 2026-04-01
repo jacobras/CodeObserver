@@ -102,4 +102,4 @@ internal class ModuleGraphViewModel(
 }
 
 private const val DEFAULT_GROUPING_THRESHOLD = 3
-private const val DEFAULT_LAYER_DEPTH = 30
+private const val DEFAULT_LAYER_DEPTH = 1
