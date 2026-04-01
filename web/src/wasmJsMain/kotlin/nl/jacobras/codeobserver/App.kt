@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -27,6 +28,7 @@ import com.gabrieldrn.carbon.api.ExperimentalCarbonApi
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
+import com.gabrieldrn.carbon.foundation.color.LocalCarbonTheme
 import nl.jacobras.codeobserver.dashboard.DashboardScreen
 import nl.jacobras.codeobserver.settings.SettingsScreen
 import nl.jacobras.codeobserver.util.ui.theme.COTheme
@@ -89,17 +91,28 @@ private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
             style = Carbon.typography.headingCompact02.copy(color = Color(0xFFF5F2EA))
         )
         Spacer(Modifier.weight(1f))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+
+        CompositionLocalProvider(
+            LocalCarbonTheme provides LocalCarbonTheme.current.copy(
+                buttonColors = LocalCarbonTheme.current.buttonColors.copy(
+                    buttonPrimary = Color(0xFF3D7999)
+                ),
+                linkPrimary = Color(0xFF86B5CE),
+                linkPrimaryHover = Color(0xFF6599B8)
+            )
         ) {
-            Screen.entries.forEach { screen ->
-                val selected = screen == active
-                Button(
-                    label = screen.label,
-                    buttonType = if (selected) ButtonType.Primary else ButtonType.Ghost,
-                    buttonSize = ButtonSize.Small,
-                    onClick = { onSelect(screen) }
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Screen.entries.forEach { screen ->
+                    val selected = screen == active
+                    Button(
+                        label = screen.label,
+                        buttonType = if (selected) ButtonType.Primary else ButtonType.Ghost,
+                        buttonSize = ButtonSize.Small,
+                        onClick = { onSelect(screen) }
+                    )
+                }
             }
         }
     }
