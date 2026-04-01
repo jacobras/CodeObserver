@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -18,6 +21,7 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,8 +38,11 @@ import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.LocalCarbonTheme
+import com.gabrieldrn.carbon.foundation.spacing.SpacingScale
+import com.gabrieldrn.carbon.notification.ToastNotification
 import nl.jacobras.codeobserver.dashboard.DashboardScreen
 import nl.jacobras.codeobserver.settings.SettingsScreen
+import nl.jacobras.codeobserver.util.ui.notification.Notifier
 import nl.jacobras.codeobserver.util.ui.theme.COTheme
 import nl.jacobras.codeobserver.web.BuildConfig
 
@@ -47,6 +54,7 @@ fun App(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val activeScreen = navBackStackEntry?.destination?.route?.let { Screen.fromRoute(it) } ?: Screen.Dashboard
+    val notifications by Notifier.notifications.collectAsState(emptyList())
 
     COTheme {
         Column(
@@ -63,10 +71,22 @@ fun App(
                     .fillMaxSize()
                     .padding(horizontal = 24.dp, vertical = 20.dp)
             ) {
-
                 NavHost(navController = navController, startDestination = Screen.Dashboard.route) {
                     composable(Screen.Dashboard.route) { DashboardScreen() }
                     composable(Screen.Settings.route) { SettingsScreen() }
+                }
+
+                Column(Modifier.align(Alignment.TopEnd).verticalScroll(rememberScrollState())) {
+                    for (notification in notifications.sortedByDescending { it.time }) {
+                        ToastNotification(
+                            title = notification.title,
+                            body = notification.message,
+                            status = notification.status,
+                            onClose = { Notifier.dismiss(notification.id) },
+                            modifier = Modifier.width(400.dp)
+                        )
+                        Spacer(Modifier.height(SpacingScale.spacing03))
+                    }
                 }
             }
         }

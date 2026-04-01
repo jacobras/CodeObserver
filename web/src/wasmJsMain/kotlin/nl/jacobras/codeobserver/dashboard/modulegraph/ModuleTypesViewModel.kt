@@ -2,6 +2,8 @@ package nl.jacobras.codeobserver.dashboard.modulegraph
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gabrieldrn.carbon.notification.NotificationStatus
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -13,6 +15,7 @@ import nl.jacobras.codeobserver.dto.ModuleTypeIdentifierDto
 import nl.jacobras.codeobserver.dto.ModuleTypeIdentifierId
 import nl.jacobras.codeobserver.projects.ProjectRepository
 import nl.jacobras.codeobserver.util.ui.UiState
+import nl.jacobras.codeobserver.util.ui.notification.Notifier
 
 internal class ModuleTypesViewModel(
     private val moduleTypeIdentifiersRepository: ModuleTypeIdentifiersRepository,
@@ -42,6 +45,13 @@ internal class ModuleTypesViewModel(
         val projectId = projectId.value ?: return
         moduleTypeIdentifiersRepository.fetchIdentifiers(projectId)
             .onOk { moduleTypeIdentifiers.value = it }
+            .onErr {
+                Notifier.show(
+                    title = "Error loading module type identifiers",
+                    message = "Due to $it",
+                    status = NotificationStatus.Error
+                )
+            }
     }
 
     fun refresh() = viewModelScope.launch {
@@ -57,11 +67,37 @@ internal class ModuleTypesViewModel(
     ) = viewModelScope.launch {
         val projectId = projectId.value ?: return@launch
         moduleTypeIdentifiersRepository.save(id, projectId, typeName, plugin, order, color)
-            .onOk { refresh() }
+            .onOk {
+                refresh()
+                Notifier.show(
+                    title = "Module identifier '$typeName' saved",
+                    status = NotificationStatus.Success
+                )
+            }
+            .onErr {
+                Notifier.show(
+                    title = "Error saving module identifier '$typeName'",
+                    message = "Due to $it",
+                    status = NotificationStatus.Error
+                )
+            }
     }
 
     fun delete(id: ModuleTypeIdentifierId) = viewModelScope.launch {
         moduleTypeIdentifiersRepository.delete(id)
-            .onOk { refresh() }
+            .onOk {
+                refresh()
+                Notifier.show(
+                    title = "Module identifier deleted",
+                    status = NotificationStatus.Success
+                )
+            }
+            .onErr {
+                Notifier.show(
+                    title = "Error deleting identifier",
+                    message = "Due to $it",
+                    status = NotificationStatus.Error
+                )
+            }
     }
 }

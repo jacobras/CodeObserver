@@ -126,19 +126,19 @@ private fun ArtifactDetail(
                         0 -> SelectionContainer(modifier) {
                             BasicText(
                                 text = item.name,
-                                style = Carbon.typography.body02
+                                style = Carbon.typography.bodyCompact01
                             )
                         }
                         1 -> SelectionContainer(modifier) {
                             BasicText(
                                 text = item.semVer,
-                                style = Carbon.typography.code02,
+                                style = Carbon.typography.code01,
                             )
                         }
                         2 -> SelectionContainer(modifier) {
                             BasicText(
                                 text = HumanReadable.fileSize(item.size, decimals = 1),
-                                style = Carbon.typography.body02,
+                                style = Carbon.typography.bodyCompact01,
                             )
                         }
                     }

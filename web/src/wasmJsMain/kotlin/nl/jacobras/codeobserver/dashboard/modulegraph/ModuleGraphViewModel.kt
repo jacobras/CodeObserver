@@ -3,6 +3,7 @@ package nl.jacobras.codeobserver.dashboard.modulegraph
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import com.gabrieldrn.carbon.notification.NotificationStatus
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onOk
@@ -21,6 +22,7 @@ import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.projects.ProjectRepository
 import nl.jacobras.codeobserver.util.data.NetworkError
 import nl.jacobras.codeobserver.util.ui.UiState
+import nl.jacobras.codeobserver.util.ui.notification.Notifier
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ModuleGraphViewModel(
@@ -45,6 +47,11 @@ internal class ModuleGraphViewModel(
                 success = { it },
                 failure = { error ->
                     Logger.e { "Failed to fetch graph info: $error" }
+                    Notifier.show(
+                        title = "Error loading module graph info",
+                        message = "Due to $error",
+                        status = NotificationStatus.Error
+                    )
                     GraphVisualInfoDto()
                 }
             )

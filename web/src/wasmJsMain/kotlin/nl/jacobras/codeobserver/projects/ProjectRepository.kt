@@ -36,9 +36,9 @@ internal class ProjectRepository(
         }
     }
 
-    suspend fun refresh() {
+    suspend fun refresh(): Result<List<ProjectDto>, NetworkError> {
         loadingState.update { RequestState.Working }
-        dataSource.fetch()
+        return dataSource.fetch()
             .onOk { newValue ->
                 projects.value = newValue
                 loadingState.update { RequestState.Idle }
@@ -68,9 +68,9 @@ internal class ProjectRepository(
             }
     }
 
-    suspend fun delete(projectId: ProjectId) {
+    suspend fun delete(projectId: ProjectId): Result<Unit, NetworkError> {
         deletingState.update { it + mapOf(projectId to RequestState.Working) }
-        dataSource.delete(projectId)
+        return dataSource.delete(projectId)
             .onOk {
                 deletingState.update { it - projectId }
                 Logger.i { "Project $projectId deleted" }
