@@ -15,6 +15,7 @@ assertK = { module = "com.willowtreeapps.assertk:assertk", version = "0.28.1" }
 carbon = { module = "io.github.gabrieldrn:carbon", version = "0.7.1" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version = "5.1.0" }
 compose-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version = "2.10.0" }
+compose-windowSizeClass = { module = "org.jetbrains.compose.material3:material3-window-size-class", version = "1.9.0" }
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.2" }
 detekt-compose = { module = "io.nlopez.compose.rules:detekt", version.ref = "detektCompose" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }

@@ -23,6 +23,7 @@ kotlin {
             implementation(libs.androidx.nav)
             implementation(libs.carbon)
             implementation(libs.compose.viewmodel)
+            implementation(libs.compose.windowSizeClass)
             implementation(libs.coroutines)
             implementation(libs.humanReadable)
             implementation(libs.kermit)
