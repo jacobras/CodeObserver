@@ -3,6 +3,8 @@ package nl.jacobras.codeobserver.di.demo
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraphDataSource
+import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphConfig
+import nl.jacobras.codeobserver.dto.GraphConfigDto
 import nl.jacobras.codeobserver.dto.GraphModuleDto
 import nl.jacobras.codeobserver.dto.GraphModulesDto
 import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
@@ -14,15 +16,15 @@ private val DEMO_GRAPH_MODULES = GraphModulesDto(
     longestPath = listOf(":app", ":feature:home", ":core:data", ":core:network"),
     modules = listOf(
         GraphModuleDto(name = "app", score = 0),
-        GraphModuleDto(name = "core", score = 8),
+        GraphModuleDto(name = "core", score = 5),
         GraphModuleDto(name = "core:common", score = 0),
-        GraphModuleDto(name = "core:data", score = 1),
+        GraphModuleDto(name = "core:data", score = 2),
         GraphModuleDto(name = "core:network", score = 1),
-        GraphModuleDto(name = "core:ui", score = 1),
+        GraphModuleDto(name = "core:ui", score = 2),
         GraphModuleDto(name = "domain", score = 1),
         GraphModuleDto(name = "feature:home", score = 0),
         GraphModuleDto(name = "feature:profile", score = 0),
-        GraphModuleDto(name = "feature:settings", score = 0)
+        GraphModuleDto(name = "feature:settings", score = 5)
     )
 )
 
@@ -81,7 +83,8 @@ internal class DemoModuleGraphDataSource : ModuleGraphDataSource {
                         "core:common",
                     ),
                     "feature:home" to listOf(
-                        "core:ui"
+                        "core:ui",
+                        "feature:settings"
                     ),
                     "feature:profile" to listOf(
                         "core:data",
@@ -99,6 +102,10 @@ internal class DemoModuleGraphDataSource : ModuleGraphDataSource {
                     "feature:home" to "#caffbf",
                     "feature:profile" to "#caffbf",
                     "feature:settings" to "#caffbf"
+                ),
+                config = listOf(
+                    GraphConfigDto.DeprecatedModule("core"),
+                    GraphConfigDto.ForbiddenDependency("*feature:*", "*feature:*")
                 )
             )
         )
