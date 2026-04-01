@@ -45,6 +45,7 @@ internal object DatabaseDataSourceLocator : DataSourceLocator {
         defaultRequest {
             url("/")
         }
+        expectSuccess = true
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
