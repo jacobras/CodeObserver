@@ -26,11 +26,6 @@ internal fun Route.moduleRoutes() {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
             return@get
         }
-        val groupingThreshold = call.request.queryParameters["groupingThreshold"]?.trim()?.toIntOrNull()
-        if (groupingThreshold == null) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing groupingThreshold"))
-            return@get
-        }
 
         val graphRecord = transaction {
             ModuleGraphTable
