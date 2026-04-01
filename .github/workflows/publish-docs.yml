@@ -1,0 +1,45 @@
+name: Publish docs
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/build-setup
+
+      - name: Build demo app distribution
+        run: |
+          ./gradlew :web:clean :web:wasmJsBrowserDistribution -Pdemo=true
+          mkdir -p docs/demo
+          cp -r web/build/dist/wasmJs/productionExecutable/* docs/demo
+
+      - name: Configure Git Credentials
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+
+      - uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: ~/.cache
+          restore-keys: |
+            mkdocs-material-
+
+      - run: pip install mkdocs-material mkdocs-callouts
+
+      - run: mkdocs gh-deploy --force
