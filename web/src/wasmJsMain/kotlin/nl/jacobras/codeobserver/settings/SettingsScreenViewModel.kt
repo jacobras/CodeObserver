@@ -50,6 +50,7 @@ internal class SettingsScreenViewModel(
                 title = "Project '${projectId.value}' saved",
                 status = NotificationStatus.Success
             )
+            refresh()
             onSuccess()
         }.onErr {
             Notifier.show(
