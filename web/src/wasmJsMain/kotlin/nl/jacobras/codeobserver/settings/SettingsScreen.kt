@@ -24,7 +24,6 @@ import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
-import com.gabrieldrn.carbon.notification.NotificationStatus
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ProjectDto
@@ -34,7 +33,6 @@ import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.button.SmallProgressButton
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
-import nl.jacobras.codeobserver.util.ui.notification.Notifier
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 
 @Composable
