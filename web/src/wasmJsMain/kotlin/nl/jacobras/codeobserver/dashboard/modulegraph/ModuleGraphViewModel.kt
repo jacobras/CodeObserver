@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
+import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphConfig
 import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphVisualizer
+import nl.jacobras.codeobserver.dto.GraphConfigDto
 import nl.jacobras.codeobserver.dto.GraphModulesDto
 import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
@@ -67,7 +69,13 @@ internal class ModuleGraphViewModel(
             startModule = startModule,
             groupingThreshold = groupingThreshold,
             layerDepth = layerDepth,
-            moduleColors = graphInfo.moduleColors
+            moduleColors = graphInfo.moduleColors,
+            config = graphInfo.config.map {
+                when (it) {
+                    is GraphConfigDto.DeprecatedModule -> GraphConfig.DeprecatedModule(it.module)
+                    is GraphConfigDto.ForbiddenDependency -> GraphConfig.ForbiddenDependency(it.a, it.b)
+                }
+            }
         )
     }
 
