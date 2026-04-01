@@ -14,13 +14,15 @@ private val DEMO_GRAPH_MODULES = GraphModulesDto(
     longestPath = listOf(":app", ":feature:home", ":core:data", ":core:network"),
     modules = listOf(
         GraphModuleDto(name = "app", score = 0),
-        GraphModuleDto(name = "feature:home", score = 15),
-        GraphModuleDto(name = "feature:profile", score = 4),
-        GraphModuleDto(name = "feature:settings", score = 20),
-        GraphModuleDto(name = "core:network", score = 5),
-        GraphModuleDto(name = "core:data", score = 0),
-        GraphModuleDto(name = "core:ui", score = 3),
-        GraphModuleDto(name = "core:common", score = 24),
+        GraphModuleDto(name = "core", score = 8),
+        GraphModuleDto(name = "core:common", score = 0),
+        GraphModuleDto(name = "core:data", score = 1),
+        GraphModuleDto(name = "core:network", score = 1),
+        GraphModuleDto(name = "core:ui", score = 1),
+        GraphModuleDto(name = "domain", score = 1),
+        GraphModuleDto(name = "feature:home", score = 0),
+        GraphModuleDto(name = "feature:profile", score = 0),
+        GraphModuleDto(name = "feature:settings", score = 0)
     )
 )
 
@@ -52,6 +54,7 @@ internal class DemoModuleGraphDataSource : ModuleGraphDataSource {
             GraphVisualInfoDto(
                 modules = mapOf(
                     "app" to listOf(
+                        "core",
                         "core:common",
                         "core:data",
                         "core:ui",
@@ -59,22 +62,34 @@ internal class DemoModuleGraphDataSource : ModuleGraphDataSource {
                         "feature:profile",
                         "feature:settings"
                     ),
+                    "core" to listOf(
+                        "core:common",
+                        "core:data",
+                        "core:network"
+                    ),
                     "core:common" to emptyList(),
                     "core:data" to listOf(
                         "core:network"
                     ),
-                    "core:network" to emptyList(),
+                    "core:network" to listOf(
+                        "core:common"
+                    ),
                     "core:ui" to listOf(
                         "core:common"
                     ),
+                    "domain" to listOf(
+                        "core:common",
+                    ),
                     "feature:home" to listOf(
-                        "core:data"
+                        "core:ui"
                     ),
                     "feature:profile" to listOf(
-                        "core:data"
+                        "core:data",
+                        "core:ui"
                     ),
                     "feature:settings" to listOf(
-                        "core:data"
+                        "core",
+                        "domain"
                     )
                 ),
                 moduleColors = mapOf(
