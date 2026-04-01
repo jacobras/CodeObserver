@@ -1,8 +1,6 @@
 package nl.jacobras.codeobserver.dashboard.buildtimes
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,6 +26,7 @@ import nl.jacobras.codeobserver.util.ui.chart.ChartColor
 import nl.jacobras.codeobserver.util.ui.chart.TimeChart
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
+import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
 import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.codeobserver.util.ui.text.excerpt
@@ -113,47 +112,49 @@ private fun BuildDetail(
     val buildTimesOldestFirst = buildTimes.sortedBy { it.gitDate }
     val buildTimesNewestFirst = buildTimesOldestFirst.reversed()
 
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        TimeChart(
-            modifier = Modifier.weight(1f),
-            title = buildName,
-            records = buildTimesOldestFirst,
-            dateField = { it.gitDate },
-            metricField = { it.timeSeconds },
-            timeView = timeView,
-            color = ChartColor.Amethyst,
-            yAxisFormatter = { y -> HumanReadable.duration(y.toLong().seconds) },
-        )
-        DataTable(
-            modifier = Modifier.weight(1f),
-            columnHeadings = listOf("Git date", "Git hash", "Time"),
-            rowCount = buildTimesNewestFirst.size,
-            cellContent = { rowIndex, columnIndex, modifier ->
-                val item = buildTimesNewestFirst[rowIndex]
-                when (columnIndex) {
-                    0 -> SelectionContainer(modifier) {
-                        BasicText(
-                            text = item.gitDate.toString(),
-                            style = Carbon.typography.bodyCompact01,
-                        )
-                    }
-                    1 -> SelectionContainer(modifier) {
-                        BasicText(
-                            text = item.gitHash.excerpt(),
-                            style = Carbon.typography.code01,
-                        )
-                    }
-                    2 -> SelectionContainer(modifier) {
-                        BasicText(
-                            text = HumanReadable.duration(item.timeSeconds.seconds),
-                            style = Carbon.typography.bodyCompact01,
-                        )
+    SingleChartWithDataTable(
+        modifier = Modifier.fillMaxWidth(),
+        chart = { modifier ->
+            TimeChart(
+                modifier = modifier,
+                title = buildName,
+                records = buildTimesOldestFirst,
+                dateField = { it.gitDate },
+                metricField = { it.timeSeconds },
+                timeView = timeView,
+                color = ChartColor.Amethyst,
+                yAxisFormatter = { y -> HumanReadable.duration(y.toLong().seconds) },
+            )
+        },
+        dataTable = { modifier ->
+            DataTable(
+                modifier = modifier,
+                columnHeadings = listOf("Git date", "Git hash", "Time"),
+                rowCount = buildTimesNewestFirst.size,
+                cellContent = { rowIndex, columnIndex, modifier ->
+                    val item = buildTimesNewestFirst[rowIndex]
+                    when (columnIndex) {
+                        0 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = item.gitDate.toString(),
+                                style = Carbon.typography.bodyCompact01,
+                            )
+                        }
+                        1 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = item.gitHash.excerpt(),
+                                style = Carbon.typography.code01,
+                            )
+                        }
+                        2 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = HumanReadable.duration(item.timeSeconds.seconds),
+                                style = Carbon.typography.bodyCompact01,
+                            )
+                        }
                     }
                 }
-            }
-        )
-    }
+            )
+        }
+    )
 }

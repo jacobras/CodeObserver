@@ -56,7 +56,7 @@ internal fun ModuleGraph() {
     val startModule by viewModel.startModule.collectAsState("")
     val groupingThreshold by viewModel.groupingThreshold.collectAsState()
     val layerDepth by viewModel.layerDepth.collectAsState()
-    val graph by viewModel.graph.collectAsState("")
+    val graph by viewModel.mermaidGraph.collectAsState("")
     val mermaidContainerBuilder = remember { MermaidContainerBuilder() }
 
     Column(modifier = Modifier) {

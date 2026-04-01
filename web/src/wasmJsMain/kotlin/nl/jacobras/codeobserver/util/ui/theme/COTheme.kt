@@ -17,7 +17,12 @@ internal fun COTheme(
     CarbonDesignSystem(
         theme = WhiteTheme.copy(
             borderInteractive = Color(0xFF1F3D4D),
-            layerSelectedInverse = Color(0xFF1F3D4D)
+            layerSelectedInverse = Color(0xFF1F3D4D),
+            buttonColors = WhiteTheme.buttonColors.copy(
+                buttonPrimary = Color(0xFF3F739D),
+                buttonPrimaryHover = Color(0xFF376D8A),
+                buttonPrimaryActive = Color(0xFF2A5369)
+            )
         )
     ) {
         ProvideVicoTheme(

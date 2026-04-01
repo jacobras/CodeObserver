@@ -3,8 +3,11 @@ package nl.jacobras.codeobserver.di.demo
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraphDataSource
+import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphConfig
+import nl.jacobras.codeobserver.dto.GraphConfigDto
 import nl.jacobras.codeobserver.dto.GraphModuleDto
 import nl.jacobras.codeobserver.dto.GraphModulesDto
+import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.data.NetworkError
@@ -12,14 +15,16 @@ import nl.jacobras.codeobserver.util.data.NetworkError
 private val DEMO_GRAPH_MODULES = GraphModulesDto(
     longestPath = listOf(":app", ":feature:home", ":core:data", ":core:network"),
     modules = listOf(
-        GraphModuleDto(name = ":app", score = 0),
-        GraphModuleDto(name = ":feature:home", score = 15),
-        GraphModuleDto(name = ":feature:profile", score = 4),
-        GraphModuleDto(name = ":feature:settings", score = 20),
-        GraphModuleDto(name = ":core:network", score = 5),
-        GraphModuleDto(name = ":core:data", score = 0),
-        GraphModuleDto(name = ":core:ui", score = 3),
-        GraphModuleDto(name = ":core:common", score = 24),
+        GraphModuleDto(name = "app", score = 0),
+        GraphModuleDto(name = "core", score = 5),
+        GraphModuleDto(name = "core:common", score = 0),
+        GraphModuleDto(name = "core:data", score = 2),
+        GraphModuleDto(name = "core:network", score = 1),
+        GraphModuleDto(name = "core:ui", score = 2),
+        GraphModuleDto(name = "domain", score = 1),
+        GraphModuleDto(name = "feature:home", score = 0),
+        GraphModuleDto(name = "feature:profile", score = 0),
+        GraphModuleDto(name = "feature:settings", score = 5)
     )
 )
 
@@ -44,47 +49,65 @@ internal class DemoModuleGraphDataSource : ModuleGraphDataSource {
         }
     }
 
-    override suspend fun fetchGraph(
-        projectId: ProjectId,
-        startModule: String,
-        groupingThreshold: Int,
-        layerDepth: Int
-    ): Result<String, NetworkError> {
+    override suspend fun fetchGraphInfo(
+        projectId: ProjectId
+    ): Result<GraphVisualInfoDto, NetworkError> {
         return Ok(
-            """
-            graph TD
-                app
-                core:common
-                core:data
-                core:network
-                core:ui
-                feature:home
-                feature:profile
-                feature:settings
-            
-            %% Dependencies
-                app --> core:common
-                app --> core:data
-                app --> core:ui
-                app --> feature:home
-                app --> feature:profile
-                app --> feature:settings
-                feature:home --> core:data
-                core:data --> core:network
-                feature:profile --> core:data
-                feature:settings --> core:data
-                core:ui --> core:common
-            
-            classDef moduleType0 fill:#9bf6ff;
-            classDef moduleType1 fill:#bdb2ff;
-            classDef moduleType2 fill:#caffbf;
-            class app moduleType0
-            class core:common moduleType1
-            class core:network moduleType1
-            class feature:home moduleType2
-            class feature:profile moduleType2
-            class feature:settings moduleType2
-            """.trimIndent()
+            GraphVisualInfoDto(
+                modules = mapOf(
+                    "app" to listOf(
+                        "core",
+                        "core:common",
+                        "core:data",
+                        "core:ui",
+                        "feature:home",
+                        "feature:profile",
+                        "feature:settings"
+                    ),
+                    "core" to listOf(
+                        "core:common",
+                        "core:data",
+                        "core:network"
+                    ),
+                    "core:common" to emptyList(),
+                    "core:data" to listOf(
+                        "core:network"
+                    ),
+                    "core:network" to listOf(
+                        "core:common"
+                    ),
+                    "core:ui" to listOf(
+                        "core:common"
+                    ),
+                    "domain" to listOf(
+                        "core:common",
+                    ),
+                    "feature:home" to listOf(
+                        "core:ui",
+                        "feature:settings"
+                    ),
+                    "feature:profile" to listOf(
+                        "core:data",
+                        "core:ui"
+                    ),
+                    "feature:settings" to listOf(
+                        "core",
+                        "domain"
+                    )
+                ),
+                moduleColors = mapOf(
+                    "app" to "#9bf6ff",
+                    "core:common" to "#bdb2ff",
+                    "core:network" to "#bdb2ff",
+                    "feature:home" to "#caffbf",
+                    "feature:profile" to "#caffbf",
+                    "feature:settings" to "#caffbf"
+                ),
+                config = listOf(
+                    GraphConfigDto.DeprecatedModule("core"),
+                    GraphConfigDto.ForbiddenDependency("*feature:*", "*feature:*")
+                )
+            )
         )
     }
 }

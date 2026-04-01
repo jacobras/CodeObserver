@@ -22,6 +22,7 @@ internal class ServerUploader {
         install(ContentNegotiation) {
             json(json)
         }
+        expectSuccess = true
     }
 
     suspend fun upload(

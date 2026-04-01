@@ -306,9 +306,7 @@
         - `GET /modules?projectId=...` -> `GraphModulesDto` with all modules and `longestPath` for the project,
           derived from the `moduleGraph` table.
     - Module graph:
-        - `GET /moduleGraph?projectId=...&startModule=...&groupingThreshold=...` -> mermaid graph string.
-            - Modules are colored according to their identifier color (from `moduleTypeIdentifiers`) when
-              `moduleDetails` is available.
+        - `GET /graphVisualInfo?projectId=...` -> all info required to draw the module graph.
     - Module identifiers:
         - `GET /moduleTypeIdentifiers?projectId=...` -> list of module identifier records.
         - `POST /moduleTypeIdentifiers` -> creates a module identifier.

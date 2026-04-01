@@ -1,8 +1,8 @@
-package nl.jacobras.codeobserver.server.graph
+package nl.jacobras.codeobserver.dashboard.modulegraph.util
 
-import nl.jacobras.codeobserver.server.graph.FilterUtil.filterByLayerDepth
-import nl.jacobras.codeobserver.server.graph.FilterUtil.filterByStartModule
-import nl.jacobras.codeobserver.server.graph.FilterUtil.getPossibleModuleGroups
+import nl.jacobras.codeobserver.dashboard.modulegraph.util.FilterUtil.filterByLayerDepth
+import nl.jacobras.codeobserver.dashboard.modulegraph.util.FilterUtil.filterByStartModule
+import nl.jacobras.codeobserver.dashboard.modulegraph.util.FilterUtil.getPossibleModuleGroups
 
 object GraphVisualizer {
 

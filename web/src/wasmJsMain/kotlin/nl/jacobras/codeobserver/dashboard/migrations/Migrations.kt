@@ -1,8 +1,6 @@
 package nl.jacobras.codeobserver.dashboard.migrations
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,6 +29,7 @@ import nl.jacobras.codeobserver.util.ui.chart.ChartColor
 import nl.jacobras.codeobserver.util.ui.chart.TimeChart
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
+import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
 import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.codeobserver.util.ui.text.excerpt
@@ -178,46 +177,47 @@ private fun MigrationDetail(
     )
     Spacer(Modifier.height(16.dp))
 
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        TimeChart(
-            modifier = Modifier.weight(1f),
-            title = "Usages",
-            records = progressOldestFirst,
-            dateField = { it.gitDate },
-            metricField = { it.count },
-            timeView = timeView,
-            color = ChartColor.RoseDust
-        )
-        DataTable(
-            modifier = Modifier.weight(1f),
-            columnHeadings = listOf("Git hash", "Date", "Count"),
-            rowCount = progressNewestFirst.size,
-            cellContent = { rowIndex, columnIndex, modifier ->
-                val item = progressNewestFirst[rowIndex]
-                when (columnIndex) {
-                    0 -> SelectionContainer(modifier) {
-                        BasicText(
-                            text = item.gitHash.excerpt(),
-                            style = Carbon.typography.code01
-                        )
-                    }
-                    1 -> SelectionContainer(modifier) {
-                        BasicText(
-                            text = item.gitDate.toString(),
-                            style = Carbon.typography.bodyCompact01
-                        )
-                    }
-                    2 -> SelectionContainer(modifier) {
-                        BasicText(
-                            text = item.count.toString(),
-                            style = Carbon.typography.bodyCompact01
-                        )
+    SingleChartWithDataTable(
+        modifier = Modifier.fillMaxWidth(),
+        chart = { modifier ->
+            TimeChart(
+                modifier = modifier,
+                title = "Usages",
+                records = progressOldestFirst,
+                dateField = { it.gitDate },
+                metricField = { it.count },
+                timeView = timeView,
+                color = ChartColor.RoseDust
+            )
+        }, dataTable = { modifier ->
+            DataTable(
+                modifier = modifier,
+                columnHeadings = listOf("Git hash", "Date", "Count"),
+                rowCount = progressNewestFirst.size,
+                cellContent = { rowIndex, columnIndex, modifier ->
+                    val item = progressNewestFirst[rowIndex]
+                    when (columnIndex) {
+                        0 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = item.gitHash.excerpt(),
+                                style = Carbon.typography.code01
+                            )
+                        }
+                        1 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = item.gitDate.toString(),
+                                style = Carbon.typography.bodyCompact01
+                            )
+                        }
+                        2 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = item.count.toString(),
+                                style = Carbon.typography.bodyCompact01
+                            )
+                        }
                     }
                 }
-            }
-        )
-    }
+            )
+        }
+    )
 }

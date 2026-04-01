@@ -19,7 +19,7 @@ internal class DemoModuleGraphSettingsDataSource : ModuleGraphSettingsDataSource
             createdAt = now.minus(300.days),
             projectId = ProjectId("myApp"),
             type = "deprecatedModule",
-            data = "util"
+            data = "core"
         ),
         ModuleGraphSettingDto(
             id = ModuleGraphSettingId(2),

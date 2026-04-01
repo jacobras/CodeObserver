@@ -1,4 +1,4 @@
-package nl.jacobras.codeobserver.server.graph
+package nl.jacobras.codeobserver.dashboard.modulegraph.util
 
 internal object FilterUtil {
 

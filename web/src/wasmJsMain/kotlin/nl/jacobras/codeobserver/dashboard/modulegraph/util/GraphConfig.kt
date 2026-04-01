@@ -1,4 +1,4 @@
-package nl.jacobras.codeobserver.server.graph
+package nl.jacobras.codeobserver.dashboard.modulegraph.util
 
 sealed interface GraphConfig {
     data class DeprecatedModule(val module: String) : GraphConfig {

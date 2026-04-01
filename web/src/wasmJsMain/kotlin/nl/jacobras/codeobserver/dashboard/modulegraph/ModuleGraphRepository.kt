@@ -5,6 +5,7 @@ import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
 import nl.jacobras.codeobserver.dto.GraphModulesDto
+import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.data.NetworkError
@@ -25,19 +26,11 @@ internal class ModuleGraphRepository(
             .onErr { loadingState.value = RequestState.Error(it) }
     }
 
-    suspend fun fetchGraph(
-        projectId: ProjectId,
-        startModule: String,
-        groupingThreshold: Int,
-        layerDepth: Int
-    ): Result<String, NetworkError> {
+    suspend fun fetchGraphInfo(
+        projectId: ProjectId
+    ): Result<GraphVisualInfoDto, NetworkError> {
         loadingState.value = RequestState.Working
-        return dataSource.fetchGraph(
-            projectId = projectId,
-            startModule = startModule,
-            groupingThreshold = groupingThreshold,
-            layerDepth = layerDepth
-        )
+        return dataSource.fetchGraphInfo(projectId = projectId)
             .onOk { loadingState.value = RequestState.Idle }
             .onErr { loadingState.value = RequestState.Error(it) }
     }

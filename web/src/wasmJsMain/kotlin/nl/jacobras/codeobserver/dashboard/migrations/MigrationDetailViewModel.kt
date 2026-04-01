@@ -2,6 +2,8 @@ package nl.jacobras.codeobserver.dashboard.migrations
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gabrieldrn.carbon.notification.NotificationStatus
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -10,6 +12,7 @@ import kotlinx.coroutines.launch
 import nl.jacobras.codeobserver.dto.MigrationId
 import nl.jacobras.codeobserver.dto.MigrationProgressDto
 import nl.jacobras.codeobserver.util.ui.UiState
+import nl.jacobras.codeobserver.util.ui.notification.Notifier
 
 internal class MigrationDetailViewModel(
     private val migrationProgressRepository: MigrationProgressRepository
@@ -37,6 +40,13 @@ internal class MigrationDetailViewModel(
         val migrationId = migrationId.value ?: return
         migrationProgressRepository.fetchProgress(migrationId)
             .onOk { progress.value = it }
+            .onErr {
+                Notifier.show(
+                    title = "Error loading migration progress",
+                    message = "Due to $it",
+                    status = NotificationStatus.Error
+                )
+            }
     }
 
     fun refresh() = viewModelScope.launch {

@@ -2,38 +2,30 @@ package nl.jacobras.codeobserver.server.routes
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlinx.serialization.json.Json
+import nl.jacobras.codeobserver.dto.GraphConfigDto
 import nl.jacobras.codeobserver.dto.GraphModuleDto
 import nl.jacobras.codeobserver.dto.GraphModulesDto
+import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.server.entity.ModuleGraphSettingsTable
 import nl.jacobras.codeobserver.server.entity.ModuleGraphTable
 import nl.jacobras.codeobserver.server.entity.ModuleTypeIdentifiersTable
-import nl.jacobras.codeobserver.server.graph.GraphConfig
 import nl.jacobras.codeobserver.server.graph.GraphUtil
-import nl.jacobras.codeobserver.server.graph.GraphVisualizer
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 internal fun Route.moduleRoutes() {
-    get("/moduleGraph") {
+    get("/graphVisualInfo") {
         val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
         if (projectId.isBlank()) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
             return@get
         }
-        val startModule = call.request.queryParameters["startModule"]?.trim().orEmpty()
-        val groupingThreshold = call.request.queryParameters["groupingThreshold"]?.trim()?.toIntOrNull()
-        if (groupingThreshold == null) {
-            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing groupingThreshold"))
-            return@get
-        }
-        val layerDepth = call.request.queryParameters["layerDepth"]?.trim()?.toIntOrNull() ?: 30
 
         val graphRecord = transaction {
             ModuleGraphTable
@@ -55,11 +47,11 @@ internal fun Route.moduleRoutes() {
                 .where { ModuleGraphSettingsTable.projectId eq projectId }
                 .map {
                     when (val type = it[ModuleGraphSettingsTable.type]) {
-                        "deprecatedModule" -> GraphConfig.DeprecatedModule(it[ModuleGraphSettingsTable.data])
+                        "deprecatedModule" -> GraphConfigDto.DeprecatedModule(it[ModuleGraphSettingsTable.data])
                         "forbiddenDependency" -> {
                             val parts = it[ModuleGraphSettingsTable.data].split(" -> ")
                             if (parts.size == 2) {
-                                GraphConfig.ForbiddenDependency(parts[0], parts[1])
+                                GraphConfigDto.ForbiddenDependency(parts[0], parts[1])
                             } else {
                                 error("Invalid data format: ${it[ModuleGraphSettingsTable.data]}")
                             }
@@ -76,15 +68,12 @@ internal fun Route.moduleRoutes() {
                 .filter { it.value.isNotEmpty() }
             config to colors
         }
-        val graph = GraphVisualizer.build(
+        val info = GraphVisualInfoDto(
             modules = graphMap,
-            startModule = startModule,
-            groupingThreshold = groupingThreshold,
-            layerDepth = layerDepth,
             config = graphConfig,
             moduleColors = moduleColors
         )
-        call.respondText(graph)
+        call.respond(info)
     }
     get("/modules") {
         val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()

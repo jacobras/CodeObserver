@@ -3,21 +3,30 @@ package nl.jacobras.codeobserver.dashboard.modulegraph
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import com.gabrieldrn.carbon.notification.NotificationStatus
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onOk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
+import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphConfig
+import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphVisualizer
+import nl.jacobras.codeobserver.dto.GraphConfigDto
 import nl.jacobras.codeobserver.dto.GraphModulesDto
+import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.projects.ProjectRepository
 import nl.jacobras.codeobserver.util.data.NetworkError
 import nl.jacobras.codeobserver.util.ui.UiState
+import nl.jacobras.codeobserver.util.ui.notification.Notifier
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class ModuleGraphViewModel(
     private val modulesRepository: ModuleGraphRepository,
     projectRepository: ProjectRepository
@@ -31,23 +40,43 @@ internal class ModuleGraphViewModel(
     val startModule = MutableStateFlow("")
     val groupingThreshold = MutableStateFlow(DEFAULT_GROUPING_THRESHOLD)
     val layerDepth = MutableStateFlow(DEFAULT_LAYER_DEPTH)
-    val graph = combine(
-        projectId,
-        startModule,
-        groupingThreshold,
-        layerDepth
-    ) { projectId, startModule, groupingThreshold, layerDepth ->
+    val graphInfo = projectId.mapLatest { projectId ->
         if (projectId == null) {
-            return@combine ""
+            return@mapLatest GraphVisualInfoDto()
         }
-        loadGraph(projectId, startModule, groupingThreshold, layerDepth)
+        loadGraphInfo(projectId)
             .fold(
                 success = { it },
                 failure = { error ->
-                    Logger.e { "Failed to fetch graph: $error" }
-                    ""
+                    Logger.e { "Failed to fetch graph info: $error" }
+                    Notifier.show(
+                        title = "Error loading module graph info",
+                        message = "Due to $error",
+                        status = NotificationStatus.Error
+                    )
+                    GraphVisualInfoDto()
                 }
             )
+    }
+    val mermaidGraph = combine(
+        graphInfo,
+        startModule,
+        groupingThreshold,
+        layerDepth
+    ) { graphInfo, startModule, groupingThreshold, layerDepth ->
+        GraphVisualizer.build(
+            modules = graphInfo.modules,
+            startModule = startModule,
+            groupingThreshold = groupingThreshold,
+            layerDepth = layerDepth,
+            moduleColors = graphInfo.moduleColors,
+            config = graphInfo.config.map {
+                when (it) {
+                    is GraphConfigDto.DeprecatedModule -> GraphConfig.DeprecatedModule(it.module)
+                    is GraphConfigDto.ForbiddenDependency -> GraphConfig.ForbiddenDependency(it.a, it.b)
+                }
+            }
+        )
     }
 
     init {
@@ -75,20 +104,10 @@ internal class ModuleGraphViewModel(
         loadData()
     }
 
-    suspend fun loadGraph(
-        projectId: ProjectId,
-        startModule: String,
-        groupingThreshold: Int,
-        layerDepth: Int
-    ): Result<String, NetworkError> {
-        return modulesRepository.fetchGraph(
-            projectId = projectId,
-            startModule = startModule,
-            groupingThreshold = groupingThreshold,
-            layerDepth = layerDepth
-        )
+    suspend fun loadGraphInfo(projectId: ProjectId): Result<GraphVisualInfoDto, NetworkError> {
+        return modulesRepository.fetchGraphInfo(projectId = projectId)
     }
 }
 
 private const val DEFAULT_GROUPING_THRESHOLD = 3
-private const val DEFAULT_LAYER_DEPTH = 30
+private const val DEFAULT_LAYER_DEPTH = 1

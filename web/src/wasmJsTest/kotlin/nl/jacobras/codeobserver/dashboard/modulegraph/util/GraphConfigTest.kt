@@ -1,4 +1,4 @@
-package nl.jacobras.codeobserver.server.graph
+package nl.jacobras.codeobserver.dashboard.modulegraph.util
 
 import assertk.assertThat
 import assertk.assertions.isFalse
