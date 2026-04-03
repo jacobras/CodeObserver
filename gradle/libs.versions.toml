@@ -5,7 +5,7 @@ compose = "1.10.3"
 buildconfig = "6.0.9"
 detekt = "1.23.8"
 detektCompose = "0.4.28" # Version 0.5 requires Detekt 2.x which is not yet stable.
-exposed = "1.1.1"
+exposed = "1.2.0"
 ktor = "3.4.2"
 
 [libraries]
