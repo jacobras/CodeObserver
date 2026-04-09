@@ -6,24 +6,37 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import nl.jacobras.codeobserver.dto.CodeMetricsDto
+import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.ui.chart.ChartColor
 import nl.jacobras.codeobserver.util.ui.chart.TimeChart
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
+import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
 
 @Composable
 internal fun CodeCharts(
     metrics: List<CodeMetricsDto>,
     timeView: TimeView,
-    onSelectTimeView: (TimeView) -> Unit
+    onSelectTimeView: (TimeView) -> Unit,
+    projectId: ProjectId?
 ) {
-    TimeViewSelector(
-        selected = timeView,
-        onSelect = { onSelectTimeView(it) }
-    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TimeViewSelector(
+            selected = timeView,
+            onSelect = { onSelectTimeView(it) }
+        )
+        if (projectId != null) {
+            Spacer(Modifier.weight(1f))
+            CommandInfoBox(
+                command = "measure",
+                projectId = projectId
+            )
+        }
+    }
     Spacer(Modifier.height(16.dp))
 
     Row(

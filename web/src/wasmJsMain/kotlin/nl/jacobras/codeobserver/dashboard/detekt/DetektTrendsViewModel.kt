@@ -24,7 +24,7 @@ internal class DetektTrendsViewModel(
     projectRepository: ProjectRepository
 ) : ViewModel() {
 
-    private val projectId = projectRepository.selectedProjectId
+    val projectId = projectRepository.selectedProjectId
     val metricsState =
         combine(
             detektReportRepository.metricsLoadingState,

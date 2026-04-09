@@ -1,6 +1,7 @@
 package nl.jacobras.codeobserver.dashboard.migrations
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -29,6 +31,7 @@ import nl.jacobras.codeobserver.util.ui.chart.ChartColor
 import nl.jacobras.codeobserver.util.ui.chart.TimeChart
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
+import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
 import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
 import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
@@ -75,13 +78,23 @@ internal fun Migrations(
             .map { TabItem(label = it.name) }
         var selectedTab by remember { mutableStateOf(overviewTab) }
 
-        TabList(
-            tabs = tabs,
-            selectedTab = selectedTab,
-            onTabSelected = { tab ->
-                selectedTab = tab
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TabList(
+                tabs = tabs,
+                selectedTab = selectedTab,
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                }
+            )
+            val projectId by viewModel.projectId.collectAsState()
+            projectId?.let {
+                Spacer(Modifier.weight(1f))
+                CommandInfoBox(
+                    command = "measure",
+                    projectId = it
+                )
             }
-        )
+        }
         Spacer(Modifier.height(16.dp))
 
         if (selectedTab == overviewTab) {

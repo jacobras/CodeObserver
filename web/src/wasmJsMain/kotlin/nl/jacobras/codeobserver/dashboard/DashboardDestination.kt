@@ -10,9 +10,7 @@ internal enum class DashboardDestination(
     Migrations("migrations", "Migrations"),
     DetektTrends("detektTrends", "Detekt trends"),
     DetektReport("detektReport", "Detekt report"),
-    ModuleGraph("moduleGraph", "Module graph"),
-    ModuleRules("moduleRules", "Module rules"),
-    ModuleTypes("moduleTypes", "Module types");
+    ModuleGraph("moduleGraph", "Module graph");
 
     companion object {
         fun fromRoute(route: String) = entries.firstOrNull { it.route == route }

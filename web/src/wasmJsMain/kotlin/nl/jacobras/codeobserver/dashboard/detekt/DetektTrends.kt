@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,6 +32,7 @@ import nl.jacobras.codeobserver.util.ui.chart.ChartColor
 import nl.jacobras.codeobserver.util.ui.chart.TimeChart
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
+import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
@@ -77,10 +79,20 @@ internal fun DetektTrends(
             return
         }
 
-        TimeViewSelector(
-            selected = timeView,
-            onSelect = onSelectTimeView
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TimeViewSelector(
+                selected = timeView,
+                onSelect = onSelectTimeView
+            )
+            val projectId by viewModel.projectId.collectAsState()
+            projectId?.let {
+                Spacer(Modifier.weight(1f))
+                CommandInfoBox(
+                    command = "report-detekt --htmlFile=build/reports/detekt/detekt.html",
+                    projectId = it
+                )
+            }
+        }
         Spacer(Modifier.height(16.dp))
 
         DetektChartsAndTable(

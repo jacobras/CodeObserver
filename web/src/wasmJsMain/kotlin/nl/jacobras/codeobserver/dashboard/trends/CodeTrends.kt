@@ -64,10 +64,13 @@ internal fun CodeTrends(
     }
 
     Column {
+        val projectId by viewModel.projectId.collectAsState()
+
         CodeCharts(
             metrics = metrics,
             timeView = timeView,
-            onSelectTimeView = onSelectTimeView
+            onSelectTimeView = onSelectTimeView,
+            projectId = projectId
         )
         Spacer(Modifier.height(32.dp))
         CodeTable(

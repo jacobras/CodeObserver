@@ -1,6 +1,7 @@
 package nl.jacobras.codeobserver.dashboard.artifacts
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -25,6 +27,7 @@ import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.chart.ChartColor
 import nl.jacobras.codeobserver.util.ui.chart.VersionChart
+import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
 import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
 import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
@@ -73,13 +76,23 @@ internal fun ArtifactCharts() {
         if (artifacts.size > 1) {
             val tabs = artifacts.map { TabItem(label = it) }
 
-            TabList(
-                tabs = tabs,
-                selectedTab = tabs.first { it.label == selectedArtifact },
-                onTabSelected = { tab ->
-                    selectedArtifact = artifacts.first { it == tab.label }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TabList(
+                    tabs = tabs,
+                    selectedTab = tabs.first { it.label == selectedArtifact },
+                    onTabSelected = { tab ->
+                        selectedArtifact = artifacts.first { it == tab.label }
+                    }
+                )
+                val projectId by viewModel.projectId.collectAsState()
+                projectId?.let {
+                    Spacer(Modifier.weight(1f))
+                    CommandInfoBox(
+                        command = "measure-artifact-size --name=\"$selectedArtifact\" --semVer=1.2.3",
+                        projectId = it
+                    )
                 }
-            )
+            }
             Spacer(Modifier.height(16.dp))
         }
 

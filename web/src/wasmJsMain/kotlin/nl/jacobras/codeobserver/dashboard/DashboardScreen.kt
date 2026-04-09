@@ -37,8 +37,6 @@ import nl.jacobras.codeobserver.dashboard.detekt.DetektReport
 import nl.jacobras.codeobserver.dashboard.detekt.DetektTrends
 import nl.jacobras.codeobserver.dashboard.migrations.Migrations
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraph
-import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleRules
-import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleTypes
 import nl.jacobras.codeobserver.dashboard.trends.CodeTrends
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ProjectDto
@@ -167,12 +165,6 @@ private fun DashboardScreen(
                     }
                     composable(DashboardDestination.ModuleGraph.route) {
                         ModuleGraph()
-                    }
-                    composable(DashboardDestination.ModuleRules.route) {
-                        ModuleRules()
-                    }
-                    composable(DashboardDestination.ModuleTypes.route) {
-                        ModuleTypes()
                     }
                 }
             }
