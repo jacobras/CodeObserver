@@ -17,11 +17,11 @@ internal class DemoMigrationsDataSource : MigrationsDataSource {
         MigrationDto(
             id = MigrationId(1),
             createdAt = now.minus(100.days),
-            name = "RxJava to Coroutines",
-            description = "Replace all RxJava usage with Kotlin Coroutines",
+            name = "GSON to KotlinX Serialization",
+            description = "Replace all GSON usages with KotlinX Serialization",
             projectId = ProjectId("myApp"),
             type = "import",
-            rule = "io.reactivex"
+            rule = "com.google.gson.Gson"
         ),
         MigrationDto(
             id = MigrationId(2),
