@@ -88,7 +88,7 @@ internal fun ArtifactCharts() {
                 projectId?.let {
                     Spacer(Modifier.weight(1f))
                     CommandInfoBox(
-                        command = "measure-artifact-size --name=\"$selectedArtifact\" --semVer=1.2.3",
+                        command = "measure-artifact-size --file=path/to/artifact --name=\"$selectedArtifact\" --semVer=1.2.3",
                         projectId = it
                     )
                 }
