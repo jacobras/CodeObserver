@@ -16,7 +16,7 @@ import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
-import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
+import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 
 @Composable
 internal fun CodeTrends(

@@ -34,7 +34,7 @@ import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.carbon.IntSelector
-import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
+import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import org.w3c.dom.HTMLIFrameElement
 
 @OptIn(ExperimentalComposeUiApi::class)

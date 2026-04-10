@@ -16,7 +16,7 @@ import kotlinx.browser.document
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
-import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
+import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import org.w3c.dom.HTMLIFrameElement
 
 @OptIn(ExperimentalComposeUiApi::class)
