@@ -77,7 +77,6 @@ internal fun ArtifactCharts() {
         var selectedArtifact by remember { mutableStateOf(artifacts.first()) }
 
         if (artifacts.size > 1) {
-            var selectedArtifact by remember { mutableStateOf(artifacts.firstOrNull()) }
             val tabs = artifacts.map { TabItem(label = it) }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
