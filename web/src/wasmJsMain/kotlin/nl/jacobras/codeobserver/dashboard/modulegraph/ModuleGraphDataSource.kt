@@ -4,9 +4,12 @@ import co.touchlab.kermit.Logger
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.coroutines.runSuspendCatching
 import com.github.michaelbull.result.mapError
+import com.github.michaelbull.result.recoverIf
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
 import nl.jacobras.codeobserver.dto.GraphModulesDto
 import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
@@ -55,7 +58,10 @@ internal class ModuleGraphDataSourceImpl(
                     parameters.append("projectId", projectId.value)
                 }
             }.body<GraphVisualInfoDto>()
-        }.mapError {
+        }.recoverIf(
+            predicate = { it is ClientRequestException && it.response.status == HttpStatusCode.NotFound },
+            transform = { GraphVisualInfoDto() }
+        ).mapError {
             Logger.e(it) { "Failed to fetch graph visual info" }
             NetworkError.UnknownError
         }
