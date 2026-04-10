@@ -34,6 +34,7 @@ import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
 import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
+import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.codeobserver.util.ui.text.excerpt
@@ -51,6 +52,7 @@ internal fun DetektTrends(
     }
     val reports by viewModel.metrics.collectAsState(emptyList())
     val state by viewModel.metricsState.collectAsState(UiState())
+    val projectId by viewModel.projectId.collectAsState()
 
     Column {
         when (val loading = state.loading) {
@@ -71,10 +73,10 @@ internal fun DetektTrends(
         }
 
         if (reports.isEmpty()) {
-            BasicText(
-                modifier = Modifier.fillMaxWidth(),
+            EmptyState(
                 text = "No Detekt reports found",
-                style = Carbon.typography.body02
+                command = "report-detekt --htmlFile=build/reports/detekt/detekt.html",
+                projectId = projectId ?: return
             )
             return
         }
@@ -84,7 +86,6 @@ internal fun DetektTrends(
                 selected = timeView,
                 onSelect = onSelectTimeView
             )
-            val projectId by viewModel.projectId.collectAsState()
             projectId?.let {
                 Spacer(Modifier.weight(1f))
                 CommandInfoBox(

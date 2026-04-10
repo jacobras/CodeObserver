@@ -29,6 +29,7 @@ import nl.jacobras.codeobserver.util.ui.chart.ChartColor
 import nl.jacobras.codeobserver.util.ui.chart.VersionChart
 import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
 import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
+import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.humanreadable.HumanReadable
@@ -43,6 +44,7 @@ internal fun ArtifactCharts() {
     }
     val artifactSizes by viewModel.artifactSizes.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
+    val projectId by viewModel.projectId.collectAsState()
 
     Column {
         when (val loading = state.loading) {
@@ -61,11 +63,12 @@ internal fun ArtifactCharts() {
             RequestState.Idle -> Unit
         }
 
+        val exampleCommand = "measure-artifact-size --file=path/to/artifact --name=\"Artifact name\" --semVer=1.2.3"
         if (artifactSizes.isEmpty()) {
-            BasicText(
-                modifier = Modifier.fillMaxWidth(),
+            EmptyState(
                 text = "No artifacts found",
-                style = Carbon.typography.body02
+                command = exampleCommand,
+                projectId = projectId ?: return
             )
             return
         }
@@ -74,6 +77,7 @@ internal fun ArtifactCharts() {
         var selectedArtifact by remember { mutableStateOf(artifacts.first()) }
 
         if (artifacts.size > 1) {
+            var selectedArtifact by remember { mutableStateOf(artifacts.firstOrNull()) }
             val tabs = artifacts.map { TabItem(label = it) }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -84,11 +88,10 @@ internal fun ArtifactCharts() {
                         selectedArtifact = artifacts.first { it == tab.label }
                     }
                 )
-                val projectId by viewModel.projectId.collectAsState()
                 projectId?.let {
                     Spacer(Modifier.weight(1f))
                     CommandInfoBox(
-                        command = "measure-artifact-size --file=path/to/artifact --name=\"$selectedArtifact\" --semVer=1.2.3",
+                        command = exampleCommand,
                         projectId = it
                     )
                 }

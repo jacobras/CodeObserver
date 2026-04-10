@@ -25,6 +25,7 @@ import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.MigrationDto
+import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.chart.ChartColor
@@ -33,6 +34,7 @@ import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
 import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
 import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
+import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.codeobserver.util.ui.text.excerpt
@@ -50,6 +52,7 @@ internal fun Migrations(
     }
     val migrations by viewModel.migrations.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
+    val projectId by viewModel.projectId.collectAsState()
 
     val isLoading = state.loading is RequestState.Working
     val loadingError = (state.loading as? RequestState.Error)?.type?.name ?: ""
@@ -72,7 +75,7 @@ internal fun Migrations(
     }
 
     Column(Modifier.fillMaxWidth()) {
-        val overviewTab = TabItem("Overview")
+        val overviewTab = TabItem("Configuration")
         val tabs = listOf(overviewTab) + migrations
             .sortedBy { it.name }
             .map { TabItem(label = it.name) }
@@ -86,7 +89,6 @@ internal fun Migrations(
                     selectedTab = tab
                 }
             )
-            val projectId by viewModel.projectId.collectAsState()
             projectId?.let {
                 Spacer(Modifier.weight(1f))
                 CommandInfoBox(
@@ -108,6 +110,7 @@ internal fun Migrations(
         } else {
             val selectedMigration = migrations.first { it.name == selectedTab.label }
             MigrationDetail(
+                projectId = projectId,
                 migration = selectedMigration,
                 timeView = timeView,
                 onSelectTimeView = onSelectTimeView
@@ -118,6 +121,7 @@ internal fun Migrations(
 
 @Composable
 private fun MigrationDetail(
+    projectId: ProjectId?,
     migration: MigrationDto,
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
@@ -176,10 +180,10 @@ private fun MigrationDetail(
     val progressNewestFirst = progressOldestFirst.reversed()
 
     if (progress.isEmpty()) {
-        BasicText(
-            modifier = Modifier.fillMaxWidth(),
+        EmptyState(
             text = "No progress data found",
-            style = Carbon.typography.body02
+            command = "measure",
+            projectId = projectId ?: return
         )
         return
     }

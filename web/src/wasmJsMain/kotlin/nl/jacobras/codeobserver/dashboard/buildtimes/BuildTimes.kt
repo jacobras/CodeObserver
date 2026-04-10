@@ -30,6 +30,7 @@ import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
 import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
 import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
+import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.codeobserver.util.ui.text.excerpt
@@ -51,6 +52,7 @@ internal fun BuildTimes(
     val buildTimes by viewModel.buildTimes.collectAsState(emptyList())
     val isLoading = uiState.loading == RequestState.Working
     val loadingError = uiState.loading.let { (it as? RequestState.Error)?.type?.name } ?: ""
+    val projectId by viewModel.projectId.collectAsState()
 
     Column {
         if (isLoading || loadingError.isNotEmpty()) {
@@ -68,10 +70,10 @@ internal fun BuildTimes(
         }
 
         if (buildTimes.isEmpty()) {
-            BasicText(
-                modifier = Modifier.fillMaxWidth(),
+            EmptyState(
                 text = "No build times found",
-                style = Carbon.typography.body02
+                command = "report-build-time --name=myBuildName --time=123",
+                projectId = projectId ?: return
             )
             return
         }
@@ -90,7 +92,6 @@ internal fun BuildTimes(
                         selectedBuild = buildNames.first { it == tab.label }
                     }
                 )
-                val projectId by viewModel.projectId.collectAsState()
                 projectId?.let {
                     Spacer(Modifier.weight(1f))
                     CommandInfoBox(

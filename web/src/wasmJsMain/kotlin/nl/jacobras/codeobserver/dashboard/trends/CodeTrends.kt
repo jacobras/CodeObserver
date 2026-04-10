@@ -4,18 +4,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.gabrieldrn.carbon.Carbon
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
+import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 
 @Composable
@@ -29,6 +28,7 @@ internal fun CodeTrends(
             projectRepository = RepositoryLocator.projectRepository
         )
     }
+    val projectId by viewModel.projectId.collectAsState()
     val metrics by viewModel.metrics.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
 
@@ -55,17 +55,15 @@ internal fun CodeTrends(
     }
 
     if (metrics.isEmpty()) {
-        BasicText(
-            modifier = Modifier.fillMaxWidth(),
+        EmptyState(
             text = "No metrics found",
-            style = Carbon.typography.body02
+            command = "measure",
+            projectId = projectId ?: return
         )
         return
     }
 
     Column {
-        val projectId by viewModel.projectId.collectAsState()
-
         CodeCharts(
             metrics = metrics,
             timeView = timeView,
