@@ -11,7 +11,7 @@ import com.patrykandpatrick.vico.compose.common.VicoTheme
 import com.patrykandpatrick.vico.compose.common.VicoTheme.CandlestickCartesianLayerColors
 
 @Composable
-internal fun COTheme(
+fun COTheme(
     content: @Composable () -> Unit
 ) {
     CarbonDesignSystem(

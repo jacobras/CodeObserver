@@ -39,6 +39,7 @@ kotlin {
             implementation(libs.vico)
 
             implementation(projects.serverDto)
+            implementation(projects.util.design)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

@@ -34,6 +34,10 @@ Then run CLI commands:
 
 It'll be available at http://localhost:8080/.
 
+### Standalone desktop app
+
+1. Run `gradlew :desktop:hotRunJvm`.
+
 ## Releasing
 
 Only the maintainer can do this.
@@ -53,3 +57,7 @@ Only the maintainer can do this.
 ### Web app
 
 Happens in `publish-docs.yml` workflow.
+
+### Standalone desktop app
+
+1. Run `gradlew :desktop:packageDistributionForCurrentOS`.
