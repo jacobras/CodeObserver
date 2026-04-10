@@ -20,7 +20,7 @@ internal class MigrationsViewModel(
     projectRepository: ProjectRepository
 ) : ViewModel() {
 
-    private val projectId = projectRepository.selectedProjectId
+    val projectId = projectRepository.selectedProjectId
     val uiState = combine(
         migrationsRepository.loadingState,
         migrationsRepository.savingState,

@@ -21,7 +21,7 @@ internal class BuildTimesViewModel(
     projectRepository: ProjectRepository
 ) : ViewModel() {
 
-    private val projectId = projectRepository.selectedProjectId
+    val projectId = projectRepository.selectedProjectId
     val uiState = buildTimesRepository.loadingState.map { UiState<Nothing>(loading = it) }
     val buildTimes = MutableStateFlow(emptyList<BuildTimeDto>())
 

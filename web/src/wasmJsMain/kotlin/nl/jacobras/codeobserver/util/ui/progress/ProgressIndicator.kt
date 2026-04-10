@@ -1,4 +1,4 @@
-package nl.jacobras.codeobserver.util.ui.loading
+package nl.jacobras.codeobserver.util.ui.progress
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

@@ -21,7 +21,10 @@ internal fun COTheme(
             buttonColors = WhiteTheme.buttonColors.copy(
                 buttonPrimary = Color(0xFF3F739D),
                 buttonPrimaryHover = Color(0xFF376D8A),
-                buttonPrimaryActive = Color(0xFF2A5369)
+                buttonPrimaryActive = Color(0xFF2A5369),
+                buttonTertiary = Color(0xFF3F739D),
+                buttonTertiaryHover = Color(0xFF376D8A),
+                buttonTertiaryActive = Color(0xFF2A5369)
             )
         )
     ) {

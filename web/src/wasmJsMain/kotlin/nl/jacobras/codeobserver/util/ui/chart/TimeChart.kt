@@ -1,6 +1,7 @@
 package nl.jacobras.codeobserver.util.ui.chart
 
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +23,10 @@ import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarkerController
+import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.LineCartesianLayerMarkerTarget
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberFadingEdges
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
@@ -29,7 +34,9 @@ import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.Fill
 import com.patrykandpatrick.vico.compose.common.Insets
 import com.patrykandpatrick.vico.compose.common.LegendItem
+import com.patrykandpatrick.vico.compose.common.component.LineComponent
 import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.data.ExtraStore
@@ -121,6 +128,23 @@ internal fun <T> TimeChart(
     }
 
     val legendLabelComponent = rememberTextComponent(TextStyle(vicoTheme.textColor))
+    val marker = rememberDefaultCartesianMarker(
+        label = TextComponent(
+            background = ShapeComponent(
+                fill = Fill(Color.White.copy(alpha = 0.9f)),
+                shape = RoundedCornerShape(4.dp)
+            ),
+            padding = Insets(4.dp)
+        ),
+        labelPosition = DefaultCartesianMarker.LabelPosition.AroundPoint,
+        guideline = LineComponent(
+            fill = Fill(color.copy(alpha = 0.9f))
+        ),
+        valueFormatter = { _, targets ->
+            val value = (targets.first() as LineCartesianLayerMarkerTarget).points.maxBy { it.entry.y }.entry.y
+            yAxisFormatter?.invoke(value) ?: HumanReadable.number(value)
+        }
+    )
 
     CartesianChartHost(
         modifier = modifier,
@@ -159,7 +183,9 @@ internal fun <T> TimeChart(
                     )
                 },
                 padding = Insets(top = 16.dp)
-            )
+            ),
+            marker = marker,
+            markerController = CartesianMarkerController.rememberShowOnHover()
         ),
         modelProducer = modelProducer,
         animateIn = false,

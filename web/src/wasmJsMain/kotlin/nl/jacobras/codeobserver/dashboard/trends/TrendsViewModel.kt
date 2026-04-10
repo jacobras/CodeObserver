@@ -20,7 +20,7 @@ internal class TrendsViewModel(
     projectRepository: ProjectRepository
 ) : ViewModel() {
 
-    private val projectId = projectRepository.selectedProjectId
+    val projectId = projectRepository.selectedProjectId
     val uiState = combine(
         trendsRepository.loadingState,
         trendsRepository.deletingState

@@ -3,7 +3,6 @@ package nl.jacobras.codeobserver.dashboard.detekt
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -11,12 +10,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.WebElementView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.gabrieldrn.carbon.Carbon
 import kotlinx.browser.document
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
-import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
+import nl.jacobras.codeobserver.util.ui.progress.EmptyState
+import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import org.w3c.dom.HTMLIFrameElement
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -30,6 +29,7 @@ internal fun DetektReport() {
     }
     val latestReport by viewModel.detailReport.collectAsState("")
     val state by viewModel.detailReportState.collectAsState(UiState())
+    val projectId by viewModel.projectId.collectAsState()
 
     Column {
         when (val loading = state.loading) {
@@ -50,10 +50,10 @@ internal fun DetektReport() {
         }
 
         if (latestReport.isEmpty()) {
-            BasicText(
-                modifier = Modifier.fillMaxWidth(),
-                text = "No report available",
-                style = Carbon.typography.body02
+            EmptyState(
+                text = "No Detekt report found",
+                command = "report-detekt --htmlFile=build/reports/detekt/detekt.html",
+                projectId = projectId ?: return
             )
             return
         }

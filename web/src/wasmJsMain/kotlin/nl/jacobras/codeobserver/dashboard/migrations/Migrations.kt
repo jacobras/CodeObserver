@@ -1,6 +1,7 @@
 package nl.jacobras.codeobserver.dashboard.migrations
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -23,14 +25,17 @@ import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.MigrationDto
+import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.chart.ChartColor
 import nl.jacobras.codeobserver.util.ui.chart.TimeChart
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
+import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
 import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
-import nl.jacobras.codeobserver.util.ui.loading.ProgressIndicator
+import nl.jacobras.codeobserver.util.ui.progress.EmptyState
+import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.codeobserver.util.ui.text.excerpt
 
@@ -47,6 +52,7 @@ internal fun Migrations(
     }
     val migrations by viewModel.migrations.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
+    val projectId by viewModel.projectId.collectAsState()
 
     val isLoading = state.loading is RequestState.Working
     val loadingError = (state.loading as? RequestState.Error)?.type?.name ?: ""
@@ -69,19 +75,28 @@ internal fun Migrations(
     }
 
     Column(Modifier.fillMaxWidth()) {
-        val overviewTab = TabItem("Overview")
+        val overviewTab = TabItem("Configuration")
         val tabs = listOf(overviewTab) + migrations
             .sortedBy { it.name }
             .map { TabItem(label = it.name) }
         var selectedTab by remember { mutableStateOf(overviewTab) }
 
-        TabList(
-            tabs = tabs,
-            selectedTab = selectedTab,
-            onTabSelected = { tab ->
-                selectedTab = tab
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TabList(
+                tabs = tabs,
+                selectedTab = selectedTab,
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                }
+            )
+            projectId?.let {
+                Spacer(Modifier.weight(1f))
+                CommandInfoBox(
+                    command = "measure",
+                    projectId = it
+                )
             }
-        )
+        }
         Spacer(Modifier.height(16.dp))
 
         if (selectedTab == overviewTab) {
@@ -95,6 +110,7 @@ internal fun Migrations(
         } else {
             val selectedMigration = migrations.first { it.name == selectedTab.label }
             MigrationDetail(
+                projectId = projectId,
                 migration = selectedMigration,
                 timeView = timeView,
                 onSelectTimeView = onSelectTimeView
@@ -105,6 +121,7 @@ internal fun Migrations(
 
 @Composable
 private fun MigrationDetail(
+    projectId: ProjectId?,
     migration: MigrationDto,
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
@@ -163,10 +180,10 @@ private fun MigrationDetail(
     val progressNewestFirst = progressOldestFirst.reversed()
 
     if (progress.isEmpty()) {
-        BasicText(
-            modifier = Modifier.fillMaxWidth(),
+        EmptyState(
             text = "No progress data found",
-            style = Carbon.typography.body02
+            command = "measure",
+            projectId = projectId ?: return
         )
         return
     }

@@ -19,7 +19,7 @@ internal class ArtifactChartsViewModel(
     projectRepository: ProjectRepository
 ) : ViewModel() {
 
-    private val projectId = projectRepository.selectedProjectId
+    val projectId = projectRepository.selectedProjectId
     val uiState = artifactSizesRepository.loadingState.map { UiState<Nothing>(loading = it) }
     val artifactSizes = MutableStateFlow(emptyList<ArtifactSizeDto>())
 
