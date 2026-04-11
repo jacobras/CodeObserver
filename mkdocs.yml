@@ -43,8 +43,10 @@ markdown_extensions:
 nav:
   - 'Introduction':
       - 'Welcome': 'README.md'
-      - 'Installation': 'introduction/installation.md'
-      - 'Contributing': 'introduction/contributing.md'
-      - 'Running dev builds': 'introduction/running_dev_builds.md'
-      - 'Running release builds': 'introduction/running_release_builds.md'
+      - 'Installation':
+          - 'Server': 'introduction/installation_server.md'
+          - 'Standalone': 'introduction/installation_standalone.md'
+      - 'Contributing':
+          - 'Running dev builds': 'introduction/running_dev_builds.md'
+          - 'Running release builds': 'introduction/running_release_builds.md'
   - 'Online demo': 'https://jacobras.github.io/CodeObserver/demo/'

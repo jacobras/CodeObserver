@@ -1,8 +1,6 @@
-# Installation
+# Installation (server)
 
-## Server
-
-The server is provided as a Docker image.
+Server installation allows for CI integration. The server is provided as a Docker image.
 
 ### Docker Compose
 
@@ -25,6 +23,8 @@ services:
 Now start the server with `docker-compose up -d`.
 
 ## CLI tool
+
+The CLI tool feeds data to the server.
 
 > [!INFO]
 > Coming soon.
