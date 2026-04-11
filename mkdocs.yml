@@ -47,6 +47,6 @@ nav:
           - 'Server': 'introduction/installation_server.md'
           - 'Standalone': 'introduction/installation_standalone.md'
       - 'Contributing':
-          - 'Running dev builds': 'introduction/running_dev_builds.md'
-          - 'Running release builds': 'introduction/running_release_builds.md'
+          - 'Dev builds': 'introduction/dev_builds.md'
+          - 'Release builds': 'introduction/release_builds.md'
   - 'Online demo': 'https://jacobras.github.io/CodeObserver/demo/'
