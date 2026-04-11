@@ -1,4 +1,4 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import io.github.kdroidfilter.nucleus.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.compose)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.buildconfig)
+    alias(libs.plugins.nucleus)
 }
 
 kotlin {
@@ -37,7 +38,11 @@ kotlin {
     }
 }
 
-compose.desktop {
+//compose.desktop.application {
+//    mainClass = "nl.jacobras.codeobserver.desktop.MainKt" // For hot reload
+//}
+
+nucleus {
     application {
         mainClass = "nl.jacobras.codeobserver.desktop.MainKt"
         nativeDistributions {
@@ -46,6 +51,7 @@ compose.desktop {
             appResourcesRootDir.set(project.layout.projectDirectory.dir("app"))
             packageName = "nl.jacobras.codeobserver"
             packageVersion = "1.0.0"
+            homepage = "https://github.com/jacobras/CodeObserver"
 
             windows {
                 menu = true
