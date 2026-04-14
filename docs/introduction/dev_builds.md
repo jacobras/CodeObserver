@@ -1,13 +1,15 @@
-# Contributing
+# Running development builds
 
-## Running locally
+## Full local build
+
+Recommended for development involving server and web app.
 
 1. Run server: `gradlew :server:run`
 2. Build web app: `gradlew :web:clean :web:wasmJsBrowserDevelopmentExecutableDistribution`
 
 When the server is running, the web development build will be accessible at http://localhost:8080/dev/.
 
-Then run CLI commands:
+Then run CLI commands to feed data:
 
 - General help:
     - `gradlew :cli:run`
@@ -30,26 +32,12 @@ Then run CLI commands:
 
 ## Demo web app
 
+Recommended for development involving only the web app's UI.
+
 `gradlew :web:clean :web:wasmJsBrowserDevelopmentRun -Pdemo=true`
 
 It'll be available at http://localhost:8080/.
 
-## Releasing
+## Standalone desktop app
 
-Only the maintainer can do this.
-
-### Docker
-
-1. Build the web app: `gradlew :web:wasmJsBrowserDistribution`
-2. Build the server: `gradlew :server:shadowJar`
-3. Build the image: `docker build -t mrras/code-observer:0.5.0 .`
-4. Now run with `docker compose up`
-5. Push the image: `docker push mrras/code-observer:0.5.0`
-
-### CLI
-
-`gradlew :cli:shadowJar`
-
-### Web app
-
-Happens in `publish-docs.yml` workflow.
+`gradlew :desktop:hotRunJvm`.

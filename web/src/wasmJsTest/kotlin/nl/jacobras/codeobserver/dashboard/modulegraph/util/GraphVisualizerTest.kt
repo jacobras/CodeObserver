@@ -201,7 +201,8 @@ class GraphVisualizerTest {
     fun `too many modules`() {
         val graph = GraphVisualizer.build(
             modules = List(300) { "module$it" to emptyList<String>() }.toMap(),
-            groupingThreshold = 3
+            groupingThreshold = 3,
+            nodeLimit = 30
         )
 
         assertThat(graph).isEqualTo(

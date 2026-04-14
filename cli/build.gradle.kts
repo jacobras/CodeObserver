@@ -2,6 +2,7 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -28,12 +29,16 @@ application {
     mainClass = "nl.jacobras.codeobserver.cli.MainKt"
 }
 
+java {
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+    }
+}
+
 tasks.named<ShadowJar>("shadowJar") {
     archiveClassifier.set("")
-}
-tasks.named("startScripts") {
-    dependsOn("shadowJar")
-}
-tasks.named("jar") {
-    enabled = false
 }

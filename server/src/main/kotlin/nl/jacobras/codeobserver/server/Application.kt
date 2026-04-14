@@ -40,13 +40,18 @@ fun main() {
     embeddedServer(Netty, port = 8080, module = Application::module).start(wait = true)
 }
 
-fun Application.module() {
+fun Application.module(
+    webRoot: File = File("app/web"),
+    defaultDbPath: String = "data/app.db"
+) {
     install(ContentNegotiation) {
-        json(Json {
-            prettyPrint = false
-            isLenient = true
-            ignoreUnknownKeys = true
-        })
+        json(
+            Json {
+                prettyPrint = false
+                isLenient = true
+                ignoreUnknownKeys = true
+            }
+        )
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
@@ -57,7 +62,7 @@ fun Application.module() {
         }
     }
 
-    val dbPath = System.getenv("DB_PATH") ?: "data/app.db"
+    val dbPath = System.getenv("DB_PATH") ?: defaultDbPath
     val dbFile = File(dbPath)
     dbFile.parentFile?.mkdirs()
     Database.connect("jdbc:sqlite:${dbFile.absolutePath}", driver = "org.sqlite.JDBC")
@@ -77,7 +82,7 @@ fun Application.module() {
     }
 
     routing {
-        staticFiles("/", File("app/web")) {
+        staticFiles("/", webRoot) {
             default("index.html")
         }
         staticFiles("/dev", File("../web/build/dist/wasmJs/developmentExecutable")) {

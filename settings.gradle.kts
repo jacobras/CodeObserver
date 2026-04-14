@@ -33,7 +33,9 @@ dependencyResolutionManagement {
 
 include(
     ":cli",
+    ":desktop",
     ":server",
     ":server-dto",
+    ":util:design",
     ":web"
 )

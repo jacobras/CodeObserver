@@ -13,7 +13,7 @@ import com.gabrieldrn.carbon.foundation.spacing.SpacingScale
 import com.gabrieldrn.carbon.loading.SmallLoading
 
 @Composable
-internal fun SmallProgressButton(
+fun SmallProgressButton(
     label: String,
     loading: Boolean,
     buttonType: ButtonType,
