@@ -18,20 +18,18 @@ jobs:
       - uses: ./.github/actions/build-setup
 
       - name: Build desktop
-        run: ./gradlew :desktop:packageReleaseDistributionForCurrentOS
+        run: ./gradlew :desktop:packageDistributionForCurrentOS
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.os }}-${{ github.ref_name }}
-          path: desktop/build/compose/binaries/main-release/**/*
+          path: desktop/build/compose/binaries/main/**/*
           if-no-files-found: error
 
       - name: GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.event.inputs.versionTag }}
-          target_commitish: ${{ github.sha }}
           generate_release_notes: true
-          files: desktop/build/compose/binaries/main-release/**/*
+          files: desktop/build/compose/binaries/main/**/*
           fail_on_unmatched_files: true

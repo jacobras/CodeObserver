@@ -26,14 +26,12 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build image
-        run: docker build -t mrras/code-observer:${{ github.event.inputs.versionTag }} .
+        run: docker build -t mrras/code-observer:${{ github.ref_name }} .
 
       - name: Push image
-        run: docker push mrras/code-observer:${{ github.event.inputs.versionTag }}
+        run: docker push mrras/code-observer:${{ github.ref_name }}
 
       - name: GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.event.inputs.versionTag }}
-          target_commitish: ${{ github.sha }}
           generate_release_notes: true
