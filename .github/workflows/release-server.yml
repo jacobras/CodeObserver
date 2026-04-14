@@ -2,10 +2,12 @@ name: Release Server
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v6
 
@@ -24,7 +26,14 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build image
-        run: docker build -t mrras/code-observer:0.5.0 .
+        run: docker build -t mrras/code-observer:${{ github.event.inputs.versionTag }} .
 
       - name: Push image
-        run: docker push mrras/code-observer:0.5.0
+        run: docker push mrras/code-observer:${{ github.event.inputs.versionTag }}
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.inputs.versionTag }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true

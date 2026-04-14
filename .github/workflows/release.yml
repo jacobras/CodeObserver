@@ -1,0 +1,30 @@
+name: Release (CLI + desktop + server)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify tag ref
+        run: |
+          if [[ "${GITHUB_REF}" != refs/tags/* ]]; then
+            echo "::error::This workflow can only be run from a tag."
+            exit 1
+          fi
+
+  release-cli:
+    needs: verify-tag
+    uses: ./.github/workflows/release-cli.yml
+    secrets: inherit
+
+  release-desktop:
+    needs: verify-tag
+    uses: ./.github/workflows/release-desktop.yml
+    secrets: inherit
+
+  release-server:
+    needs: verify-tag
+    uses: ./.github/workflows/release-server.yml
+    secrets: inherit

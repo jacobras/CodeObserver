@@ -1,4 +1,4 @@
-name: Release CLI
+name: Release Desktop
 
 on:
   workflow_dispatch:
