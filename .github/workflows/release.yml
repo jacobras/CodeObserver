@@ -1,4 +1,4 @@
-name: Release (CLI + desktop + server)
+name: Release (CLI + Desktop + Server)
 
 on:
   workflow_dispatch:
