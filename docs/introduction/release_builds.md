@@ -2,18 +2,9 @@
 
 Only the maintainer can do this.
 
-## Docker
-
-Run the `release-server.yml` workflow.
-
-## CLI
-
-Run the `release-cli.yml` workflow.
+1. Create a tag
+2. Run `release.yml` on the tag.
 
 ## Web demo
 
 Run the `publish-docs.yml` workflow.
-
-## Standalone desktop app
-
-`gradlew :desktop:packageDistributionForCurrentOS`.

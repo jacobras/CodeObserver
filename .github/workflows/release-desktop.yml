@@ -6,21 +6,26 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
     steps:
       - uses: actions/checkout@v6
 
       - uses: ./.github/actions/build-setup
 
-      - name: Build CLI shadowJar
-        run: ./gradlew :cli:shadowJar
+      - name: Build desktop
+        run: ./gradlew :desktop:packageReleaseDistributionForCurrentOS
 
-      - name: Upload CLI artifact
-        uses: actions/upload-artifact@v7
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: cli-shadowjar
-          path: cli/build/libs/*.jar
+          name: desktop-${{ matrix.os }}-${{ github.ref_name }}
+          path: desktop/build/compose/binaries/main-release/**/*
+          if-no-files-found: error
 
       - name: GitHub Release
         uses: softprops/action-gh-release@v3
@@ -28,3 +33,5 @@ jobs:
           tag_name: ${{ github.event.inputs.versionTag }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
+          files: desktop/build/compose/binaries/main-release/**/*
+          fail_on_unmatched_files: true
