@@ -2,7 +2,7 @@
 
 ## Full local build
 
-Recommended for development involving server + web app.
+Recommended for development involving server and web app.
 
 1. Run server: `gradlew :server:run`
 2. Build web app: `gradlew :web:clean :web:wasmJsBrowserDevelopmentExecutableDistribution`
