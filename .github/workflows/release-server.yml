@@ -1,0 +1,30 @@
+name: Release Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/build-setup
+
+      - name: Build web app
+        run: ./gradlew :web:wasmJsBrowserDistribution
+
+      - name: Build server
+        run: ./gradlew :server:shadowJar
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        run: docker build -t mrras/code-observer:0.5.0 .
+
+      - name: Push image
+        run: docker push mrras/code-observer:0.5.0
