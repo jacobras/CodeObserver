@@ -22,7 +22,7 @@ runs:
         GH_TOKEN: ${{ github.token }}
       run: |
         gh release download 0.5.0 \
-          --repo "${{ github.action_repository }}" \
+          --repo jacobras/CodeObserver \
           --pattern 'cli-*.zip' \
           --dir "$RUNNER_TEMP"
         unzip -q "$RUNNER_TEMP"/cli-*.zip -d "$RUNNER_TEMP"
