@@ -42,9 +42,3 @@ kotlin {
 tasks.named<ShadowJar>("shadowJar") {
     archiveClassifier.set("")
 }
-//tasks.named("startScripts") {
-//    dependsOn("shadowJar")
-//}
-//tasks.named("jar") {
-//    enabled = false
-//}
