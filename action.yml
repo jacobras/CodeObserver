@@ -51,5 +51,4 @@ runs:
         java -jar "$METRICS_CLI_JAR" \
           ${{ inputs.command }} \
           --server "$SERVER_URL" \
-          --project "${{ inputs.project }}" \
-          --command ${{ inputs.command }}
+          --project "${{ inputs.project }}"
