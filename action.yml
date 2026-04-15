@@ -28,18 +28,18 @@ runs:
 
         gh release download 0.5.1 \
           --repo jacobras/CodeObserver \
-          --pattern 'cli-*.zip' \
+          --pattern '*.jar' \
           --dir "$RUNNER_TEMP"
-        unzip -q "$RUNNER_TEMP"/cli-*.zip -d "$RUNNER_TEMP"
-        CLI_BIN=$(find "$RUNNER_TEMP" -type f -path '*/bin/cli' | head -n1)
-        echo "METRICS_CLI_BIN=$CLI_BIN" >> "$GITHUB_ENV"
+
+        CLI_JAR=$(find "$RUNNER_TEMP" -maxdepth 1 -type f -name '*.jar' | head -n1)
+        echo "METRICS_CLI_JAR=$CLI_JAR" >> "$GITHUB_ENV"
 
     - name: Run metrics CLI
       shell: bash
       env:
         SERVER_URL: ${{ inputs.server-url }}
       run: |
-        "$METRICS_CLI_BIN" \
+        java -jar "$METRICS_CLI_JAR" \
           measure
           --server "$SERVER_URL" \
           --project "${{ inputs.project-id }}"
