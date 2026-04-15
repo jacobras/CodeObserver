@@ -40,6 +40,6 @@ runs:
         SERVER_URL: ${{ inputs.server-url }}
       run: |
         java -jar "$METRICS_CLI_JAR" \
-          measure
+          measure \
           --server "$SERVER_URL" \
           --project "${{ inputs.project-id }}"
