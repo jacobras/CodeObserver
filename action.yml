@@ -6,10 +6,13 @@ branding:
   color: blue
 
 inputs:
-  server-url:
+  command:
+    description: Command including parameters
+    required: true
+  server:
     description: The URL of the CodeObserver server
     required: true
-  project-id:
+  project:
     description: The ID of the project
     required: true
 
@@ -21,25 +24,32 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        if ! command -v gh >/dev/null 2>&1; then
-          echo "::error::GitHub CLI (gh) is required but not found on PATH. Install it from https://cli.github.com/ on your runner."
-          exit 1
+        CLI_JAR="$RUNNER_TEMP/codeobserver-cli-0.5.2.jar"
+
+        if [ ! -f "$CLI_JAR" ]; then
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "::error::GitHub CLI (gh) is required but not found on PATH."
+            exit 1
+          fi
+
+          gh release download 0.5.2 \
+            --repo jacobras/CodeObserver \
+            --pattern 'cli-*.jar' \
+            --dir "$RUNNER_TEMP"
+
+          DOWNLOADED=$(find "$RUNNER_TEMP" -maxdepth 1 -type f -name 'cli-*.jar' | head -n1)
+          mv "$DOWNLOADED" "$CLI_JAR"
         fi
 
-        gh release download 0.5.2 \
-          --repo jacobras/CodeObserver \
-          --pattern 'cli-*.jar' \
-          --dir "$RUNNER_TEMP"
-
-        CLI_JAR=$(find "$RUNNER_TEMP" -maxdepth 1 -type f -name '*.jar' | head -n1)
         echo "METRICS_CLI_JAR=$CLI_JAR" >> "$GITHUB_ENV"
 
     - name: Run metrics CLI
       shell: bash
       env:
-        SERVER_URL: ${{ inputs.server-url }}
+        SERVER_URL: ${{ inputs.server }}
       run: |
         java -jar "$METRICS_CLI_JAR" \
-          measure \
+          ${{ inputs.command }} \
           --server "$SERVER_URL" \
-          --project "${{ inputs.project-id }}"
+          --project "${{ inputs.project }}" \
+          --command ${{ inputs.command }}

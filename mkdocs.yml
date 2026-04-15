@@ -44,9 +44,13 @@ nav:
   - 'Introduction':
       - 'Welcome': 'README.md'
       - 'Installation':
-          - 'Server': 'introduction/installation_server.md'
-          - 'Standalone': 'introduction/installation_standalone.md'
+          - 'Server': 'introduction/installating_server.md'
+          - 'Standalone': 'introduction/installing_standalone.md'
       - 'Contributing':
-          - 'Dev builds': 'introduction/dev_builds.md'
-          - 'Release builds': 'introduction/release_builds.md'
+          - 'Running dev builds': 'introduction/running_dev_builds.md'
+          - 'Releasing': 'introduction/releasing_builds.md'
+  - 'Usage':
+      - 'Overview': 'usage/overview.md'
+      - 'Code metrics': 'usage/code_metrics.md'
+      - 'Detekt metrics': 'usage/detekt_metrics.md'
   - 'Online demo': 'https://jacobras.github.io/CodeObserver/demo/'
