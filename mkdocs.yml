@@ -51,6 +51,9 @@ nav:
           - 'Releasing': 'introduction/releasing_builds.md'
   - 'Usage':
       - 'Overview': 'usage/overview.md'
+      - 'Artifact sizes': 'usage/artifact_sizes.md'
+      - 'Build times': 'usage/build_times.md'
       - 'Code metrics': 'usage/code_metrics.md'
       - 'Detekt metrics': 'usage/detekt_metrics.md'
+      - 'Tech debt migrations': 'usage/tech_debt_migrations.md'
   - 'Online demo': 'https://jacobras.github.io/CodeObserver/demo/'

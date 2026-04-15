@@ -11,6 +11,11 @@ And, if the project is a Gradle project:
 - Longest path between two modules
 - Module graph
 
+And, if [migrations](tech_debt_migrations.md) are configured:
+
+- Number of times an import is used; or
+- Number of times a module is used
+
 The results will be shown in charts over time:
 
 ![](../images/code_metrics.png)
