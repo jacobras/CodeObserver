@@ -18,7 +18,7 @@ Run the `report-build-time` command with the following arguments:
 ## With the GitHub Action
 
 ```yaml
-  -   name: CodeObserver Artifact Size
+  -   name: CodeObserver
       uses: jacobras/CodeObserver@v0
       timeout-minutes: 5
       with:

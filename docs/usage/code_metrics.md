@@ -35,7 +35,7 @@ an older commit and run the command again.
 ## With the GitHub Action
 
 ```yaml
-  -   name: CodeObserver Detekt
+  -   name: CodeObserver
       uses: jacobras/CodeObserver@v0
       timeout-minutes: 5
       with:
