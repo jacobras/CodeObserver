@@ -48,12 +48,12 @@ on:
 jobs:
   observe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
 
       - name: CodeObserver
         uses: jacobras/CodeObserver@v0
+        timeout-minutes: 5
         with:
           command: measure
           server: ${{ secrets.CODEOBSERVER_SERVER_URL }}

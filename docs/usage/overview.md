@@ -1,6 +1,14 @@
 # Usage
 
-First, add a project in the web UI. Then, CodeObserver can be used to track:
+## Prerequisites
+
+First, add a project in the web UI.
+
+The CLI tool requires Java 17+. The GitHub Action requires the `gh` CLI tool to be installed.
+
+## Example use cases
+
+CodeObserver can be used to track:
 
 - 📦 Artifact sizes per version (e.g., release build size, debug build size).
 - 🕰️ Build times (e.g., Gradle sync time, release build time, ...).

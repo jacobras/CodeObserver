@@ -36,6 +36,7 @@ After running Detekt, feed the HTML report to CodeObserver:
 ```yaml
   -   name: CodeObserver Detekt
       uses: jacobras/CodeObserver@v0
+      timeout-minutes: 5
       with:
           command: measure
           server: ${{ secrets.CODEOBSERVER_SERVER_URL }}
