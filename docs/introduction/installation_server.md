@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: CodeObserver
-        uses: jacobras/CodeObserver@v0.5
+        uses: jacobras/CodeObserver@v0
         with:
           server-url: ${{ secrets.CODEOBSERVER_SERVER_URL }}
           project-id: your-project-id
