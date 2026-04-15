@@ -26,7 +26,7 @@ runs:
           exit 1
         fi
 
-        gh release download 0.5.0 \
+        gh release download 0.5.1 \
           --repo jacobras/CodeObserver \
           --pattern 'cli-*.zip' \
           --dir "$RUNNER_TEMP"
