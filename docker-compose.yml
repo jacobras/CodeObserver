@@ -1,6 +1,6 @@
 services:
   app:
-    image: mrras/code-observer:0.5.1
+    image: mrras/code-observer:0.5.2
     container_name: code-observer
     ports:
       - "8080:8080"
