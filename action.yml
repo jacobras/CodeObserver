@@ -21,6 +21,11 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
+        if ! command -v gh >/dev/null 2>&1; then
+          echo "::error::GitHub CLI (gh) is required but not found on PATH. Install it from https://cli.github.com/ on your runner."
+          exit 1
+        fi
+
         gh release download 0.5.0 \
           --repo jacobras/CodeObserver \
           --pattern 'cli-*.zip' \

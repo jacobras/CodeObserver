@@ -26,5 +26,33 @@ Now start the server with `docker-compose up -d`.
 
 The CLI tool feeds data to the server.
 
-> [!INFO]
-> Coming soon.
+### Prerequisites
+
+1. Java 17+ needs to be available.
+2. [GitHub CLI](https://cli.github.com) needs to be available.
+
+These are both preinstalled on GitHub-hosted runners.
+
+### Example workflow
+
+```yaml
+name: CodeObserver
+
+on:
+  push:
+      branches: [main]
+  workflow_dispatch:
+
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: CodeObserver
+        uses: jacobras/CodeObserver@v0.5
+        with:
+          server-url: ${{ secrets.CODEOBSERVER_SERVER_URL }}
+          project-id: your-project-id
+```
