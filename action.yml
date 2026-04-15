@@ -28,7 +28,7 @@ runs:
 
         gh release download 0.5.1 \
           --repo jacobras/CodeObserver \
-          --pattern '*.jar' \
+          --pattern 'cli-*.jar' \
           --dir "$RUNNER_TEMP"
 
         CLI_JAR=$(find "$RUNNER_TEMP" -maxdepth 1 -type f -name '*.jar' | head -n1)
