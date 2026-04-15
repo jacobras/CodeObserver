@@ -9,7 +9,7 @@ Example `docker-compose.yml`:
 ```yaml
 services:
     app:
-        image: mrras/code-observer:0.5.0
+        image: mrras/code-observer:0.5.1
         container_name: code-observer
         ports:
             - "8080:8080" # Update this to your desired port ('external:internal', where 'internal' needs to be 8080)

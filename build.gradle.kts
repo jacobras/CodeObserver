@@ -8,5 +8,5 @@ plugins {
 
 subprojects {
     group = "nl.jacobras.codeobserver"
-    version = "0.5.0"
+    version = "0.5.1"
 }
