@@ -22,7 +22,7 @@ class MeasureGradleCommand internal constructor(
     private val serverUrl by option(
         "--server",
         help = "Server base URL. Without this, the count will not be uploaded."
-    )
+    ).required()
     private val projectId by option(
         "--project",
         help = "Project identifier for this measurement."
