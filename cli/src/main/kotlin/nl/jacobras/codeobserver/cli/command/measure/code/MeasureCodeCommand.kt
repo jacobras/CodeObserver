@@ -22,18 +22,18 @@ import kotlin.streams.asSequence
 class MeasureCodeCommand internal constructor(
     private val uploader: ServerUploader
 ) : CliktCommand(name = "measure-code") {
-    private val path by option(
-        "--path",
-        help = "Folder to scan. Defaults to the current working directory."
-    ).default(".")
     private val serverUrl by option(
         "--server",
         help = "Server base URL. Without this, the count will not be uploaded."
-    )
+    ).required()
     private val projectId by option(
         "--project",
         help = "Project identifier for this measurement."
     ).required()
+    private val path by option(
+        "--path",
+        help = "Folder to scan. Defaults to the current working directory."
+    ).default(".")
     private val include by option(
         "--include",
         help = "Glob patterns to include files/folders (comma-separated). Defaults to .kt/.kts."

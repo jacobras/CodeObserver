@@ -13,10 +13,6 @@ import java.io.File
 class ReportDetektCommand internal constructor(
     private val uploader: ServerUploader
 ) : CliktCommand(name = "report-detekt") {
-    private val htmlFile by option(
-        "--htmlFile",
-        help = "Path to the Detekt HTML report file."
-    ).required()
     private val serverUrl by option(
         "--server",
         help = "Server base URL."
@@ -24,6 +20,10 @@ class ReportDetektCommand internal constructor(
     private val projectId by option(
         "--project",
         help = "Project identifier for this measurement."
+    ).required()
+    private val htmlFile by option(
+        "--htmlFile",
+        help = "Path to the Detekt HTML report file."
     ).required()
 
     override fun run() {

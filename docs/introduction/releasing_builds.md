@@ -1,4 +1,4 @@
-# Running release builds
+# Releasing builds
 
 Only the maintainer can do this.
 

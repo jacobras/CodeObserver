@@ -35,6 +35,8 @@ These are both preinstalled on GitHub-hosted runners.
 
 ### Example workflow
 
+**.github/workflows/codeobserver.yml**:
+
 ```yaml
 name: CodeObserver
 
@@ -44,15 +46,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  analyse:
+  observe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
 
       - name: CodeObserver
         uses: jacobras/CodeObserver@v0
+        timeout-minutes: 5
         with:
-          server-url: ${{ secrets.CODEOBSERVER_SERVER_URL }}
-          project-id: your-project-id
+          command: measure
+          server: ${{ secrets.CODEOBSERVER_SERVER_URL }}
+          project: your-project-id
 ```

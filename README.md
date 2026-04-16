@@ -26,8 +26,6 @@ A demo dashboard is available online at <https://jacobras.github.io/CodeObserver
 Everything's Kotlin. The Ktor server is bundled into a Docker image. The dashboard UI is built with Compose
 Multiplatform.
 
-A full technical and functional overview is available in the [specification document](SPEC.md).
-
 ## Documentation/Quickstart
 
 All documentation is available to read online at <https://jacobras.github.io/CodeObserver/>.
@@ -42,9 +40,5 @@ See [contributing guidelines](docs/introduction/contributing.md).
 
 ## Assisted coding policy
 
-Coding LLMs were and are allowed to use for bootstrapping features and reviewing code. Polishing was done manually.
-
-The specification in `SPEC.md` needs to stay up to date with the latest changes to the codebase. This is also used to
-review changes in PRs.
-
-Every generated line of code still needs to be reviewed by a human developer.
+Coding LLMs are allowed to use for bootstrapping features and reviewing code. Every generated line of code still needs
+to be reviewed by a human developer.

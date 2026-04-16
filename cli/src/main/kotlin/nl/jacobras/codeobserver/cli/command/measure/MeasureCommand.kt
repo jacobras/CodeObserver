@@ -10,18 +10,18 @@ import nl.jacobras.codeobserver.cli.command.measure.gradle.MeasureGradleCommand
 import nl.jacobras.codeobserver.cli.util.ServerUploader
 
 class MeasureCommand : CliktCommand(name = "measure") {
-    private val path by option(
-        "--path",
-        help = "Folder to scan. Defaults to the current working directory."
-    ).default(".")
     private val serverUrl by option(
         "--server",
         help = "Server base URL. Without this, the counts will not be uploaded."
-    )
+    ).required()
     private val projectId by option(
         "--project",
         help = "Project identifier for this measurement."
     ).required()
+    private val path by option(
+        "--path",
+        help = "Folder to scan. Defaults to the current working directory."
+    ).default(".")
 
     override fun run() {
         println("Running measure-code and measure-gradle...")
