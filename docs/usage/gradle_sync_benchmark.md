@@ -50,7 +50,7 @@ jobs:
             -   name: Compute median build time
                 id: median
                 run: |
-                    median_ms=$(kotlin .github/scripts/get_gradle_profiler_median_seconds.main.kts)
+                    median_s=$(kotlin .github/scripts/get_gradle_profiler_median_seconds.main.kts)
                     echo "Median build time: ${median_s} s"
                     echo "median_s=${median_s}" >> "$GITHUB_OUTPUT"
                     echo "## 📊 Gradle Profiler Results" >> "$GITHUB_STEP_SUMMARY"
@@ -60,7 +60,7 @@ jobs:
                 uses: jacobras/CodeObserver@v0
                 timeout-minutes: 5
                 with:
-                    command: report-build-time --name gradle-sync --time ${{ steps.median.outputs.median_ms }}
+                    command: report-build-time --name gradle-sync --time ${{ steps.median.outputs.median_s }}
                     server: ${{ secrets.CODEOBSERVER_SERVER_URL }}
                     project: your-project-id
 ```
