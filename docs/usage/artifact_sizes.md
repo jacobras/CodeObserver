@@ -25,5 +25,5 @@ Run the `measure-artifact-size` command with the following arguments:
       with:
           command: measure-artifact-size --file build/libs/your-project.jar --name your-project.jar --semVer 1.0.0
           server: ${{ secrets.CODEOBSERVER_SERVER_URL }}
-          project: your-project
+          project: your-project-id
 ```

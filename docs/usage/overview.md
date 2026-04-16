@@ -4,7 +4,8 @@
 
 First, add a project in the web UI.
 
-The CLI tool requires Java 17+. The GitHub Action requires the `gh` CLI tool to be installed.
+The CLI tool requires Java 17+. The GitHub Action requires the `gh` CLI tool to be installed. GitHub-hosted runners have
+this by default.
 
 ## Example use cases
 

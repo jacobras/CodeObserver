@@ -40,7 +40,7 @@ After running Detekt, feed the HTML report to CodeObserver:
       with:
           command: measure
           server: ${{ secrets.CODEOBSERVER_SERVER_URL }}
-          project: your-project
+          project: your-project-id
 ```
 
 The hash and date of the last Git commit will be used to store the results.
