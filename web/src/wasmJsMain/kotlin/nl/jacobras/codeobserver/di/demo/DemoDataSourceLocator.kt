@@ -8,11 +8,15 @@ import nl.jacobras.codeobserver.dashboard.migrations.MigrationsDataSource
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraphDataSource
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraphSettingsDataSource
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleTypeIdentifiersDataSource
+import nl.jacobras.codeobserver.auth.AuthDataSource
 import nl.jacobras.codeobserver.dashboard.trends.TrendsDataSource
 import nl.jacobras.codeobserver.di.DataSourceLocator
 import nl.jacobras.codeobserver.projects.ProjectDataSource
+import nl.jacobras.codeobserver.users.UsersDataSource
 
 internal object DemoDataSourceLocator : DataSourceLocator {
+    override val authDataSource: AuthDataSource = DemoAuthDataSource()
+    override val usersDataSource: UsersDataSource = DemoUsersDataSource()
     override val artifactSizesDataSource: ArtifactSizesDataSource = DemoArtifactSizesDataSource()
     override val buildTimesDataSource: BuildTimesDataSource = DemoBuildTimesDataSource()
     override val detektReportDataSource: DetektReportDataSource = DemoDetektReportDataSource()

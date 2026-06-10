@@ -19,7 +19,7 @@ class MeasureArtifactCommand internal constructor(
     private val serverUrl by option(
         "--server",
         help = "Server base URL. Without this, the count will not be uploaded."
-    ).required()
+    )
     private val projectId by option(
         "--project",
         help = "Project identifier for this measurement."
@@ -36,6 +36,11 @@ class MeasureArtifactCommand internal constructor(
         "--semVer",
         help = "SemVer identifying this artifact."
     ).required()
+    private val apiKey by option(
+        "--api-key",
+        envvar = "CODEOBSERVER_API_KEY",
+        help = "Server API key. Can also be set via the CODEOBSERVER_API_KEY environment variable."
+    )
 
     override fun run() {
         println("Going to measure artifact size")
@@ -52,6 +57,7 @@ class MeasureArtifactCommand internal constructor(
             runBlocking {
                 uploader.upload(
                     serverUrl = url,
+                    apiKey = apiKey ?: error("Missing API key"),
                     endpoint = "artifactSizes",
                     payload = payload
                 )

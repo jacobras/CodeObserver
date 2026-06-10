@@ -23,15 +23,18 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.bcrypt)
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
     implementation(libs.jgrapht.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.serialization.json)
+    implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.sessions)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.logback.classic)
     implementation(libs.semver)
@@ -41,6 +44,8 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(libs.assertK)
+    testImplementation(libs.ktor.client.content.negotiation)
+    testImplementation(libs.ktor.server.test.host)
 }
 
 tasks.named<ShadowJar>("shadowJar") {

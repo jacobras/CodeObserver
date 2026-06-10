@@ -27,11 +27,13 @@ internal class ServerUploader {
 
     suspend fun upload(
         serverUrl: String,
+        apiKey: String,
         endpoint: String,
         payload: Any
     ) {
         val response = client.post("${serverUrl.trimEnd('/')}/$endpoint") {
             header(HttpHeaders.ContentType, ContentType.Application.Json)
+            header(HttpHeaders.ApiKey, apiKey)
             contentType(ContentType.Application.Json)
             setBody(payload)
         }
@@ -45,9 +47,12 @@ internal class ServerUploader {
 
     suspend inline fun <reified T> fetch(
         serverUrl: String,
+        apiKey: String,
         endpoint: String
     ): T {
-        val response = client.get("${serverUrl.trimEnd('/')}/$endpoint")
+        val response = client.get("${serverUrl.trimEnd('/')}/$endpoint") {
+            header(HttpHeaders.ApiKey, apiKey)
+        }
         val statusCode = response.status.value
         val responseBody = response.bodyAsText()
         require(response.status.isSuccess()) {
@@ -56,3 +61,7 @@ internal class ServerUploader {
         return json.decodeFromString(responseBody)
     }
 }
+
+@Suppress("UnusedReceiverParameter")
+private val HttpHeaders.ApiKey: String
+    get() = "X-Api-Key"

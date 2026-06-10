@@ -23,9 +23,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.capitalize
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -40,53 +43,111 @@ import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.LocalCarbonTheme
 import com.gabrieldrn.carbon.foundation.spacing.SpacingScale
 import com.gabrieldrn.carbon.notification.ToastNotification
+import kotlinx.coroutines.launch
+import nl.jacobras.codeobserver.auth.AuthState
+import nl.jacobras.codeobserver.auth.LoginScreen
 import nl.jacobras.codeobserver.dashboard.DashboardScreen
+import nl.jacobras.codeobserver.di.RepositoryLocator
+import nl.jacobras.codeobserver.dto.UserDto
+import nl.jacobras.codeobserver.dto.UserRole
 import nl.jacobras.codeobserver.settings.SettingsScreen
+import nl.jacobras.codeobserver.users.UsersScreen
 import nl.jacobras.codeobserver.util.ui.notification.Notifier
+import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.theme.COTheme
 import nl.jacobras.codeobserver.web.BuildConfig
 
-@OptIn(ExperimentalCarbonApi::class)
 @Composable
 fun App(
     onNavHostReady: suspend (NavController) -> Unit
 ) {
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val activeScreen = navBackStackEntry?.destination?.route?.let { Screen.fromRoute(it) } ?: Screen.Dashboard
-    val notifications by Notifier.notifications.collectAsState(emptyList())
+    val authState by RepositoryLocator.authRepository.authState.collectAsState()
 
     COTheme {
-        Column(
+        when (val state = authState) {
+            AuthState.Pending -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Carbon.theme.background),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ProgressIndicator(loading = true)
+                }
+            }
+
+            AuthState.LoggedOut -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Carbon.theme.background)
+                ) {
+                    LoginScreen()
+                }
+            }
+
+            is AuthState.LoggedIn -> {
+                LaunchedEffect(state) {
+                    RepositoryLocator.projectRepository.refresh()
+                }
+                MainContent(
+                    user = state.user,
+                    onNavHostReady = onNavHostReady
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalCarbonApi::class)
+@Composable
+private fun MainContent(
+    user: UserDto,
+    onNavHostReady: suspend (NavController) -> Unit
+) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val activeDestination =
+        navBackStackEntry?.destination?.route?.let { Destination.fromRoute(it) } ?: Destination.Dashboard
+    val notifications by Notifier.notifications.collectAsState(emptyList())
+    val scope = rememberCoroutineScope()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Carbon.theme.background)
+    ) {
+        TopNav(
+            active = activeDestination,
+            user = user,
+            onSelect = { navController.navigate(it.route) },
+            onLogout = {
+                scope.launch {
+                    RepositoryLocator.authRepository.logout()
+                }
+            }
+        )
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Carbon.theme.background)
+                .padding(horizontal = 24.dp, vertical = 20.dp)
         ) {
-            TopNav(
-                active = activeScreen,
-                onSelect = { navController.navigate(it.route) }
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 20.dp)
-            ) {
-                NavHost(navController = navController, startDestination = Screen.Dashboard.route) {
-                    composable(Screen.Dashboard.route) { DashboardScreen() }
-                    composable(Screen.Settings.route) { SettingsScreen() }
-                }
+            NavHost(navController = navController, startDestination = Destination.Dashboard.route) {
+                composable(Destination.Dashboard.route) { DashboardScreen() }
+                composable(Destination.Settings.route) { SettingsScreen() }
+                composable(Destination.Users.route) { UsersScreen() }
+            }
 
-                Column(Modifier.align(Alignment.TopEnd).verticalScroll(rememberScrollState())) {
-                    for (notification in notifications.sortedByDescending { it.time }) {
-                        ToastNotification(
-                            title = notification.title,
-                            body = notification.message,
-                            status = notification.status,
-                            onClose = { Notifier.dismiss(notification.id) },
-                            modifier = Modifier.width(400.dp)
-                        )
-                        Spacer(Modifier.height(SpacingScale.spacing03))
-                    }
+            Column(Modifier.align(Alignment.TopEnd).verticalScroll(rememberScrollState())) {
+                for (notification in notifications.sortedByDescending { it.time }) {
+                    ToastNotification(
+                        title = notification.title,
+                        body = notification.message,
+                        status = notification.status,
+                        onClose = { Notifier.dismiss(notification.id) },
+                        modifier = Modifier.width(400.dp)
+                    )
+                    Spacer(Modifier.height(SpacingScale.spacing03))
                 }
             }
         }
@@ -99,7 +160,12 @@ fun App(
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
+private fun TopNav(
+    active: Destination,
+    user: UserDto,
+    onSelect: (Destination) -> Unit,
+    onLogout: () -> Unit
+) {
     val windowSize = calculateWindowSizeClass()
     val wideNavBar = windowSize.widthSizeClass > WindowWidthSizeClass.Compact
     val tallScreen = windowSize.heightSizeClass > WindowHeightSizeClass.Compact
@@ -114,8 +180,11 @@ private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavTitle()
+            Spacer(Modifier.width(8.dp))
+            Username(user.username, user.role)
+            Spacer(Modifier.width(8.dp))
             Spacer(Modifier.weight(1f))
-            MenuOptions(active = active, onSelect = onSelect)
+            MenuOptions(active = active, user = user, onSelect = onSelect, onLogout = onLogout)
         }
     } else {
         Column(
@@ -125,9 +194,16 @@ private fun TopNav(active: Screen, onSelect: (Screen) -> Unit) {
                 .padding(horizontal = 24.dp, vertical = verticalPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            NavTitle(modifier = Modifier.padding(top = 4.dp))
+            Row(
+                modifier = Modifier.padding(top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                NavTitle()
+                Spacer(Modifier.width(8.dp))
+                Username(user.username, user.role)
+            }
             Spacer(Modifier.height(8.dp))
-            MenuOptions(active = active, onSelect = onSelect)
+            MenuOptions(active = active, user = user, onSelect = onSelect, onLogout = onLogout)
         }
     }
 }
@@ -147,9 +223,20 @@ private fun NavTitle(modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun Username(username: String, role: UserRole, modifier: Modifier = Modifier) {
+    BasicText(
+        modifier = modifier,
+        text = "${role.name.lowercase().capitalize(Locale.current)} ($username)",
+        style = Carbon.typography.bodyCompact01.copy(color = Color(0xFFF5F2EA))
+    )
+}
+
+@Composable
 private fun MenuOptions(
-    active: Screen,
-    onSelect: (Screen) -> Unit,
+    active: Destination,
+    user: UserDto,
+    onSelect: (Destination) -> Unit,
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     CompositionLocalProvider(
@@ -163,9 +250,13 @@ private fun MenuOptions(
     ) {
         Row(
             modifier = modifier,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Screen.entries.forEach { screen ->
+            val visibleDestinations = Destination.entries.filter { screen ->
+                screen != Destination.Users || user.role == UserRole.ADMIN
+            }
+            visibleDestinations.forEach { screen ->
                 val selected = screen == active
                 Button(
                     label = screen.label,
@@ -174,6 +265,12 @@ private fun MenuOptions(
                     onClick = { onSelect(screen) }
                 )
             }
+            Button(
+                label = "Log out",
+                buttonType = ButtonType.Ghost,
+                buttonSize = ButtonSize.Small,
+                onClick = onLogout
+            )
         }
     }
 }

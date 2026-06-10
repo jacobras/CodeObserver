@@ -10,6 +10,7 @@ import io.ktor.server.routing.post
 import nl.jacobras.codeobserver.dto.ProjectDto
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.dto.ProjectRequest
+import nl.jacobras.codeobserver.server.auth.requireAdmin
 import nl.jacobras.codeobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codeobserver.server.entity.BuildTimesTable
 import nl.jacobras.codeobserver.server.entity.DetektReportsTable
@@ -43,6 +44,7 @@ internal fun Route.projectRoutes() {
         call.respond(projects)
     }
     post("/projects") {
+        call.requireAdmin() ?: return@post
         val request = call.receive<ProjectRequest>()
         val name = request.name.trim()
         if (name.isEmpty()) {
@@ -59,6 +61,7 @@ internal fun Route.projectRoutes() {
         call.respond(HttpStatusCode.Created)
     }
     delete("/projects/{projectId}") {
+        call.requireAdmin() ?: return@delete
         val projectId = call.parameters["projectId"]?.trim().orEmpty()
         if (projectId.isBlank()) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing projectId"))
