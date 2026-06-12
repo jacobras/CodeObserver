@@ -10,8 +10,6 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
-import io.ktor.server.sessions.clear
-import io.ktor.server.sessions.sessions
 import nl.jacobras.codeobserver.dto.ApiKeyDto
 import nl.jacobras.codeobserver.dto.ChangePasswordRequest
 import nl.jacobras.codeobserver.dto.CreateUserRequest
@@ -42,11 +40,6 @@ internal fun Route.userRoutes() {
             return@get
         }
         call.respond(UserDto(username = principal.username, role = principal.role))
-    }
-
-    post("/logout") {
-        call.sessions.clear<UserSession>()
-        call.respond(HttpStatusCode.OK, mapOf("status" to "loggedOut"))
     }
 
     put("/me/password") {

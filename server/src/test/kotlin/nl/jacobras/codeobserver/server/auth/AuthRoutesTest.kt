@@ -105,6 +105,11 @@ class AuthRoutesTest {
     }
 
     @Test
+    fun `logout without a session succeeds`() = authTestApplication { client ->
+        assertThat(client.post("/logout").status).isEqualTo(HttpStatusCode.OK)
+    }
+
+    @Test
     fun `admin can manage users`() = authTestApplication { client ->
         client.login("admin", "admin")
 

@@ -5,6 +5,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import nl.jacobras.codeobserver.dto.LoginRequest
@@ -41,5 +42,12 @@ internal fun Route.authRoutes() {
                 role = UserRole.valueOf(user[UsersTable.role])
             )
         )
+    }
+
+    // Deliberately outside the authenticated-shielded block in UserRoutes: logging out without a
+    // valid session must succeed, or expired sessions can never log out.
+    post("/logout") {
+        call.sessions.clear<UserSession>()
+        call.respond(HttpStatusCode.OK, mapOf("status" to "loggedOut"))
     }
 }
