@@ -57,7 +57,10 @@ class MeasureArtifactCommand internal constructor(
             runBlocking {
                 uploader.upload(
                     serverUrl = url,
-                    apiKey = apiKey ?: error("Missing API key"),
+                    apiKey = apiKey ?: error(
+                        "Missing API key. Provide it with `--api-key` or set " +
+                            "the `CODEOBSERVER_API_KEY` environment variable."
+                    ),
                     endpoint = "artifactSizes",
                     payload = payload
                 )

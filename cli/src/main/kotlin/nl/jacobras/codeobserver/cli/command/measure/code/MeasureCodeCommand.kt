@@ -62,7 +62,10 @@ class MeasureCodeCommand internal constructor(
                 try {
                     val metrics = uploader.fetch<List<CodeMetricsDto>>(
                         serverUrl = url,
-                        apiKey = apiKey ?: error("Missing API key"),
+                        apiKey = apiKey ?: error(
+                            "Missing API key. Provide it with `--api-key` or set " +
+                                "the `CODEOBSERVER_API_KEY` environment variable."
+                        ),
                         endpoint = "metrics?projectId=$projectId"
                     )
                     lastKnownLines = metrics
@@ -72,7 +75,10 @@ class MeasureCodeCommand internal constructor(
                 }
                 migrations = uploader.fetch<List<MigrationDto>>(
                     serverUrl = url,
-                    apiKey = apiKey ?: error("Missing API key"),
+                    apiKey = apiKey ?: error(
+                        "Missing API key. Provide it with `--api-key` or set " +
+                            "the `CODEOBSERVER_API_KEY` environment variable."
+                    ),
                     endpoint = "migrations?projectId=$projectId"
                 )
             }
@@ -94,7 +100,10 @@ class MeasureCodeCommand internal constructor(
             runBlocking {
                 uploader.upload(
                     serverUrl = url,
-                    apiKey = apiKey ?: error("Missing API key"),
+                    apiKey = apiKey ?: error(
+                        "Missing API key. Provide it with `--api-key` or set " +
+                            "the `CODEOBSERVER_API_KEY` environment variable."
+                    ),
                     endpoint = "metrics/code",
                     payload = CodeMetricsRequest(
                         projectId = ProjectId(projectId),
@@ -108,7 +117,10 @@ class MeasureCodeCommand internal constructor(
                     .forEach { migration ->
                         uploader.upload(
                             serverUrl = url,
-                            apiKey = apiKey ?: error("Missing API key"),
+                            apiKey = apiKey ?: error(
+                                "Missing API key. Provide it with `--api-key` or set " +
+                                    "the `CODEOBSERVER_API_KEY` environment variable."
+                            ),
                             endpoint = "migrationProgress",
                             payload = MigrationProgressRequest(
                                 migrationId = migration.id,
