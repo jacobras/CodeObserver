@@ -48,6 +48,7 @@ import nl.jacobras.codeobserver.auth.AuthState
 import nl.jacobras.codeobserver.auth.LoginScreen
 import nl.jacobras.codeobserver.dashboard.DashboardScreen
 import nl.jacobras.codeobserver.di.RepositoryLocator
+import nl.jacobras.codeobserver.di.UseCaseLocator
 import nl.jacobras.codeobserver.dto.UserDto
 import nl.jacobras.codeobserver.dto.UserRole
 import nl.jacobras.codeobserver.settings.SettingsScreen
@@ -123,7 +124,7 @@ private fun MainContent(
             onSelect = { navController.navigate(it.route) },
             onLogout = {
                 scope.launch {
-                    RepositoryLocator.authRepository.logout()
+                    UseCaseLocator.logoutUseCase()
                 }
             }
         )

@@ -63,6 +63,7 @@ internal object DatabaseDataSourceLocator : DataSourceLocator {
             handleResponseExceptionWithRequest { cause, request ->
                 val status = (cause as? ResponseException)?.response?.status
                 if (status == HttpStatusCode.Unauthorized && !request.url.encodedPath.endsWith("/login")) {
+                    UseCaseLocator.logoutUseCase()
                     AuthEvents.onUnauthorized()
                 }
             }

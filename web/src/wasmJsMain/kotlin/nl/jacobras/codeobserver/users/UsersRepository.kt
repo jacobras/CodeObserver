@@ -74,4 +74,9 @@ internal class UsersRepository(
                 deletingState.update { it + mapOf(username to RequestState.Error(error)) }
             }
     }
+
+    fun clearCache() {
+        users.update { emptyList() }
+        apiKey.update { null }
+    }
 }

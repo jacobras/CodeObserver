@@ -12,6 +12,7 @@ import nl.jacobras.codeobserver.util.data.NetworkError
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.notification.Notifier
 
+// TODO: this should be on UserScope, so data gets cleared on user change
 internal class UsersScreenViewModel(
     private val usersRepository: UsersRepository
 ) : ViewModel() {
