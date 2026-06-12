@@ -28,11 +28,10 @@ import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.PasswordInput
 import com.gabrieldrn.carbon.textinput.TextInput
-import nl.jacobras.codeobserver.auth.AuthState
+import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ProjectDto
 import nl.jacobras.codeobserver.dto.ProjectId
-import nl.jacobras.codeobserver.dto.UserRole
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.button.SmallProgressButton
@@ -45,8 +44,7 @@ internal fun SettingsScreen() {
     val viewModel = viewModel { SettingsScreenViewModel(RepositoryLocator.projectRepository) }
     val projects by viewModel.projects.collectAsState(emptyList())
     val state by viewModel.state.collectAsState(UiState())
-    val authState by RepositoryLocator.authRepository.authState.collectAsState()
-    val isAdmin = (authState as? AuthState.LoggedIn)?.user?.role == UserRole.ADMIN
+    val isAdmin = isCurrentUserAdmin()
 
     var editProjectId by remember { mutableStateOf<ProjectId?>(null) }
     var editName by remember { mutableStateOf("") }

@@ -13,6 +13,7 @@ import nl.jacobras.codeobserver.dto.CodeMetricsRequest
 import nl.jacobras.codeobserver.dto.GitHash
 import nl.jacobras.codeobserver.dto.GradleMetricsRequest
 import nl.jacobras.codeobserver.dto.ProjectId
+import nl.jacobras.codeobserver.server.auth.requireAdmin
 import nl.jacobras.codeobserver.server.entity.MetricsTable
 import nl.jacobras.codeobserver.server.entity.ModuleGraphTable
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -100,6 +101,7 @@ internal fun Route.metricRoutes() {
         call.respond(HttpStatusCode.Created)
     }
     delete("/metrics/{gitHash}") {
+        call.requireAdmin() ?: return@delete
         val gitHash = call.parameters["gitHash"]?.trim().orEmpty()
         val projectId = call.request.queryParameters["projectId"]?.trim().orEmpty()
         val deletedRows = transaction {

@@ -13,6 +13,7 @@ import nl.jacobras.codeobserver.dto.ModuleTypeIdentifierId
 import nl.jacobras.codeobserver.dto.ModuleTypeIdentifierRequest
 import nl.jacobras.codeobserver.dto.ModuleTypeIdentifierUpdateRequest
 import nl.jacobras.codeobserver.dto.ProjectId
+import nl.jacobras.codeobserver.server.auth.requireAdmin
 import nl.jacobras.codeobserver.server.entity.ModuleTypeIdentifiersTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
@@ -111,6 +112,7 @@ internal fun Route.moduleTypeIdentifierRoutes() {
         }
     }
     delete("/moduleTypeIdentifiers/{id}") {
+        call.requireAdmin() ?: return@delete
         val id = call.parameters["id"]?.trim()?.toIntOrNull()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))

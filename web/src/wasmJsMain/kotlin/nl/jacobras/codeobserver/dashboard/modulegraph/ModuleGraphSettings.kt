@@ -25,6 +25,7 @@ import com.gabrieldrn.carbon.dropdown.Dropdown
 import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
+import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ModuleGraphSettingId
 import nl.jacobras.codeobserver.util.data.RequestState
@@ -136,8 +137,13 @@ internal fun ModuleRules() {
                 )
             }
 
+            val isAdmin = isCurrentUserAdmin()
             DataTable(
-                columnHeadings = listOf("Type", "Data", "Actions"),
+                columnHeadings = if (isAdmin) {
+                    listOf("Type", "Data", "Actions")
+                } else {
+                    listOf("Type", "Data")
+                },
                 rowCount = settings.size,
                 cellContent = { rowIndex, columnIndex, modifier ->
                     val setting = settings[rowIndex]

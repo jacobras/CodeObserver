@@ -23,6 +23,7 @@ import com.gabrieldrn.carbon.dropdown.Dropdown
 import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
+import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.dto.MigrationDto
 import nl.jacobras.codeobserver.dto.MigrationId
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
@@ -126,8 +127,13 @@ internal fun MigrationsOverview(
                 )
             }
 
+            val isAdmin = isCurrentUserAdmin()
             DataTable(
-                columnHeadings = listOf("Name", "Type", "Rule", "Actions"),
+                columnHeadings = if (isAdmin) {
+                    listOf("Name", "Type", "Rule", "Actions")
+                } else {
+                    listOf("Name", "Type", "Rule")
+                },
                 rowCount = migrations.size,
                 cellContent = { rowIndex, columnIndex, modifier ->
                     val migration = migrations[rowIndex]

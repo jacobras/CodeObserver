@@ -13,6 +13,7 @@ import nl.jacobras.codeobserver.dto.ModuleGraphSettingId
 import nl.jacobras.codeobserver.dto.ModuleGraphSettingRequest
 import nl.jacobras.codeobserver.dto.ModuleGraphSettingUpdateRequest
 import nl.jacobras.codeobserver.dto.ProjectId
+import nl.jacobras.codeobserver.server.auth.requireAdmin
 import nl.jacobras.codeobserver.server.entity.ModuleGraphSettingsTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -105,6 +106,7 @@ internal fun Route.moduleGraphSettingsRoutes() {
         }
     }
     delete("/moduleGraphSettings/{id}") {
+        call.requireAdmin() ?: return@delete
         val id = call.parameters["id"]?.trim()?.toIntOrNull()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))

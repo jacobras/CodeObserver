@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.ButtonType
+import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.DetektMetricDto
 import nl.jacobras.codeobserver.dto.ReportId
@@ -152,9 +153,14 @@ private fun DetektChartsAndTable(
             )
         }
 
+        val isAdmin = isCurrentUserAdmin()
         DataTable(
             modifier = Modifier.fillMaxWidth(),
-            columnHeadings = listOf("Git date", "Git hash", "Findings", "Smells/1000 lloc", "Actions"),
+            columnHeadings = if (isAdmin) {
+                listOf("Git date", "Git hash", "Findings", "Smells/1000 lloc", "Actions")
+            } else {
+                listOf("Git date", "Git hash", "Findings", "Smells/1000 lloc")
+            },
             rowCount = reportsNewestFirst.size,
             cellContent = { rowIndex, columnIndex, modifier ->
                 val record = reportsNewestFirst[rowIndex]

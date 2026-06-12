@@ -16,6 +16,7 @@ import nl.jacobras.codeobserver.dto.MigrationProgressRequest
 import nl.jacobras.codeobserver.dto.MigrationRequest
 import nl.jacobras.codeobserver.dto.MigrationUpdateRequest
 import nl.jacobras.codeobserver.dto.ProjectId
+import nl.jacobras.codeobserver.server.auth.requireAdmin
 import nl.jacobras.codeobserver.server.entity.MigrationProgressTable
 import nl.jacobras.codeobserver.server.entity.MigrationsTable
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -110,6 +111,7 @@ internal fun Route.migrationRoutes() {
         }
     }
     delete("/migrations/{id}") {
+        call.requireAdmin() ?: return@delete
         val id = call.parameters["id"]?.trim()?.toIntOrNull()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing or invalid id"))
@@ -160,6 +162,7 @@ internal fun Route.migrationRoutes() {
         call.respond(HttpStatusCode.Created)
     }
     delete("/migrationProgress/{migrationId}/{gitHash}") {
+        call.requireAdmin() ?: return@delete
         val migrationId = call.parameters["migrationId"]?.trim()?.toIntOrNull()
         val gitHash = call.parameters["gitHash"]?.trim().orEmpty()
         if (migrationId == null) {
