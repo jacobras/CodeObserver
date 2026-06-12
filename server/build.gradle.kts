@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.shadow)
+    alias(libs.plugins.buildconfig)
     application
 }
 
@@ -50,4 +51,11 @@ dependencies {
 
 tasks.named<ShadowJar>("shadowJar") {
     archiveClassifier.set("")
+}
+
+buildConfig {
+    val isReleaseBuild = providers.gradleProperty("release")
+        .map { it.toBoolean() }
+        .getOrElse(false)
+    buildConfigField("RELEASE", isReleaseBuild)
 }

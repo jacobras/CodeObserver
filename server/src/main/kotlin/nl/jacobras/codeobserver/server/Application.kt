@@ -133,6 +133,7 @@ fun Application.module(
             cookie.httpOnly = true
             cookie.extensions["SameSite"] = "Lax"
             cookie.maxAgeInSeconds = SESSION_TTL_MS / 1000
+            cookie.secure = BuildConfig.RELEASE
             serializer = object : SessionSerializer<UserSession> {
                 override fun serialize(session: UserSession): String = Json.encodeToString(session)
                 override fun deserialize(text: String): UserSession = Json.decodeFromString(text)
