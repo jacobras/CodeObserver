@@ -129,11 +129,7 @@ internal fun MigrationsOverview(
 
             val isAdmin = isCurrentUserAdmin()
             DataTable(
-                columnHeadings = if (isAdmin) {
-                    listOf("Name", "Type", "Rule", "Actions")
-                } else {
-                    listOf("Name", "Type", "Rule")
-                },
+                columnHeadings = listOf("Name", "Type", "Rule", "Actions"),
                 rowCount = migrations.size,
                 cellContent = { rowIndex, columnIndex, modifier ->
                     val migration = migrations[rowIndex]
@@ -172,12 +168,14 @@ internal fun MigrationsOverview(
                                     formRule = migration.rule
                                 }
                             )
-                            Button(
-                                label = "Delete",
-                                buttonType = ButtonType.GhostDanger,
-                                buttonSize = ButtonSize.Small,
-                                onClick = { requestDeleteId = migration.id }
-                            )
+                            if (isAdmin) {
+                                Button(
+                                    label = "Delete",
+                                    buttonType = ButtonType.GhostDanger,
+                                    buttonSize = ButtonSize.Small,
+                                    onClick = { requestDeleteId = migration.id }
+                                )
+                            }
                         }
                     }
                 }

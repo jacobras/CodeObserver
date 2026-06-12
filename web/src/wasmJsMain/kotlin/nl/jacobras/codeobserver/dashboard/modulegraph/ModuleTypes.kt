@@ -161,11 +161,7 @@ internal fun ModuleTypes() {
 
             val isAdmin = isCurrentUserAdmin()
             DataTable(
-                columnHeadings = if (isAdmin) {
-                    listOf("Name", "Plugin", "Order", "Color", "Actions")
-                } else {
-                    listOf("Name", "Plugin", "Order", "Color")
-                },
+                columnHeadings = listOf("Name", "Plugin", "Order", "Color", "Actions"),
                 rowCount = typeIdentifiers.size,
                 cellContent = { rowIndex, columnIndex, modifier ->
                     val identifier = typeIdentifiers[rowIndex]
@@ -210,12 +206,14 @@ internal fun ModuleTypes() {
                                     formColor = identifier.color
                                 }
                             )
-                            Button(
-                                label = "Delete",
-                                buttonType = ButtonType.GhostDanger,
-                                buttonSize = ButtonSize.Small,
-                                onClick = { requestDeleteId = identifier.id }
-                            )
+                            if (isAdmin) {
+                                Button(
+                                    label = "Delete",
+                                    buttonType = ButtonType.GhostDanger,
+                                    buttonSize = ButtonSize.Small,
+                                    onClick = { requestDeleteId = identifier.id }
+                                )
+                            }
                         }
                     }
                 }

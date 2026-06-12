@@ -139,11 +139,7 @@ internal fun ModuleRules() {
 
             val isAdmin = isCurrentUserAdmin()
             DataTable(
-                columnHeadings = if (isAdmin) {
-                    listOf("Type", "Data", "Actions")
-                } else {
-                    listOf("Type", "Data")
-                },
+                columnHeadings = listOf("Type", "Data", "Actions"),
                 rowCount = settings.size,
                 cellContent = { rowIndex, columnIndex, modifier ->
                     val setting = settings[rowIndex]
@@ -174,12 +170,14 @@ internal fun ModuleRules() {
                                     formData = setting.data
                                 }
                             )
-                            Button(
-                                label = "Delete",
-                                buttonType = ButtonType.GhostDanger,
-                                buttonSize = ButtonSize.Small,
-                                onClick = { requestDeleteId = setting.id }
-                            )
+                            if (isAdmin) {
+                                Button(
+                                    label = "Delete",
+                                    buttonType = ButtonType.GhostDanger,
+                                    buttonSize = ButtonSize.Small,
+                                    onClick = { requestDeleteId = setting.id }
+                                )
+                            }
                         }
                     }
                 }
