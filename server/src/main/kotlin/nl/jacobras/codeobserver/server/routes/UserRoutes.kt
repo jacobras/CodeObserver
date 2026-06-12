@@ -103,6 +103,10 @@ internal fun Route.userRoutes() {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Username and password may not be blank"))
             return@post
         }
+        if (username.contains('/')) {
+            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Username may not contain '/'"))
+            return@post
+        }
 
         val created = transaction {
             val exists = UsersTable
