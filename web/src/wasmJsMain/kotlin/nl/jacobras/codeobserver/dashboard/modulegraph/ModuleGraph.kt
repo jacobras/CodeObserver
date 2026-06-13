@@ -13,20 +13,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun ModuleGraph() {
-    val viewModel = viewModel {
-        ModuleGraphViewModel(
-            modulesRepository = RepositoryLocator.modulesRepository,
-            projectRepository = RepositoryLocator.projectRepository
-        )
-    }
+    val viewModel = koinViewModel<ModuleGraphViewModel>()
     val projectId by viewModel.projectId.collectAsState()
 
     Column(modifier = Modifier) {

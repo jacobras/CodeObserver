@@ -16,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
@@ -26,22 +25,17 @@ import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ModuleGraphSettingId
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun ModuleRules() {
-    val viewModel = viewModel {
-        ModuleRulesViewModel(
-            moduleGraphSettingsRepository = RepositoryLocator.moduleGraphSettingsRepository,
-            projectRepository = RepositoryLocator.projectRepository
-        )
-    }
+    val viewModel = koinViewModel<ModuleRulesViewModel>()
     val settings by viewModel.settings.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
     var editingId by remember { mutableStateOf<ModuleGraphSettingId?>(null) }

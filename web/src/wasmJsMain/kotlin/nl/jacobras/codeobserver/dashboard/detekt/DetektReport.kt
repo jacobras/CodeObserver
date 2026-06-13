@@ -9,24 +9,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.WebElementView
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.browser.document
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
+import org.koin.compose.viewmodel.koinViewModel
 import org.w3c.dom.HTMLIFrameElement
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun DetektReport() {
-    val viewModel = viewModel {
-        DetektTrendsViewModel(
-            detektReportRepository = RepositoryLocator.detektReportRepository,
-            projectRepository = RepositoryLocator.projectRepository
-        )
-    }
+    val viewModel = koinViewModel<DetektTrendsViewModel>()
     val latestReport by viewModel.detailReport.collectAsState("")
     val state by viewModel.detailReportState.collectAsState(UiState())
     val projectId by viewModel.projectId.collectAsState()

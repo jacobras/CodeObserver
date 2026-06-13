@@ -17,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
@@ -30,7 +29,6 @@ import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.PasswordInput
 import com.gabrieldrn.carbon.textinput.TextInput
 import com.gabrieldrn.carbon.textinput.TextInputState
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.UserDto
 import nl.jacobras.codeobserver.dto.UserRole
 import nl.jacobras.codeobserver.util.data.RequestState
@@ -39,10 +37,11 @@ import nl.jacobras.codeobserver.util.ui.button.SmallProgressButton
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun UsersScreen() {
-    val viewModel = viewModel { UsersScreenViewModel(RepositoryLocator.usersRepository) }
+    val viewModel = koinViewModel<UsersScreenViewModel>()
     val users by viewModel.users.collectAsState(emptyList())
     val apiKey by viewModel.apiKey.collectAsState(null)
     val state by viewModel.state.collectAsState(UiState())

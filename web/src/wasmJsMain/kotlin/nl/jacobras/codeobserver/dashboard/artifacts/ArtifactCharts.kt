@@ -16,12 +16,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
 import io.github.z4kn4fein.semver.toVersion
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ArtifactSizeDto
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
@@ -33,15 +31,11 @@ import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.humanreadable.HumanReadable
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun ArtifactCharts() {
-    val viewModel = viewModel {
-        ArtifactChartsViewModel(
-            artifactSizesRepository = RepositoryLocator.artifactSizesRepository,
-            projectRepository = RepositoryLocator.projectRepository
-        )
-    }
+    val viewModel = koinViewModel<ArtifactChartsViewModel>()
     val artifactSizes by viewModel.artifactSizes.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
     val projectId by viewModel.projectId.collectAsState()

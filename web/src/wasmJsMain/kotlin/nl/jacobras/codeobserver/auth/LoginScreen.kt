@@ -23,19 +23,18 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.PasswordInput
 import com.gabrieldrn.carbon.textinput.TextInput
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.util.ui.button.SmallProgressButton
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun LoginScreen() {
-    val viewModel = viewModel { LoginViewModel(RepositoryLocator.authRepository) }
+    val viewModel = koinViewModel<LoginViewModel>()
     val loggingIn by viewModel.loggingIn.collectAsState()
     val error by viewModel.error.collectAsState()
 
