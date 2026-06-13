@@ -14,13 +14,13 @@ Then run CLI commands to feed data:
 - General help:
     - `gradlew :cli:run`
 - Measure code:
-    - `gradlew :cli:run --args="measure --project=test --path=.. --server=http://localhost:8080"`
+    - `gradlew :cli:run --args="measure --project=test --path=.. --server=http://localhost:8080 --api-key=dev-build"`
 - Measure artifact size:
-    - `gradlew :cli:run --args="measure-artifact-size --project=test --file=app.apk --name=myApp --semVer=1.0.0 --server=http://localhost:8080"`
+    - `gradlew :cli:run --args="measure-artifact-size --project=test --file=app.apk --name=myApp --semVer=1.0.0 --server=http://localhost:8080 --api-key=dev-build"`
 - Report build time:
-    - `gradlew :cli:run --args="report-build-time --project=test --name=mainBuild --time=123 --server=http://localhost:8080"`
+    - `gradlew :cli:run --args="report-build-time --project=test --name=mainBuild --time=123 --server=http://localhost:8080 --api-key=dev-build"`
 - Report Detekt:
-    - `gradlew :cli:run --args="report-detekt --project=test --htmlFile=../build/reports/detekt/detekt.html --server=http://localhost:8080"`
+    - `gradlew :cli:run --args="report-detekt --project=test --htmlFile=../build/reports/detekt/detekt.html --server=http://localhost:8080 --api-key=dev-build"`
 
 ## Demo web app
 

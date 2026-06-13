@@ -1,5 +1,7 @@
 package nl.jacobras.codeobserver.server.auth
 
+import co.touchlab.kermit.Logger
+import nl.jacobras.codeobserver.server.BuildConfig
 import nl.jacobras.codeobserver.server.entity.ServerSettingsTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -7,7 +9,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.security.MessageDigest
 import java.security.SecureRandom
-import java.util.Base64
+import java.util.*
 
 internal object ApiKeyService {
     private const val SETTING_KEY = "apiKey"
@@ -41,6 +43,11 @@ internal object ApiKeyService {
     }
 
     fun isValid(key: String): Boolean {
+        @Suppress("SimplifyBooleanWithConstants")
+        if (!BuildConfig.RELEASE && key == "dev-build") {
+            Logger.d { "Using dev-build API key" }
+            return true
+        }
         return MessageDigest.isEqual(key.toByteArray(), current().toByteArray())
     }
 }
