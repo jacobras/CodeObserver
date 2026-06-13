@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.upsert
+import kotlin.time.Duration.Companion.days
 
 internal class SqliteSessionStorage : SessionStorage {
 
@@ -22,7 +23,7 @@ internal class SqliteSessionStorage : SessionStorage {
                 it[SessionsTable.id] = id
                 it[SessionsTable.username] = username
                 it[SessionsTable.value] = value
-                it[expiresAt] = System.currentTimeMillis() + SESSION_TTL_MS
+                it[expiresAt] = System.currentTimeMillis() + SESSION_TTL.inWholeMilliseconds
             }
         }
     }
@@ -50,4 +51,4 @@ internal fun purgeExpiredSessions() {
     }
 }
 
-internal const val SESSION_TTL_MS = 30L * 24 * 60 * 60 * 1000
+internal val SESSION_TTL = 30.days

@@ -20,7 +20,7 @@ import kotlinx.serialization.json.Json
 import nl.jacobras.codeobserver.dto.UserRole
 import nl.jacobras.codeobserver.server.auth.ApiKeyService
 import nl.jacobras.codeobserver.server.auth.PasswordHasher
-import nl.jacobras.codeobserver.server.auth.SESSION_TTL_MS
+import nl.jacobras.codeobserver.server.auth.SESSION_TTL
 import nl.jacobras.codeobserver.server.auth.SqliteSessionStorage
 import nl.jacobras.codeobserver.server.auth.UserPrincipal
 import nl.jacobras.codeobserver.server.auth.UserSession
@@ -127,7 +127,7 @@ fun Application.module(
             cookie.path = "/"
             cookie.httpOnly = true
             cookie.extensions["SameSite"] = "Lax"
-            cookie.maxAgeInSeconds = SESSION_TTL_MS / 1000
+            cookie.maxAgeInSeconds = SESSION_TTL.inWholeSeconds
             cookie.secure = BuildConfig.RELEASE
             serializer = object : SessionSerializer<UserSession> {
                 override fun serialize(session: UserSession): String = Json.encodeToString(session)
