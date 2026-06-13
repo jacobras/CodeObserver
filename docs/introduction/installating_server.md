@@ -20,7 +20,7 @@ services:
         restart: unless-stopped
 ```
 
-Now start the server with `docker-compose up -d`.
+Now start the server with `docker-compose up -d`. The default account is `admin` with password `admin`.
 
 ## CLI tool
 
