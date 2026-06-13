@@ -4,7 +4,9 @@ import at.favre.lib.crypto.bcrypt.BCrypt
 
 internal object PasswordHasher {
 
-    /** Hash used to keep login timing uniform for unknown usernames. */
+    /**
+     * Hash used to keep login timing uniform for unknown usernames.
+     */
     val dummyHash: String by lazy { hash("dummy-password") }
 
     fun hash(password: String): String {
