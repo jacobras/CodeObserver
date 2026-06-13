@@ -27,6 +27,7 @@
 
 - No newline at the end of a file.
 - PascalCase for enum values.
+- Constants below all classes in a file.
 
 ## Building
 
