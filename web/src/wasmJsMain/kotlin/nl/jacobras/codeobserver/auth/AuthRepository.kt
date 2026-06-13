@@ -11,11 +11,8 @@ import nl.jacobras.codeobserver.dto.UserDto
 import nl.jacobras.codeobserver.util.data.NetworkError
 
 internal sealed class AuthState {
-
     data object Pending : AuthState()
-
     data object LoggedOut : AuthState()
-
     data class LoggedIn(val user: UserDto) : AuthState()
 }
 
