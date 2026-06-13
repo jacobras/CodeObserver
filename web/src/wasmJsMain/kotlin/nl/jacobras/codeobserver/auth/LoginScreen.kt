@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
@@ -39,6 +42,10 @@ internal fun LoginScreen() {
 
     val canSubmit = username.isNotBlank() && password.isNotEmpty() && !loggingIn
 
+    fun doLogin() {
+        viewModel.login(username.trim(), password)
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -59,7 +66,8 @@ internal fun LoginScreen() {
                 TextInput(
                     label = "Username",
                     value = username,
-                    onValueChange = { username = it }
+                    onValueChange = { username = it },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
                 Spacer(Modifier.height(8.dp))
                 PasswordInput(
@@ -67,7 +75,9 @@ internal fun LoginScreen() {
                     value = password,
                     passwordHidden = passwordHidden,
                     onValueChange = { password = it },
-                    onPasswordHiddenChange = { passwordHidden = it }
+                    onPasswordHiddenChange = { passwordHidden = it },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                    keyboardActions = KeyboardActions(onGo = { doLogin() })
                 )
 
                 error?.let { message ->
@@ -84,7 +94,7 @@ internal fun LoginScreen() {
                     buttonType = ButtonType.Primary,
                     isEnabled = canSubmit,
                     loading = loggingIn,
-                    onClick = { viewModel.login(username.trim(), password) }
+                    onClick = { doLogin() }
                 )
             }
         }
