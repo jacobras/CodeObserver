@@ -1,15 +1,11 @@
 package nl.jacobras.codeobserver.server.routes
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.auth.principal
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.put
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import nl.jacobras.codeobserver.dto.ApiKeyDto
 import nl.jacobras.codeobserver.dto.ChangePasswordRequest
 import nl.jacobras.codeobserver.dto.CreateUserRequest
@@ -29,8 +25,6 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
-
-private enum class MutationResult { Ok, NotFound, LastAdmin }
 
 internal fun Route.userRoutes() {
     get("/me") {
@@ -193,13 +187,21 @@ private fun adminCount(): Long {
         .count()
 }
 
+private enum class MutationResult { Ok, NotFound, LastAdmin }
+
 private suspend fun ApplicationCall.respondMutationResult(result: MutationResult) {
     when (result) {
-        MutationResult.Ok -> respond(HttpStatusCode.OK, mapOf("status" to "ok"))
-        MutationResult.NotFound -> respond(HttpStatusCode.NotFound, mapOf("error" to "User not found"))
-        MutationResult.LastAdmin -> respond(
-            HttpStatusCode.Conflict,
-            mapOf("error" to "There must always be at least one admin")
-        )
+        MutationResult.Ok -> respondOk()
+        MutationResult.NotFound -> respondNotFoundError()
+        MutationResult.LastAdmin -> respondLastAdminError()
     }
 }
+
+private suspend fun ApplicationCall.respondOk() =
+    respond(HttpStatusCode.OK, mapOf("status" to "ok"))
+
+private suspend fun ApplicationCall.respondNotFoundError() =
+    respond(HttpStatusCode.OK, mapOf("error" to "User not found"))
+
+private suspend fun ApplicationCall.respondLastAdminError() =
+    respond(HttpStatusCode.Conflict, mapOf("error" to "There must always be at least one admin"))
