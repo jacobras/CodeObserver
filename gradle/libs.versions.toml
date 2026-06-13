@@ -24,7 +24,7 @@ exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "e
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 humanReadable = { module = "nl.jacobras:Human-Readable", version = "1.12.3" }
-jgrapht-core = { module = "org.jgrapht:jgrapht-core", version = "1.5.2" }
+jgrapht-core = { module = "org.jgrapht:jgrapht-core", version = "1.5.3" }
 kermit = { module = "co.touchlab:kermit", version = "2.1.0" }
 kotlin-result = { module = "com.michael-bull.kotlin-result:kotlin-result", version = "2.3.1" }
 kotlin-result-coroutines = { module = "com.michael-bull.kotlin-result:kotlin-result-coroutines", version = "2.3.1" }
