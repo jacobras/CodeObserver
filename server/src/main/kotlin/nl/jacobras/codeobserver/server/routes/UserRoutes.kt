@@ -1,11 +1,15 @@
 package nl.jacobras.codeobserver.server.routes
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.auth.principal
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import nl.jacobras.codeobserver.dto.ApiKeyDto
 import nl.jacobras.codeobserver.dto.ChangePasswordRequest
 import nl.jacobras.codeobserver.dto.CreateUserRequest
