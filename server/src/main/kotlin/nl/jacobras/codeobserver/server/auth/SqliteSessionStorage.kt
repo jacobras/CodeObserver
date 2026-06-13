@@ -23,7 +23,7 @@ internal class SqliteSessionStorage : SessionStorage {
                 it[SessionsTable.id] = id
                 it[SessionsTable.username] = username
                 it[SessionsTable.value] = value
-                it[expiresAt] = System.currentTimeMillis() + SESSION_TTL.inWholeMilliseconds
+                it[expiresAtMs] = System.currentTimeMillis() + SESSION_TTL.inWholeMilliseconds
             }
         }
     }
@@ -32,7 +32,7 @@ internal class SqliteSessionStorage : SessionStorage {
         return transaction {
             SessionsTable
                 .selectAll()
-                .where { (SessionsTable.id eq id) and (SessionsTable.expiresAt greater System.currentTimeMillis()) }
+                .where { (SessionsTable.id eq id) and (SessionsTable.expiresAtMs greater System.currentTimeMillis()) }
                 .singleOrNull()
                 ?.get(SessionsTable.value)
         } ?: throw NoSuchElementException("Session $id not found")
@@ -47,7 +47,7 @@ internal class SqliteSessionStorage : SessionStorage {
 
 internal fun purgeExpiredSessions() {
     transaction {
-        SessionsTable.deleteWhere { SessionsTable.expiresAt lessEq System.currentTimeMillis() }
+        SessionsTable.deleteWhere { SessionsTable.expiresAtMs lessEq System.currentTimeMillis() }
     }
 }
 

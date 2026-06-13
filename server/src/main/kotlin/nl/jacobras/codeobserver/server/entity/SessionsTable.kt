@@ -6,6 +6,6 @@ internal object SessionsTable : Table("sessions") {
     val id = text("id")
     val username = text("username")
     val value = text("value")
-    val expiresAt = long("expiresAt")
+    val expiresAtMs = long("expiresAt")
     override val primaryKey = PrimaryKey(id)
 }
