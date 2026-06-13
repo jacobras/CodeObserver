@@ -25,6 +25,11 @@ class ReportDetektCommand internal constructor(
         "--htmlFile",
         help = "Path to the Detekt HTML report file."
     ).required()
+    private val apiKey by option(
+        "--api-key",
+        envvar = "CODEOBSERVER_API_KEY",
+        help = "Server API key. Can also be set via the CODEOBSERVER_API_KEY environment variable."
+    ).required()
 
     override fun run() {
         val file = File(htmlFile)
@@ -47,6 +52,7 @@ class ReportDetektCommand internal constructor(
         runBlocking {
             uploader.upload(
                 serverUrl = serverUrl,
+                apiKey = apiKey,
                 endpoint = "detektReports",
                 payload = DetektReportRequest(
                     projectId = ProjectId(projectId),

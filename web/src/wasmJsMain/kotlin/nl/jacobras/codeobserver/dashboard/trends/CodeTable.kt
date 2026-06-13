@@ -14,6 +14,7 @@ import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
+import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.dto.CodeMetricsDto
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codeobserver.util.ui.table.DataTable
@@ -39,15 +40,13 @@ internal fun CodeTable(
         )
     }
 
+    val isAdmin = isCurrentUserAdmin()
     DataTable(
-        columnHeadings = listOf(
-            "Git date",
-            "Git hash",
-            "Lines of code",
-            "Module count",
-            "Module tree height",
-            "Actions"
-        ),
+        columnHeadings = if (isAdmin) {
+            listOf("Git date", "Git hash", "Lines of code", "Module count", "Module tree height", "Actions")
+        } else {
+            listOf("Git date", "Git hash", "Lines of code", "Module count", "Module tree height")
+        },
         rowCount = sortedMetrics.size,
         cellContent = { rowIndex, columnIndex, modifier ->
             val record = sortedMetrics[rowIndex]

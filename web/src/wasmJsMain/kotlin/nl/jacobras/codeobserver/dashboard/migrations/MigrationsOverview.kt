@@ -23,6 +23,7 @@ import com.gabrieldrn.carbon.dropdown.Dropdown
 import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
+import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.dto.MigrationDto
 import nl.jacobras.codeobserver.dto.MigrationId
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
@@ -126,6 +127,7 @@ internal fun MigrationsOverview(
                 )
             }
 
+            val isAdmin = isCurrentUserAdmin()
             DataTable(
                 columnHeadings = listOf("Name", "Type", "Rule", "Actions"),
                 rowCount = migrations.size,
@@ -166,12 +168,14 @@ internal fun MigrationsOverview(
                                     formRule = migration.rule
                                 }
                             )
-                            Button(
-                                label = "Delete",
-                                buttonType = ButtonType.GhostDanger,
-                                buttonSize = ButtonSize.Small,
-                                onClick = { requestDeleteId = migration.id }
-                            )
+                            if (isAdmin) {
+                                Button(
+                                    label = "Delete",
+                                    buttonType = ButtonType.GhostDanger,
+                                    buttonSize = ButtonSize.Small,
+                                    onClick = { requestDeleteId = migration.id }
+                                )
+                            }
                         }
                     }
                 }

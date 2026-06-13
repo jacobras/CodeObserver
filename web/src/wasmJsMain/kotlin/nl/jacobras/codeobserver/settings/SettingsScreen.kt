@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,7 +26,9 @@ import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
 import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
+import com.gabrieldrn.carbon.textinput.PasswordInput
 import com.gabrieldrn.carbon.textinput.TextInput
+import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ProjectDto
 import nl.jacobras.codeobserver.dto.ProjectId
@@ -40,6 +44,7 @@ internal fun SettingsScreen() {
     val viewModel = viewModel { SettingsScreenViewModel(RepositoryLocator.projectRepository) }
     val projects by viewModel.projects.collectAsState(emptyList())
     val state by viewModel.state.collectAsState(UiState())
+    val isAdmin = isCurrentUserAdmin()
 
     var editProjectId by remember { mutableStateOf<ProjectId?>(null) }
     var editName by remember { mutableStateOf("") }
@@ -55,6 +60,7 @@ internal fun SettingsScreen() {
             modifier = Modifier
                 .layerBackground()
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             when (val loading = state.loading) {
                 is RequestState.Working -> {
@@ -79,55 +85,58 @@ internal fun SettingsScreen() {
             )
             Spacer(Modifier.height(16.dp))
 
-            TextInput(
-                label = "Project ID",
-                value = editProjectId?.value ?: "",
-                onValueChange = { newValue ->
-                    editProjectId = if (newValue.isNotBlank()) {
-                        ProjectId(newValue)
-                    } else {
-                        null
-                    }
-                },
-                placeholderText = "my-app"
-            )
-            Spacer(Modifier.height(8.dp))
-            TextInput(
-                label = "Display name",
-                value = editName,
-                onValueChange = { editName = it },
-                placeholderText = "My App"
-            )
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val saving = state.saving
+            if (isAdmin) {
+                TextInput(
+                    label = "Project ID",
+                    value = editProjectId?.value ?: "",
+                    onValueChange = { newValue ->
+                        editProjectId = if (newValue.isNotBlank()) {
+                            ProjectId(newValue)
+                        } else {
+                            null
+                        }
+                    },
+                    placeholderText = "my-app"
+                )
+                Spacer(Modifier.height(8.dp))
+                TextInput(
+                    label = "Display name",
+                    value = editName,
+                    onValueChange = { editName = it },
+                    placeholderText = "My App"
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val saving = state.saving
 
-                SmallProgressButton(
-                    label = if (isEditing) "Update project" else "Add project",
-                    buttonType = ButtonType.Primary,
-                    isEnabled = editProjectId != null && editName.trim().isNotEmpty(),
-                    loading = saving is RequestState.Working,
-                    onClick = {
-                        val id = editProjectId ?: return@SmallProgressButton
-                        viewModel.saveProject(
-                            projectId = id,
-                            name = editName.trim(),
-                            onSuccess = { clearForm() }
-                        )
-                    }
-                )
-                Button(
-                    label = "Clear",
-                    buttonType = ButtonType.Tertiary,
-                    buttonSize = ButtonSize.Small,
-                    isEnabled = editProjectId != null || editName.isNotEmpty(),
-                    onClick = { clearForm() }
-                )
+                    SmallProgressButton(
+                        label = if (isEditing) "Update project" else "Add project",
+                        buttonType = ButtonType.Primary,
+                        isEnabled = editProjectId != null && editName.trim().isNotEmpty(),
+                        loading = saving is RequestState.Working,
+                        onClick = {
+                            val id = editProjectId ?: return@SmallProgressButton
+                            viewModel.saveProject(
+                                projectId = id,
+                                name = editName.trim(),
+                                onSuccess = { clearForm() }
+                            )
+                        }
+                    )
+                    Button(
+                        label = "Clear",
+                        buttonType = ButtonType.Tertiary,
+                        buttonSize = ButtonSize.Small,
+                        isEnabled = editProjectId != null || editName.isNotEmpty(),
+                        onClick = { clearForm() }
+                    )
+                }
+
+                Spacer(Modifier.height(20.dp))
             }
-
-            Spacer(Modifier.height(20.dp))
             ProjectsTable(
                 projects = projects,
+                canEdit = isAdmin,
                 deleting = state.deleting,
                 onEdit = { project ->
                     editProjectId = project.id
@@ -135,20 +144,72 @@ internal fun SettingsScreen() {
                 },
                 onDelete = { viewModel.deleteProject(it) }
             )
+
+            Spacer(Modifier.height(24.dp))
+            ChangePasswordSection()
         }
     }
 }
 
 @Composable
+private fun ChangePasswordSection() {
+    val viewModel = viewModel { ChangePasswordViewModel(RepositoryLocator.authRepository) }
+    val changing by viewModel.changing.collectAsState()
+
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var passwordHidden by remember { mutableStateOf(true) }
+
+    BasicText(
+        text = "Change password",
+        style = Carbon.typography.heading03
+    )
+    Spacer(Modifier.height(12.dp))
+    PasswordInput(
+        label = "Current password",
+        value = currentPassword,
+        passwordHidden = passwordHidden,
+        onValueChange = { currentPassword = it },
+        onPasswordHiddenChange = { passwordHidden = it }
+    )
+    Spacer(Modifier.height(8.dp))
+    PasswordInput(
+        label = "New password",
+        value = newPassword,
+        passwordHidden = passwordHidden,
+        onValueChange = { newPassword = it },
+        onPasswordHiddenChange = { passwordHidden = it }
+    )
+    Spacer(Modifier.height(12.dp))
+    SmallProgressButton(
+        label = "Change password",
+        buttonType = ButtonType.Primary,
+        isEnabled = currentPassword.isNotEmpty() && newPassword.isNotEmpty() && !changing,
+        loading = changing,
+        onClick = {
+            viewModel.changePassword(
+                currentPassword = currentPassword,
+                newPassword = newPassword,
+                onSuccess = {
+                    currentPassword = ""
+                    newPassword = ""
+                }
+            )
+        }
+    )
+}
+
+@Composable
 private fun ProjectsTable(
     projects: List<ProjectDto>,
+    canEdit: Boolean,
     deleting: Map<ProjectId, RequestState>,
     onEdit: (ProjectDto) -> Unit,
     onDelete: (projectId: ProjectId) -> Unit
 ) {
     if (projects.isEmpty()) {
         BasicText(
-            text = "No projects yet. Add one above.",
+            text = if (canEdit) "No projects yet. Add one above." else "No projects yet.",
             style = Carbon.typography.body02
         )
         return
@@ -167,7 +228,11 @@ private fun ProjectsTable(
     }
 
     DataTable(
-        columnHeadings = listOf("Project ID", "Name", "Actions"),
+        columnHeadings = if (canEdit) {
+            listOf("Project ID", "Name", "Actions")
+        } else {
+            listOf("Project ID", "Name")
+        },
         rowCount = projects.size,
         cellContent = { rowIndex, columnIndex, modifier ->
             val project = projects[rowIndex]

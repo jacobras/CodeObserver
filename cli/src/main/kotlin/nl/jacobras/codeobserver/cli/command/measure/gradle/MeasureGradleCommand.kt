@@ -22,7 +22,7 @@ class MeasureGradleCommand internal constructor(
     private val serverUrl by option(
         "--server",
         help = "Server base URL. Without this, the count will not be uploaded."
-    ).required()
+    )
     private val projectId by option(
         "--project",
         help = "Project identifier for this measurement."
@@ -31,6 +31,11 @@ class MeasureGradleCommand internal constructor(
         "--path",
         help = "Folder to scan. Defaults to the current working directory."
     ).default(".")
+    private val apiKey by option(
+        "--api-key",
+        envvar = "CODEOBSERVER_API_KEY",
+        help = "Server API key. Can also be set via the CODEOBSERVER_API_KEY environment variable."
+    )
 
     override fun run() {
         println("Going to measure gradle modules")
@@ -53,6 +58,10 @@ class MeasureGradleCommand internal constructor(
                 val moduleIdentifiers = try {
                     uploader.fetch<List<ModuleTypeIdentifierDto>>(
                         serverUrl = url,
+                        apiKey = apiKey ?: error(
+                            "Missing API key. Provide it with `--api-key` or set " +
+                                "the `CODEOBSERVER_API_KEY` environment variable."
+                        ),
                         endpoint = "moduleTypeIdentifiers?projectId=$projectId"
                     )
                 } catch (e: Exception) {
@@ -71,11 +80,19 @@ class MeasureGradleCommand internal constructor(
                 )
                 uploader.upload(
                     serverUrl = url,
+                    apiKey = apiKey ?: error(
+                        "Missing API key. Provide it with `--api-key` or set " +
+                            "the `CODEOBSERVER_API_KEY` environment variable."
+                    ),
                     endpoint = "metrics/gradle",
                     payload = payload
                 )
                 val migrations = uploader.fetch<List<MigrationDto>>(
                     serverUrl = url,
+                    apiKey = apiKey ?: error(
+                        "Missing API key. Provide it with `--api-key` or set " +
+                            "the `CODEOBSERVER_API_KEY` environment variable."
+                    ),
                     endpoint = "migrations?projectId=$projectId"
                 )
                 migrations
@@ -84,6 +101,10 @@ class MeasureGradleCommand internal constructor(
                         val count = graphInfo.graph.values.count { deps -> migration.rule in deps }
                         uploader.upload(
                             serverUrl = url,
+                            apiKey = apiKey ?: error(
+                                "Missing API key. Provide it with `--api-key` or set " +
+                                    "the `CODEOBSERVER_API_KEY` environment variable."
+                            ),
                             endpoint = "migrationProgress",
                             payload = MigrationProgressRequest(
                                 migrationId = migration.id,

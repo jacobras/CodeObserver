@@ -32,6 +32,11 @@ class ReportBuildTimeCommand internal constructor(
         "--time",
         help = "Build time in seconds."
     ).int().required()
+    private val apiKey by option(
+        "--api-key",
+        envvar = "CODEOBSERVER_API_KEY",
+        help = "Server API key. Can also be set via the CODEOBSERVER_API_KEY environment variable."
+    ).required()
 
     override fun run() {
         println("Going to upload build time")
@@ -42,6 +47,7 @@ class ReportBuildTimeCommand internal constructor(
         runBlocking {
             uploader.upload(
                 serverUrl = serverUrl,
+                apiKey = apiKey,
                 endpoint = "buildTimes",
                 payload = BuildTimeRequest(
                     projectId = ProjectId(projectId),

@@ -12,6 +12,7 @@ import nl.jacobras.codeobserver.dto.DetektReportRequest
 import nl.jacobras.codeobserver.dto.GitHash
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.dto.ReportId
+import nl.jacobras.codeobserver.server.auth.requireAdmin
 import nl.jacobras.codeobserver.server.entity.DetektReportsTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
@@ -79,6 +80,7 @@ internal fun Route.detektReportRoutes() {
         call.respond(HttpStatusCode.Created)
     }
     delete("/detektReports/{reportId}") {
+        call.requireAdmin() ?: return@delete
         val reportId = call.parameters["reportId"]!!.trim()
         if (reportId.isBlank()) {
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing reportId"))

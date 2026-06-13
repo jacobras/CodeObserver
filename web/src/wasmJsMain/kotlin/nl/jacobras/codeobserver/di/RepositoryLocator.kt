@@ -9,8 +9,10 @@ import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraphSettingsReposit
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleTypeIdentifiersRepository
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraphRepository
 import nl.jacobras.codeobserver.dashboard.trends.TrendsRepository
+import nl.jacobras.codeobserver.auth.AuthRepository
 import nl.jacobras.codeobserver.di.demo.DemoDataSourceLocator
 import nl.jacobras.codeobserver.projects.ProjectRepository
+import nl.jacobras.codeobserver.users.UsersRepository
 import nl.jacobras.codeobserver.web.BuildConfig
 
 /**
@@ -48,5 +50,11 @@ internal object RepositoryLocator {
     }
     val projectRepository: ProjectRepository by lazy {
         ProjectRepository(dataSource = dataSourceLocator.projectDataSource)
+    }
+    val authRepository: AuthRepository by lazy {
+        AuthRepository(dataSource = dataSourceLocator.authDataSource)
+    }
+    val usersRepository: UsersRepository by lazy {
+        UsersRepository(dataSource = dataSourceLocator.usersDataSource)
     }
 }

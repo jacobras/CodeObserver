@@ -25,6 +25,7 @@ import com.gabrieldrn.carbon.dropdown.Dropdown
 import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
 import com.gabrieldrn.carbon.dropdown.base.DropdownOption
 import com.gabrieldrn.carbon.textinput.TextInput
+import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ModuleGraphSettingId
 import nl.jacobras.codeobserver.util.data.RequestState
@@ -136,6 +137,7 @@ internal fun ModuleRules() {
                 )
             }
 
+            val isAdmin = isCurrentUserAdmin()
             DataTable(
                 columnHeadings = listOf("Type", "Data", "Actions"),
                 rowCount = settings.size,
@@ -168,12 +170,14 @@ internal fun ModuleRules() {
                                     formData = setting.data
                                 }
                             )
-                            Button(
-                                label = "Delete",
-                                buttonType = ButtonType.GhostDanger,
-                                buttonSize = ButtonSize.Small,
-                                onClick = { requestDeleteId = setting.id }
-                            )
+                            if (isAdmin) {
+                                Button(
+                                    label = "Delete",
+                                    buttonType = ButtonType.GhostDanger,
+                                    buttonSize = ButtonSize.Small,
+                                    onClick = { requestDeleteId = setting.id }
+                                )
+                            }
                         }
                     }
                 }
