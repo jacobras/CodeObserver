@@ -11,7 +11,7 @@ import nl.jacobras.codeobserver.util.data.NetworkError
  * Always-logged-in admin, so the public demo works without authentication.
  */
 internal class DemoAuthDataSource : AuthDataSource {
-    private val demoUser = UserDto(username = "demo", role = UserRole.ADMIN)
+    private val demoUser = UserDto(username = "demo", role = UserRole.Admin)
 
     override suspend fun me(): Result<UserDto, NetworkError> = Ok(demoUser)
 

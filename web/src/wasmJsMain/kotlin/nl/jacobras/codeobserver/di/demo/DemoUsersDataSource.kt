@@ -10,8 +10,8 @@ import nl.jacobras.codeobserver.util.data.NetworkError
 
 internal class DemoUsersDataSource : UsersDataSource {
     private val users = mutableListOf(
-        UserDto(username = "demo", role = UserRole.ADMIN),
-        UserDto(username = "developer", role = UserRole.DEVELOPER)
+        UserDto(username = "demo", role = UserRole.Admin),
+        UserDto(username = "developer", role = UserRole.Developer)
     )
 
     override suspend fun fetch(): Result<List<UserDto>, NetworkError> = Ok(users.toList())
@@ -37,9 +37,9 @@ internal class DemoUsersDataSource : UsersDataSource {
         if (index < 0) {
             return Err(NetworkError.UnknownError)
         }
-        val demotesLastAdmin = role != null && role != UserRole.ADMIN &&
-            users[index].role == UserRole.ADMIN &&
-            users.count { it.role == UserRole.ADMIN } <= 1
+        val demotesLastAdmin = role != null && role != UserRole.Admin &&
+            users[index].role == UserRole.Admin &&
+            users.count { it.role == UserRole.Admin } <= 1
         if (demotesLastAdmin) {
             return Err(NetworkError.Conflict)
         }
@@ -52,7 +52,7 @@ internal class DemoUsersDataSource : UsersDataSource {
     override suspend fun delete(username: String): Result<Unit, NetworkError> {
         val target = users.firstOrNull { it.username == username }
             ?: return Err(NetworkError.UnknownError)
-        if (target.role == UserRole.ADMIN && users.count { it.role == UserRole.ADMIN } <= 1) {
+        if (target.role == UserRole.Admin && users.count { it.role == UserRole.Admin } <= 1) {
             return Err(NetworkError.Conflict)
         }
         users.remove(target)

@@ -18,7 +18,7 @@ internal object ApiKeyPrincipal
  */
 internal suspend fun ApplicationCall.requireAdmin(): UserPrincipal? {
     val principal = principal<UserPrincipal>()
-    if (principal?.role != UserRole.ADMIN) {
+    if (principal?.role != UserRole.Admin) {
         respond(HttpStatusCode.Forbidden, mapOf("error" to "Admin role required"))
         return null
     }

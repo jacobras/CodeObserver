@@ -50,14 +50,14 @@ internal fun UsersScreen() {
     var editUsername by remember { mutableStateOf<String?>(null) }
     var formUsername by remember { mutableStateOf("") }
     var formPassword by remember { mutableStateOf("") }
-    var formRole by remember { mutableStateOf(UserRole.DEVELOPER) }
+    var formRole by remember { mutableStateOf(UserRole.Developer) }
     var passwordHidden by remember { mutableStateOf(true) }
 
     fun clearForm() {
         editUsername = null
         formUsername = ""
         formPassword = ""
-        formRole = UserRole.DEVELOPER
+        formRole = UserRole.Developer
     }
 
     val isEditing = editUsername != null

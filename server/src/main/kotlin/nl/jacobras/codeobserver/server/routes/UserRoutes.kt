@@ -19,7 +19,6 @@ import nl.jacobras.codeobserver.dto.UserRole
 import nl.jacobras.codeobserver.server.auth.ApiKeyService
 import nl.jacobras.codeobserver.server.auth.PasswordHasher
 import nl.jacobras.codeobserver.server.auth.UserPrincipal
-import nl.jacobras.codeobserver.server.auth.UserSession
 import nl.jacobras.codeobserver.server.auth.requireAdmin
 import nl.jacobras.codeobserver.server.entity.SessionsTable
 import nl.jacobras.codeobserver.server.entity.UsersTable
@@ -141,8 +140,8 @@ internal fun Route.userRoutes() {
                 .where { UsersTable.username eq username }
                 .singleOrNull()
                 ?: return@transaction MutationResult.NotFound
-            val demotesAdmin = target[UsersTable.role] == UserRole.ADMIN.name &&
-                newRole != null && newRole != UserRole.ADMIN
+            val demotesAdmin = target[UsersTable.role] == UserRole.Admin.name &&
+                newRole != null && newRole != UserRole.Admin
             if (demotesAdmin && adminCount() <= 1) {
                 return@transaction MutationResult.LastAdmin
             }
@@ -170,7 +169,7 @@ internal fun Route.userRoutes() {
                 .where { UsersTable.username eq username }
                 .singleOrNull()
                 ?: return@transaction MutationResult.NotFound
-            if (target[UsersTable.role] == UserRole.ADMIN.name && adminCount() <= 1) {
+            if (target[UsersTable.role] == UserRole.Admin.name && adminCount() <= 1) {
                 return@transaction MutationResult.LastAdmin
             }
 
@@ -190,7 +189,7 @@ internal fun Route.userRoutes() {
 private fun adminCount(): Long {
     return UsersTable
         .selectAll()
-        .where { UsersTable.role eq UserRole.ADMIN.name }
+        .where { UsersTable.role eq UserRole.Admin.name }
         .count()
 }
 

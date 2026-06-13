@@ -255,7 +255,7 @@ private fun MenuOptions(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val visibleDestinations = Destination.entries.filter { screen ->
-                screen != Destination.Users || user.role == UserRole.ADMIN
+                screen != Destination.Users || user.role == UserRole.Admin
             }
             visibleDestinations.forEach { screen ->
                 val selected = screen == active

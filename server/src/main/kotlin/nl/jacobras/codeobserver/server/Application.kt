@@ -109,7 +109,7 @@ fun Application.module(
             UsersTable.insert {
                 it[username] = "admin"
                 it[passwordHash] = PasswordHasher.hash("admin")
-                it[role] = UserRole.ADMIN.name
+                it[role] = UserRole.Admin.name
             }
             Logger.w { "Created default user 'admin' with password 'admin'. Change the password immediately." }
         }

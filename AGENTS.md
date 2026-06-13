@@ -26,6 +26,7 @@
 ## Code style
 
 - No newline at the end of a file.
+- PascalCase for enum values.
 
 ## Building
 

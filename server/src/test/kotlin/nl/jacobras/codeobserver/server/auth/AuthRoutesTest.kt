@@ -52,7 +52,7 @@ class AuthRoutesTest {
         val response = client.login("admin", "admin")
 
         assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-        assertThat(response.body<UserDto>()).isEqualTo(UserDto(username = "admin", role = UserRole.ADMIN))
+        assertThat(response.body<UserDto>()).isEqualTo(UserDto(username = "admin", role = UserRole.Admin))
     }
 
     @Test
@@ -115,27 +115,27 @@ class AuthRoutesTest {
 
         val created = client.post("/users") {
             contentType(ContentType.Application.Json)
-            setBody(CreateUserRequest(username = "dev", password = "secret", role = UserRole.DEVELOPER))
+            setBody(CreateUserRequest(username = "dev", password = "secret", role = UserRole.Developer))
         }
         assertThat(created.status).isEqualTo(HttpStatusCode.Created)
 
         val duplicate = client.post("/users") {
             contentType(ContentType.Application.Json)
-            setBody(CreateUserRequest(username = "dev", password = "other", role = UserRole.DEVELOPER))
+            setBody(CreateUserRequest(username = "dev", password = "other", role = UserRole.Developer))
         }
         assertThat(duplicate.status).isEqualTo(HttpStatusCode.Conflict)
 
         val blank = client.post("/users") {
             contentType(ContentType.Application.Json)
-            setBody(CreateUserRequest(username = "", password = "secret", role = UserRole.DEVELOPER))
+            setBody(CreateUserRequest(username = "", password = "secret", role = UserRole.Developer))
         }
         assertThat(blank.status).isEqualTo(HttpStatusCode.BadRequest)
 
         val users = client.get("/users").body<List<UserDto>>()
         assertThat(users).isEqualTo(
             listOf(
-                UserDto(username = "admin", role = UserRole.ADMIN),
-                UserDto(username = "dev", role = UserRole.DEVELOPER)
+                UserDto(username = "admin", role = UserRole.Admin),
+                UserDto(username = "dev", role = UserRole.Developer)
             )
         )
 
@@ -148,7 +148,7 @@ class AuthRoutesTest {
         client.login("admin", "admin")
         client.post("/users") {
             contentType(ContentType.Application.Json)
-            setBody(CreateUserRequest(username = "dev", password = "secret", role = UserRole.DEVELOPER))
+            setBody(CreateUserRequest(username = "dev", password = "secret", role = UserRole.Developer))
         }
 
         val devClient = createClient {
@@ -179,18 +179,18 @@ class AuthRoutesTest {
 
         val demote = client.put("/users/admin") {
             contentType(ContentType.Application.Json)
-            setBody(UpdateUserRequest(role = UserRole.DEVELOPER))
+            setBody(UpdateUserRequest(role = UserRole.Developer))
         }
         assertThat(demote.status).isEqualTo(HttpStatusCode.Conflict)
 
         client.post("/users") {
             contentType(ContentType.Application.Json)
-            setBody(CreateUserRequest(username = "admin2", password = "secret", role = UserRole.ADMIN))
+            setBody(CreateUserRequest(username = "admin2", password = "secret", role = UserRole.Admin))
         }
 
         val demoteWithBackup = client.put("/users/admin") {
             contentType(ContentType.Application.Json)
-            setBody(UpdateUserRequest(role = UserRole.DEVELOPER))
+            setBody(UpdateUserRequest(role = UserRole.Developer))
         }
         assertThat(demoteWithBackup.status).isEqualTo(HttpStatusCode.OK)
     }
@@ -200,7 +200,7 @@ class AuthRoutesTest {
         adminClient.login("admin", "admin")
         adminClient.post("/users") {
             contentType(ContentType.Application.Json)
-            setBody(CreateUserRequest(username = "dev", password = "secret", role = UserRole.DEVELOPER))
+            setBody(CreateUserRequest(username = "dev", password = "secret", role = UserRole.Developer))
         }
 
         val devUserClient = createClient {
@@ -232,7 +232,7 @@ class AuthRoutesTest {
         client.login("admin", "admin")
         client.post("/users") {
             contentType(ContentType.Application.Json)
-            setBody(CreateUserRequest(username = "dev", password = "secret", role = UserRole.DEVELOPER))
+            setBody(CreateUserRequest(username = "dev", password = "secret", role = UserRole.Developer))
         }
 
         val reset = client.put("/users/dev") {
