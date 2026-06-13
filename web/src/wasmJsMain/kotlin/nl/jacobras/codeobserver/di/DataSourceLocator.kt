@@ -63,8 +63,6 @@ internal object DatabaseDataSourceLocator : DataSourceLocator {
             handleResponseExceptionWithRequest { cause, request ->
                 val status = (cause as? ResponseException)?.response?.status
                 val path = request.url.encodedPath
-                // Skip /logout too: logging out in response to a 401 from
-                // /logout itself would loop forever.
                 if (status == HttpStatusCode.Unauthorized && !path.endsWith("/login") && !path.endsWith("/logout")) {
                     UseCaseLocator.logoutUseCase()
                     AuthEvents.onUnauthorized()
