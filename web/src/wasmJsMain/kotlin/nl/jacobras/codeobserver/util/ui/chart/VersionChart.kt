@@ -16,7 +16,7 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.compose.cartesian.data.columnSeries
+import com.patrykandpatrick.vico.compose.cartesian.data.columnModel
 import com.patrykandpatrick.vico.compose.cartesian.layer.ColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
@@ -56,7 +56,7 @@ internal fun <T> VersionChart(
 
     LaunchedEffect(records) {
         modelProducer.runTransaction {
-            columnSeries {
+            columnModel {
                 series(
                     x = records.indices.map { it.toDouble() },
                     y = records.map(metricField)
@@ -82,7 +82,8 @@ internal fun <T> VersionChart(
                 valueFormatter = CartesianValueFormatter { _, x, _ ->
                     val index = x.toInt()
                     versionField(records[index]).toString()
-                }),
+                }
+            ),
             fadingEdges = rememberFadingEdges(),
             legend = rememberHorizontalLegend(
                 items = {
