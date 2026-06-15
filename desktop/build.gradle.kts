@@ -15,6 +15,10 @@ kotlin {
         }
     }
 
+    compilerOptions {
+        freeCompilerArgs.add("-Xexplicit-backing-fields")
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(compose.foundation)

@@ -4,6 +4,7 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import nl.jacobras.codeobserver.dto.MigrationDto
 import nl.jacobras.codeobserver.dto.MigrationId
@@ -14,9 +15,12 @@ import nl.jacobras.codeobserver.util.data.RequestState
 internal class MigrationsRepository(
     private val dataSource: MigrationsDataSource
 ) {
-    val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val savingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val deletingState = MutableStateFlow<Map<MigrationId, RequestState>>(emptyMap())
+    val loadingState: StateFlow<RequestState>
+        field = MutableStateFlow<RequestState>(RequestState.Idle)
+    val savingState: StateFlow<RequestState>
+        field = MutableStateFlow<RequestState>(RequestState.Idle)
+    val deletingState: StateFlow<Map<MigrationId, RequestState>>
+        field = MutableStateFlow<Map<MigrationId, RequestState>>(emptyMap())
 
     suspend fun fetchMigrations(projectId: ProjectId): Result<List<MigrationDto>, NetworkError> {
         loadingState.value = RequestState.Working

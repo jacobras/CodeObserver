@@ -8,6 +8,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import nl.jacobras.codeobserver.dto.ProjectDto
@@ -19,16 +20,21 @@ import nl.jacobras.codeobserver.util.data.RequestState
 internal class ProjectRepository(
     private val dataSource: ProjectDataSource
 ) {
-    val projects = MutableStateFlow(emptyList<ProjectDto>())
+    val projects: StateFlow<List<ProjectDto>>
+        field = MutableStateFlow(emptyList<ProjectDto>())
 
     /**
      * Selected project id, which changes the loaded data for everything in the app.
      */
-    val selectedProjectId = MutableStateFlow<ProjectId?>(null)
+    val selectedProjectId: StateFlow<ProjectId?>
+        field = MutableStateFlow(null)
 
-    val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val savingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val deletingState = MutableStateFlow<Map<ProjectId, RequestState>>(emptyMap())
+    val loadingState: StateFlow<RequestState>
+        field = MutableStateFlow<RequestState>(RequestState.Idle)
+    val savingState: StateFlow<RequestState>
+        field = MutableStateFlow<RequestState>(RequestState.Idle)
+    val deletingState: StateFlow<Map<ProjectId, RequestState>>
+        field = MutableStateFlow(emptyMap())
 
     init {
         GlobalScope.launch {

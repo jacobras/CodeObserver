@@ -4,6 +4,7 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import nl.jacobras.codeobserver.dto.ModuleTypeIdentifierDto
 import nl.jacobras.codeobserver.dto.ModuleTypeIdentifierId
@@ -14,9 +15,12 @@ import nl.jacobras.codeobserver.util.data.RequestState
 internal class ModuleTypeIdentifiersRepository(
     private val dataSource: ModuleTypeIdentifiersDataSource
 ) {
-    val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val savingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val deletingState = MutableStateFlow<Map<ModuleTypeIdentifierId, RequestState>>(emptyMap())
+    val loadingState: StateFlow<RequestState>
+        field = MutableStateFlow<RequestState>(RequestState.Idle)
+    val savingState: StateFlow<RequestState>
+        field = MutableStateFlow<RequestState>(RequestState.Idle)
+    val deletingState: StateFlow<Map<ModuleTypeIdentifierId, RequestState>>
+        field = MutableStateFlow<Map<ModuleTypeIdentifierId, RequestState>>(emptyMap())
 
     suspend fun fetchIdentifiers(projectId: ProjectId): Result<List<ModuleTypeIdentifierDto>, NetworkError> {
         loadingState.value = RequestState.Working

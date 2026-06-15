@@ -8,6 +8,7 @@ import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -35,7 +36,8 @@ internal class DetektTrendsViewModel(
                 deleting = deleting
             )
         }
-    val metrics = MutableStateFlow(emptyList<DetektMetricDto>())
+    val metrics: StateFlow<List<DetektMetricDto>>
+        field = MutableStateFlow(emptyList())
 
     val detailReportState = detektReportRepository.reportLoadingState.map { UiState<String>(loading = it) }
     val latestReportId = metrics.map { reports -> reports.maxByOrNull { it.gitDate }?.id }

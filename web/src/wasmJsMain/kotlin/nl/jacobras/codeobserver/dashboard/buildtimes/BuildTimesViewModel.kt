@@ -6,6 +6,7 @@ import com.gabrieldrn.carbon.notification.NotificationStatus
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -23,7 +24,8 @@ internal class BuildTimesViewModel(
 
     val projectId = projectRepository.selectedProjectId
     val uiState = buildTimesRepository.loadingState.map { UiState<Nothing>(loading = it) }
-    val buildTimes = MutableStateFlow(emptyList<BuildTimeDto>())
+    val buildTimes: StateFlow<List<BuildTimeDto>>
+        field = MutableStateFlow(emptyList())
 
     init {
         viewModelScope.launch {

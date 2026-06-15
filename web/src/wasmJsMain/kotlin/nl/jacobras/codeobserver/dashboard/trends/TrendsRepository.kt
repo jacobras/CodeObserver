@@ -4,6 +4,7 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import nl.jacobras.codeobserver.dto.CodeMetricsDto
 import nl.jacobras.codeobserver.dto.GitHash
@@ -14,8 +15,10 @@ import nl.jacobras.codeobserver.util.data.RequestState
 internal class TrendsRepository(
     private val dataSource: TrendsDataSource
 ) {
-    val loadingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val deletingState = MutableStateFlow<Map<GitHash, RequestState>>(emptyMap())
+    val loadingState: StateFlow<RequestState>
+        field = MutableStateFlow<RequestState>(RequestState.Idle)
+    val deletingState: StateFlow<Map<GitHash, RequestState>>
+        field = MutableStateFlow<Map<GitHash, RequestState>>(emptyMap())
 
     suspend fun fetchMetrics(projectId: ProjectId): Result<List<CodeMetricsDto>, NetworkError> {
         loadingState.value = RequestState.Working
