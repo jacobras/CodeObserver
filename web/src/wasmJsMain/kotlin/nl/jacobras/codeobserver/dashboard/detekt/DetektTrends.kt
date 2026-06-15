@@ -19,11 +19,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.ButtonType
 import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.DetektMetricDto
 import nl.jacobras.codeobserver.dto.ReportId
 import nl.jacobras.codeobserver.util.data.RequestState
@@ -39,18 +37,14 @@ import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.codeobserver.util.ui.text.excerpt
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun DetektTrends(
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel {
-        DetektTrendsViewModel(
-            detektReportRepository = RepositoryLocator.detektReportRepository,
-            projectRepository = RepositoryLocator.projectRepository
-        )
-    }
+    val viewModel = koinViewModel<DetektTrendsViewModel>()
     val reports by viewModel.metrics.collectAsState(emptyList())
     val state by viewModel.metricsState.collectAsState(UiState())
     val projectId by viewModel.projectId.collectAsState()

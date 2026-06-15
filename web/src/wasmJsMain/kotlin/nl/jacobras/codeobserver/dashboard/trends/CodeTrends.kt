@@ -9,25 +9,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
 import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun CodeTrends(
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel {
-        TrendsViewModel(
-            trendsRepository = RepositoryLocator.trendsRepository,
-            projectRepository = RepositoryLocator.projectRepository
-        )
-    }
+    val viewModel = koinViewModel<TrendsViewModel>()
     val projectId by viewModel.projectId.collectAsState()
     val metrics by viewModel.metrics.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())

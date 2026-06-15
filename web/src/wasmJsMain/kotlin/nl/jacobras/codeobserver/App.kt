@@ -44,11 +44,11 @@ import com.gabrieldrn.carbon.foundation.color.LocalCarbonTheme
 import com.gabrieldrn.carbon.foundation.spacing.SpacingScale
 import com.gabrieldrn.carbon.notification.ToastNotification
 import kotlinx.coroutines.launch
+import nl.jacobras.codeobserver.auth.AuthRepository
 import nl.jacobras.codeobserver.auth.AuthState
 import nl.jacobras.codeobserver.auth.LoginScreen
 import nl.jacobras.codeobserver.dashboard.DashboardScreen
-import nl.jacobras.codeobserver.di.RepositoryLocator
-import nl.jacobras.codeobserver.di.UseCaseLocator
+import nl.jacobras.codeobserver.di.SessionScope
 import nl.jacobras.codeobserver.dto.UserDto
 import nl.jacobras.codeobserver.dto.UserRole
 import nl.jacobras.codeobserver.settings.SettingsScreen
@@ -57,12 +57,16 @@ import nl.jacobras.codeobserver.util.ui.notification.Notifier
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.theme.COTheme
 import nl.jacobras.codeobserver.web.BuildConfig
+import org.koin.compose.koinInject
+import org.koin.compose.scope.KoinScope
+import org.koin.core.annotation.KoinExperimentalAPI
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun App(
     onNavHostReady: suspend (NavController) -> Unit
 ) {
-    val authState by RepositoryLocator.authRepository.authState.collectAsState()
+    val authState by koinInject<AuthRepository>().authState.collectAsState()
 
     COTheme {
         when (val state = authState) {
@@ -88,13 +92,15 @@ fun App(
             }
 
             is AuthState.LoggedIn -> {
-                LaunchedEffect(state) {
-                    RepositoryLocator.projectRepository.refresh()
+                // Open a Koin session scope for the duration of the logged-in UI. When the user
+                // logs out (or a 401 forces it), MainContent leaves composition and the scope is
+                // closed, discarding every session-scoped repository so no data leaks to the next user.
+                KoinScope<SessionScope>(scopeID = "session") {
+                    MainContent(
+                        user = state.user,
+                        onNavHostReady = onNavHostReady
+                    )
                 }
-                MainContent(
-                    user = state.user,
-                    onNavHostReady = onNavHostReady
-                )
             }
         }
     }
@@ -112,6 +118,7 @@ private fun MainContent(
         navBackStackEntry?.destination?.route?.let { Destination.fromRoute(it) } ?: Destination.Dashboard
     val notifications by Notifier.notifications.collectAsState(emptyList())
     val scope = rememberCoroutineScope()
+    val authRepository = koinInject<AuthRepository>()
 
     Column(
         modifier = Modifier
@@ -124,7 +131,7 @@ private fun MainContent(
             onSelect = { navController.navigate(it.route) },
             onLogout = {
                 scope.launch {
-                    UseCaseLocator.logoutUseCase()
+                    authRepository.logout()
                 }
             }
         )

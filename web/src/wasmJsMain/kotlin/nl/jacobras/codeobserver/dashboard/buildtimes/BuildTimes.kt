@@ -16,11 +16,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.BuildTimeDto
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
@@ -35,6 +33,7 @@ import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.codeobserver.util.ui.text.excerpt
 import nl.jacobras.humanreadable.HumanReadable
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -42,12 +41,7 @@ internal fun BuildTimes(
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel {
-        BuildTimesViewModel(
-            buildTimesRepository = RepositoryLocator.buildTimesRepository,
-            projectRepository = RepositoryLocator.projectRepository
-        )
-    }
+    val viewModel = koinViewModel<BuildTimesViewModel>()
     val uiState by viewModel.uiState.collectAsState(UiState())
     val buildTimes by viewModel.buildTimes.collectAsState(emptyList())
     val isLoading = uiState.loading == RequestState.Working

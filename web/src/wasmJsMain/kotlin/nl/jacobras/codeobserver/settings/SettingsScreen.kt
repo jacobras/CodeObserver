@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
@@ -29,7 +28,6 @@ import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.PasswordInput
 import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ProjectDto
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.data.RequestState
@@ -38,10 +36,11 @@ import nl.jacobras.codeobserver.util.ui.button.SmallProgressButton
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun SettingsScreen() {
-    val viewModel = viewModel { SettingsScreenViewModel(RepositoryLocator.projectRepository) }
+    val viewModel = koinViewModel<SettingsScreenViewModel>()
     val projects by viewModel.projects.collectAsState(emptyList())
     val state by viewModel.state.collectAsState(UiState())
     val isAdmin = isCurrentUserAdmin()
@@ -153,7 +152,7 @@ internal fun SettingsScreen() {
 
 @Composable
 private fun ChangePasswordSection() {
-    val viewModel = viewModel { ChangePasswordViewModel(RepositoryLocator.authRepository) }
+    val viewModel = koinViewModel<ChangePasswordViewModel>()
     val changing by viewModel.changing.collectAsState()
 
     var currentPassword by remember { mutableStateOf("") }

@@ -16,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -38,14 +37,14 @@ import nl.jacobras.codeobserver.dashboard.detekt.DetektTrends
 import nl.jacobras.codeobserver.dashboard.migrations.Migrations
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraph
 import nl.jacobras.codeobserver.dashboard.trends.CodeTrends
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.ProjectDto
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun DashboardScreen() {
-    val viewModel = viewModel { AppViewModel(RepositoryLocator.projectRepository) }
+    val viewModel = koinViewModel<AppViewModel>()
     val projects by viewModel.projects.collectAsState(emptyList())
     val selectedProjectId by viewModel.selectedProjectId.collectAsState(null)
     val loadingError by viewModel.loadingError.collectAsState("")

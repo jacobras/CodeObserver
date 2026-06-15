@@ -19,11 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.tab.TabItem
 import com.gabrieldrn.carbon.tab.TabList
-import nl.jacobras.codeobserver.di.RepositoryLocator
 import nl.jacobras.codeobserver.dto.MigrationDto
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.data.RequestState
@@ -38,18 +36,14 @@ import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 import nl.jacobras.codeobserver.util.ui.text.excerpt
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun Migrations(
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel {
-        MigrationsViewModel(
-            migrationsRepository = RepositoryLocator.migrationsRepository,
-            projectRepository = RepositoryLocator.projectRepository
-        )
-    }
+    val viewModel = koinViewModel<MigrationsViewModel>()
     val migrations by viewModel.migrations.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
     val projectId by viewModel.projectId.collectAsState()
@@ -126,11 +120,7 @@ private fun MigrationDetail(
     timeView: TimeView,
     onSelectTimeView: (TimeView) -> Unit
 ) {
-    val viewModel = viewModel {
-        MigrationDetailViewModel(
-            migrationProgressRepository = RepositoryLocator.migrationProgressRepository
-        )
-    }
+    val viewModel = koinViewModel<MigrationDetailViewModel>()
     val progress by viewModel.progress.collectAsState(emptyList())
     val state by viewModel.uiState.collectAsState(UiState())
 
