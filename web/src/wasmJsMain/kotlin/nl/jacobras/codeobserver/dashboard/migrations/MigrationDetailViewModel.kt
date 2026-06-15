@@ -6,6 +6,7 @@ import com.gabrieldrn.carbon.notification.NotificationStatus
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -20,7 +21,8 @@ internal class MigrationDetailViewModel(
 
     private val migrationId = MutableStateFlow<MigrationId?>(null)
     val uiState = migrationProgressRepository.loadingState.map { UiState<Nothing>(loading = it) }
-    val progress = MutableStateFlow(emptyList<MigrationProgressDto>())
+    val progress: StateFlow<List<MigrationProgressDto>>
+        field = MutableStateFlow(emptyList())
 
     init {
         viewModelScope.launch {

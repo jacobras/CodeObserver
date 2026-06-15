@@ -6,6 +6,7 @@ import com.gabrieldrn.carbon.notification.NotificationStatus
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -28,7 +29,8 @@ internal class ModuleRulesViewModel(
     ) { loading, saving, deleting ->
         UiState(loading = loading, saving = saving, deleting = deleting)
     }
-    val settings = MutableStateFlow(emptyList<ModuleGraphSettingDto>())
+    val settings: StateFlow<List<ModuleGraphSettingDto>>
+        field = MutableStateFlow(emptyList())
 
     init {
         viewModelScope.launch {

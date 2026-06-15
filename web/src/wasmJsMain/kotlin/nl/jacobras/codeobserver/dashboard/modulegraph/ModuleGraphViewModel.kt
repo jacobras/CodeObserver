@@ -9,6 +9,7 @@ import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -33,13 +34,18 @@ internal class ModuleGraphViewModel(
 ) : ViewModel() {
 
     val projectId = projectRepository.selectedProjectId
-    val sortOrder = MutableStateFlow(ModuleSortOrder.Alphabetical)
+    val sortOrder: StateFlow<ModuleSortOrder>
+        field = MutableStateFlow(ModuleSortOrder.Alphabetical)
     val uiState = modulesRepository.loadingState.map { UiState<Nothing>(loading = it) }
-    val graphModules = MutableStateFlow(GraphModulesDto())
+    val graphModules: StateFlow<GraphModulesDto>
+        field = MutableStateFlow(GraphModulesDto())
 
-    val startModule = MutableStateFlow("")
-    val groupingThreshold = MutableStateFlow(DEFAULT_GROUPING_THRESHOLD)
-    val layerDepth = MutableStateFlow(DEFAULT_LAYER_DEPTH)
+    val startModule: StateFlow<String>
+        field = MutableStateFlow("")
+    val groupingThreshold: StateFlow<Int>
+        field = MutableStateFlow(DEFAULT_GROUPING_THRESHOLD)
+    val layerDepth: StateFlow<Int>
+        field = MutableStateFlow(DEFAULT_LAYER_DEPTH)
     val graphInfo = projectId.mapLatest { projectId ->
         if (projectId == null) {
             return@mapLatest GraphVisualInfoDto()
@@ -90,8 +96,20 @@ internal class ModuleGraphViewModel(
         }
     }
 
+    fun setStartModule(module: String) {
+        startModule.value = module
+    }
+
     fun setSortOrder(order: ModuleSortOrder) {
         sortOrder.value = order
+    }
+
+    fun setGroupingThreshold(threshold: Int) {
+        groupingThreshold.value = threshold
+    }
+
+    fun setLayerDepth(depth: Int) {
+        layerDepth.value = depth
     }
 
     private suspend fun loadData() {

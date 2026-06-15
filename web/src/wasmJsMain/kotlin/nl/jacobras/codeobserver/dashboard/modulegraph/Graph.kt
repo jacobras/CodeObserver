@@ -55,6 +55,7 @@ internal fun Graph(viewModel: ModuleGraphViewModel) {
             ProgressIndicator(modifier = Modifier.fillMaxWidth(), loading = true)
             return
         }
+
         is RequestState.Error -> {
             ProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
@@ -63,6 +64,7 @@ internal fun Graph(viewModel: ModuleGraphViewModel) {
             )
             return
         }
+
         RequestState.Idle -> Unit
     }
 
@@ -85,11 +87,11 @@ internal fun Graph(viewModel: ModuleGraphViewModel) {
         ModuleList(
             modules = graphModules.modules,
             startModule = startModule,
-            onSelectModule = { viewModel.startModule.value = it },
+            onSelectModule = { viewModel.setStartModule(it) },
             groupingThreshold = groupingThreshold,
-            onGroupingThresholdChange = { viewModel.groupingThreshold.value = it },
+            onGroupingThresholdChange = { viewModel.setGroupingThreshold(it) },
             layerDepth = layerDepth,
-            onLayerDepthChange = { viewModel.layerDepth.value = it },
+            onLayerDepthChange = { viewModel.setLayerDepth(it) },
             sortOrder = sortOrder,
             onSortOrderChange = { viewModel.setSortOrder(it) },
             modifier = Modifier.width(350.dp).padding(end = 16.dp)

@@ -5,6 +5,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import me.sujanpoudel.utils.paths.appDataDirectory
 import nl.jacobras.codeobserver.server.module
 import java.io.File
@@ -13,7 +14,8 @@ internal class ServerLauncher {
     private var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private val dbFile = File(appDataDirectory(appId = "nl.jacobras.codeobserver").toString(), "data.db")
 
-    val started = MutableStateFlow(false)
+    val started: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     fun start() {
         if (started.value) {

@@ -6,6 +6,7 @@ import com.gabrieldrn.carbon.notification.NotificationStatus
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -30,7 +31,8 @@ internal class ModuleTypesViewModel(
     ) { loading, saving, deleting ->
         UiState(loading = loading, saving = saving, deleting = deleting)
     }
-    val moduleTypeIdentifiers = MutableStateFlow(emptyList<ModuleTypeIdentifierDto>())
+    val moduleTypeIdentifiers: StateFlow<List<ModuleTypeIdentifierDto>>
+        field = MutableStateFlow(emptyList<ModuleTypeIdentifierDto>())
 
     init {
         viewModelScope.launch {

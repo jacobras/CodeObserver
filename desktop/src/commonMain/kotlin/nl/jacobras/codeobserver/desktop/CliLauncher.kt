@@ -4,13 +4,15 @@ import com.github.ajalt.clikt.core.main
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import nl.jacobras.codeobserver.cli.command.measure.MeasureCommand
 import nl.jacobras.codeobserver.dto.ProjectId
 
 internal class CliLauncher {
     val scope = CoroutineScope(Dispatchers.IO)
-    val running = MutableStateFlow(false)
+    val running: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     fun measure(
         path: String,

@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -15,7 +16,8 @@ import kotlin.uuid.Uuid
 
 internal object Notifier {
     private val scope = CoroutineScope(Dispatchers.Default)
-    val notifications = MutableStateFlow<List<Notification>>(emptyList())
+    val notifications: StateFlow<List<Notification>>
+        field = MutableStateFlow(emptyList())
 
     fun show(
         title: String,

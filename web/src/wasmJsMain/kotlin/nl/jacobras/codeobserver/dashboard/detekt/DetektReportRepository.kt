@@ -4,6 +4,7 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import nl.jacobras.codeobserver.dto.DetektMetricDto
 import nl.jacobras.codeobserver.dto.ProjectId
@@ -14,9 +15,12 @@ import nl.jacobras.codeobserver.util.data.RequestState
 internal class DetektReportRepository(
     private val dataSource: DetektReportDataSource
 ) {
-    val metricsLoadingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val reportLoadingState = MutableStateFlow<RequestState>(RequestState.Idle)
-    val deletingState = MutableStateFlow<Map<ReportId, RequestState>>(emptyMap())
+    val metricsLoadingState: StateFlow<RequestState>
+        field = MutableStateFlow<RequestState>(RequestState.Idle)
+    val reportLoadingState: StateFlow<RequestState>
+        field = MutableStateFlow<RequestState>(RequestState.Idle)
+    val deletingState: StateFlow<Map<ReportId, RequestState>>
+        field = MutableStateFlow<Map<ReportId, RequestState>>(emptyMap())
 
     suspend fun fetchMetrics(projectId: ProjectId): Result<List<DetektMetricDto>, NetworkError> {
         metricsLoadingState.value = RequestState.Working
