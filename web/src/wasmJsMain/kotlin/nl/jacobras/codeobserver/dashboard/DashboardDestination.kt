@@ -8,8 +8,7 @@ internal enum class DashboardDestination(
     Artifacts("artifacts", "Artifact sizes"),
     BuildTimes("buildTimes", "Build times"),
     Migrations("migrations", "Migrations"),
-    DetektTrends("detektTrends", "Detekt trends"),
-    DetektReport("detektReport", "Detekt report"),
+    Detekt("detekt", "Detekt"),
     ModuleGraph("moduleGraph", "Module graph");
 
     companion object {

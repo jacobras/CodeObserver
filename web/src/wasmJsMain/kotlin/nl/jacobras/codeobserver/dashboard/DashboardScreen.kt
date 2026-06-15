@@ -32,8 +32,7 @@ import com.gabrieldrn.carbon.tab.TabVariant
 import nl.jacobras.codeobserver.AppViewModel
 import nl.jacobras.codeobserver.dashboard.artifacts.ArtifactCharts
 import nl.jacobras.codeobserver.dashboard.buildtimes.BuildTimes
-import nl.jacobras.codeobserver.dashboard.detekt.DetektReport
-import nl.jacobras.codeobserver.dashboard.detekt.DetektTrends
+import nl.jacobras.codeobserver.dashboard.detekt.Detekt
 import nl.jacobras.codeobserver.dashboard.migrations.Migrations
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraph
 import nl.jacobras.codeobserver.dashboard.trends.CodeTrends
@@ -147,14 +146,11 @@ private fun DashboardScreen(
                             onSelectTimeView = { timeView = it }
                         )
                     }
-                    composable(DashboardDestination.DetektTrends.route) {
-                        DetektTrends(
+                    composable(DashboardDestination.Detekt.route) {
+                        Detekt(
                             timeView = timeView,
                             onSelectTimeView = { timeView = it }
                         )
-                    }
-                    composable(DashboardDestination.DetektReport.route) {
-                        DetektReport()
                     }
                     composable(DashboardDestination.Migrations.route) {
                         Migrations(
