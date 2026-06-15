@@ -54,27 +54,5 @@ internal fun CodeCharts(
                 .weight(1f)
                 .height(240.dp)
         )
-        TimeChart(
-            title = "Module count",
-            records = metrics.filter { it.moduleCount > 0 },
-            dateField = { it.gitDate },
-            metricField = { it.moduleCount },
-            timeView = timeView,
-            color = ChartColor.BurntSienna,
-            modifier = Modifier
-                .weight(1f)
-                .height(240.dp)
-        )
-        TimeChart(
-            title = "Module tree height",
-            records = metrics.filter { it.moduleTreeHeight > 0 },
-            dateField = { it.gitDate },
-            metricField = { it.moduleTreeHeight },
-            timeView = timeView,
-            color = ChartColor.Charcoal,
-            modifier = Modifier
-                .weight(1f)
-                .height(240.dp)
-        )
     }
 }

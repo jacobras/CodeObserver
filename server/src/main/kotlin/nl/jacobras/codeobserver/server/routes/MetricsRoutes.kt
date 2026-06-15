@@ -14,6 +14,7 @@ import nl.jacobras.codeobserver.dto.GitHash
 import nl.jacobras.codeobserver.dto.GradleMetricsRequest
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.server.auth.requireAdmin
+import nl.jacobras.codeobserver.server.entity.GradleMetricsTable
 import nl.jacobras.codeobserver.server.entity.MetricsTable
 import nl.jacobras.codeobserver.server.entity.ModuleGraphTable
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -43,9 +44,7 @@ internal fun Route.metricRoutes() {
                         createdAt = Instant.fromEpochSeconds(it[MetricsTable.createdAt]),
                         gitHash = GitHash(it[MetricsTable.gitHash]),
                         gitDate = Instant.fromEpochSeconds(it[MetricsTable.gitDate]),
-                        linesOfCode = it[MetricsTable.linesOfCode],
-                        moduleCount = it[MetricsTable.moduleCount],
-                        moduleTreeHeight = it[MetricsTable.moduleTreeHeight]
+                        linesOfCode = it[MetricsTable.linesOfCode]
                     )
                 }
         }
@@ -56,9 +55,7 @@ internal fun Route.metricRoutes() {
         transaction {
             MetricsTable.upsert(
                 onUpdateExclude = listOf(
-                    MetricsTable.createdAt,
-                    MetricsTable.moduleCount,
-                    MetricsTable.moduleTreeHeight
+                    MetricsTable.createdAt
                 )
             ) {
                 it[projectId] = request.projectId.value
@@ -73,11 +70,8 @@ internal fun Route.metricRoutes() {
     post("/metrics/gradle") {
         val request = call.receive<GradleMetricsRequest>()
         transaction {
-            MetricsTable.upsert(
-                onUpdateExclude = listOf(
-                    MetricsTable.createdAt,
-                    MetricsTable.linesOfCode
-                )
+            GradleMetricsTable.upsert(
+                onUpdateExclude = listOf(GradleMetricsTable.createdAt)
             ) {
                 it[projectId] = request.projectId.value
                 it[createdAt] = Clock.System.now().epochSeconds

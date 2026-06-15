@@ -25,6 +25,7 @@ internal fun ModuleGraph() {
 
     Column(modifier = Modifier) {
         val tabs = listOf(
+            TabItem("Metrics"),
             TabItem("Graph"),
             TabItem("Module rules"),
             TabItem("Module types")
@@ -49,6 +50,7 @@ internal fun ModuleGraph() {
         Spacer(Modifier.height(16.dp))
 
         when (selectedTab.label) {
+            "Metrics" -> GradleMetrics(viewModel)
             "Graph" -> Graph(viewModel)
             "Module rules" -> ModuleRules()
             "Module types" -> ModuleTypes()

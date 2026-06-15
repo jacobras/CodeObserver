@@ -28,6 +28,8 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.migration.core)
+    implementation(libs.exposed.migration.jdbc)
     implementation(libs.jgrapht.core)
     implementation(libs.kermit)
     implementation(libs.kotlinx.serialization.json)

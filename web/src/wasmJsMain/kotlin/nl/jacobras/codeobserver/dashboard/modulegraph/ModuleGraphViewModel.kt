@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphConfig
 import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphVisualizer
 import nl.jacobras.codeobserver.dto.GraphConfigDto
-import nl.jacobras.codeobserver.dto.GraphModulesDto
+import nl.jacobras.codeobserver.dto.GradleDto
 import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.dto.ProjectId
@@ -37,8 +37,8 @@ internal class ModuleGraphViewModel(
     val sortOrder: StateFlow<ModuleSortOrder>
         field = MutableStateFlow(ModuleSortOrder.Alphabetical)
     val uiState = modulesRepository.loadingState.map { UiState<Nothing>(loading = it) }
-    val graphModules: StateFlow<GraphModulesDto>
-        field = MutableStateFlow(GraphModulesDto())
+    val graphModules: StateFlow<GradleDto>
+        field = MutableStateFlow(GradleDto())
 
     val startModule: StateFlow<String>
         field = MutableStateFlow("")

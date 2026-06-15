@@ -4,15 +4,20 @@ import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraphDataSource
 import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphConfig
+import nl.jacobras.codeobserver.dto.GradleDto
+import nl.jacobras.codeobserver.dto.GradleMetricPointDto
 import nl.jacobras.codeobserver.dto.GraphConfigDto
 import nl.jacobras.codeobserver.dto.GraphModuleDto
-import nl.jacobras.codeobserver.dto.GraphModulesDto
 import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.dto.ProjectId
 import nl.jacobras.codeobserver.util.data.NetworkError
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 
-private val DEMO_GRAPH_MODULES = GraphModulesDto(
+private val now = Clock.System.now()
+private val DEMO_GRAPH_MODULES = GradleDto(
     longestPath = listOf(":app", ":feature:home", ":core:data", ":core:network"),
     modules = listOf(
         GraphModuleDto(name = "app", score = 0),
@@ -25,6 +30,13 @@ private val DEMO_GRAPH_MODULES = GraphModulesDto(
         GraphModuleDto(name = "feature:home", score = 0),
         GraphModuleDto(name = "feature:profile", score = 0),
         GraphModuleDto(name = "feature:settings", score = 5)
+    ),
+    metrics = listOf(
+        GradleMetricPointDto(gitDate = now.minus(300.days), moduleCount = 18, moduleTreeHeight = 5),
+        GradleMetricPointDto(gitDate = now.minus(90.days), moduleCount = 20, moduleTreeHeight = 5),
+        GradleMetricPointDto(gitDate = now.minus(14.days), moduleCount = 24, moduleTreeHeight = 6),
+        GradleMetricPointDto(gitDate = now.minus(7.days), moduleCount = 21, moduleTreeHeight = 6),
+        GradleMetricPointDto(gitDate = now.minus(3.hours), moduleCount = 25, moduleTreeHeight = 4)
     )
 )
 
@@ -32,7 +44,7 @@ internal class DemoModuleGraphDataSource : ModuleGraphDataSource {
     override suspend fun fetchGraphModules(
         projectId: ProjectId,
         sortOrder: ModuleSortOrder
-    ): Result<GraphModulesDto, NetworkError> {
+    ): Result<GradleDto, NetworkError> {
         return when (sortOrder) {
             ModuleSortOrder.Alphabetical -> Ok(
                 DEMO_GRAPH_MODULES.copy(

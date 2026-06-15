@@ -34,6 +34,7 @@ import nl.jacobras.codeobserver.server.auth.purgeExpiredSessions
 import nl.jacobras.codeobserver.server.entity.ArtifactSizesTable
 import nl.jacobras.codeobserver.server.entity.BuildTimesTable
 import nl.jacobras.codeobserver.server.entity.DetektReportsTable
+import nl.jacobras.codeobserver.server.entity.GradleMetricsTable
 import nl.jacobras.codeobserver.server.entity.MetricsTable
 import nl.jacobras.codeobserver.server.entity.MigrationProgressTable
 import nl.jacobras.codeobserver.server.entity.MigrationsTable
@@ -99,6 +100,7 @@ fun Application.module(
             ArtifactSizesTable,
             BuildTimesTable,
             DetektReportsTable,
+            GradleMetricsTable,
             MetricsTable,
             MigrationProgressTable,
             MigrationsTable,
@@ -110,6 +112,7 @@ fun Application.module(
             SessionsTable,
             UsersTable,
         )
+        migrateModuleMetricsToGradleMetrics()
         if (UsersTable.selectAll().empty()) {
             UsersTable.insert {
                 it[username] = "admin"

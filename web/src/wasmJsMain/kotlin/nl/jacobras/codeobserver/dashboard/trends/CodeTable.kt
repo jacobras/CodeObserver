@@ -43,9 +43,9 @@ internal fun CodeTable(
     val isAdmin = isCurrentUserAdmin()
     DataTable(
         columnHeadings = if (isAdmin) {
-            listOf("Git date", "Git hash", "Lines of code", "Module count", "Module tree height", "Actions")
+            listOf("Git date", "Git hash", "Lines of code", "Actions")
         } else {
-            listOf("Git date", "Git hash", "Lines of code", "Module count", "Module tree height")
+            listOf("Git date", "Git hash", "Lines of code")
         },
         rowCount = sortedMetrics.size,
         cellContent = { rowIndex, columnIndex, modifier ->
@@ -70,19 +70,7 @@ internal fun CodeTable(
                         style = Carbon.typography.bodyCompact01
                     )
                 }
-                3 -> SelectionContainer(modifier) {
-                    BasicText(
-                        text = record.moduleCount.toString(),
-                        style = Carbon.typography.bodyCompact01
-                    )
-                }
-                4 -> SelectionContainer(modifier) {
-                    BasicText(
-                        text = record.moduleTreeHeight.toString(),
-                        style = Carbon.typography.bodyCompact01
-                    )
-                }
-                5 -> Row(
+                3 -> Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = modifier
                 ) {

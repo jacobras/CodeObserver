@@ -18,45 +18,35 @@ private val DEMO_METRICS = mutableListOf(
         createdAt = now.minus(300.days),
         gitHash = GitHash("a1b2c3d"),
         gitDate = now.minus(300.days),
-        linesOfCode = 40000,
-        moduleCount = 18,
-        moduleTreeHeight = 5
+        linesOfCode = 40000
     ),
     CodeMetricsDto(
         projectId = ProjectId("myApp"),
         createdAt = now.minus(90.days),
         gitHash = GitHash("b2c3d4e"),
         gitDate = now.minus(90.days),
-        linesOfCode = 47500,
-        moduleCount = 20,
-        moduleTreeHeight = 5
+        linesOfCode = 47500
     ),
     CodeMetricsDto(
         projectId = ProjectId("myApp"),
         createdAt = now.minus(14.days),
         gitHash = GitHash("c3d4e5f"),
         gitDate = now.minus(14.days),
-        linesOfCode = 51200,
-        moduleCount = 24,
-        moduleTreeHeight = 6
+        linesOfCode = 51200
     ),
     CodeMetricsDto(
         projectId = ProjectId("myApp"),
         createdAt = now.minus(7.days),
         gitHash = GitHash("d4e5f6a"),
         gitDate = now.minus(7.days),
-        linesOfCode = 53100,
-        moduleCount = 21,
-        moduleTreeHeight = 6
+        linesOfCode = 53100
     ),
     CodeMetricsDto(
         projectId = ProjectId("myApp"),
         createdAt = now.minus(3.hours),
         gitHash = GitHash("e5f6a7b"),
         gitDate = now.minus(3.hours),
-        linesOfCode = 56800,
-        moduleCount = 25,
-        moduleTreeHeight = 4
+        linesOfCode = 56800
     ),
 )
 

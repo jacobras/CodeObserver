@@ -10,7 +10,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
-import nl.jacobras.codeobserver.dto.GraphModulesDto
+import nl.jacobras.codeobserver.dto.GradleDto
 import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.dto.ProjectId
@@ -20,7 +20,7 @@ internal interface ModuleGraphDataSource {
     suspend fun fetchGraphModules(
         projectId: ProjectId,
         sortOrder: ModuleSortOrder
-    ): Result<GraphModulesDto, NetworkError>
+    ): Result<GradleDto, NetworkError>
 
     suspend fun fetchGraphInfo(
         projectId: ProjectId
@@ -33,7 +33,7 @@ internal class ModuleGraphDataSourceImpl(
     override suspend fun fetchGraphModules(
         projectId: ProjectId,
         sortOrder: ModuleSortOrder
-    ): Result<GraphModulesDto, NetworkError> {
+    ): Result<GradleDto, NetworkError> {
         Logger.i("Fetching modules for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/modules") {
@@ -41,7 +41,7 @@ internal class ModuleGraphDataSourceImpl(
                     parameters.append("projectId", projectId.value)
                     parameters.append("sort", sortOrder.id)
                 }
-            }.body<GraphModulesDto>()
+            }.body<GradleDto>()
         }.mapError {
             Logger.e(it) { "Failed to fetch modules" }
             NetworkError.UnknownError

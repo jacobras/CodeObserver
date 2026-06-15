@@ -9,7 +9,7 @@ internal enum class DashboardDestination(
     BuildTimes("buildTimes", "Build times"),
     Migrations("migrations", "Migrations"),
     Detekt("detekt", "Detekt"),
-    ModuleGraph("moduleGraph", "Module graph");
+    ModuleGraph("moduleGraph", "Gradle");
 
     companion object {
         fun fromRoute(route: String) = entries.firstOrNull { it.route == route }

@@ -5,11 +5,13 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlinx.serialization.json.Json
+import nl.jacobras.codeobserver.dto.GradleDto
+import nl.jacobras.codeobserver.dto.GradleMetricPointDto
 import nl.jacobras.codeobserver.dto.GraphConfigDto
 import nl.jacobras.codeobserver.dto.GraphModuleDto
-import nl.jacobras.codeobserver.dto.GraphModulesDto
 import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
+import nl.jacobras.codeobserver.server.entity.GradleMetricsTable
 import nl.jacobras.codeobserver.server.entity.ModuleGraphSettingsTable
 import nl.jacobras.codeobserver.server.entity.ModuleGraphTable
 import nl.jacobras.codeobserver.server.entity.ModuleTypeIdentifiersTable
@@ -18,6 +20,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlin.time.Instant
 
 internal fun Route.moduleRoutes() {
     get("/graphVisualInfo") {
@@ -99,11 +102,24 @@ internal fun Route.moduleRoutes() {
                 .singleOrNull()
         }
         if (graphRecord == null) {
-            call.respond(GraphModulesDto())
+            call.respond(GradleDto())
             return@get
         }
 
         val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
+
+        val metrics = transaction {
+            GradleMetricsTable.selectAll()
+                .where { GradleMetricsTable.projectId eq projectId }
+                .orderBy(GradleMetricsTable.gitDate to SortOrder.ASC)
+                .map {
+                    GradleMetricPointDto(
+                        gitDate = Instant.fromEpochSeconds(it[GradleMetricsTable.gitDate]),
+                        moduleCount = it[GradleMetricsTable.moduleCount],
+                        moduleTreeHeight = it[GradleMetricsTable.moduleTreeHeight]
+                    )
+                }
+        }
 
         val modules = when (sortOrder) {
             ModuleSortOrder.BetweennessCentrality -> {
@@ -116,7 +132,7 @@ internal fun Route.moduleRoutes() {
             }
         }
         call.respond(
-            GraphModulesDto(
+            GradleDto(
                 modules = modules,
                 longestPath = graphRecord[ModuleGraphTable.longestPath].let {
                     if (it.isBlank()) {
@@ -124,7 +140,8 @@ internal fun Route.moduleRoutes() {
                     } else {
                         it.split(",")
                     }
-                }
+                },
+                metrics = metrics
             )
         )
     }

@@ -9,7 +9,5 @@ data class CodeMetricsDto(
     val createdAt: Instant,
     val gitHash: GitHash,
     val gitDate: Instant,
-    val linesOfCode: Int,
-    val moduleCount: Int,
-    val moduleTreeHeight: Int
+    val linesOfCode: Int
 )

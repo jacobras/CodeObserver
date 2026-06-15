@@ -29,7 +29,7 @@ import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
 import kotlinx.browser.document
 import nl.jacobras.codeobserver.dto.GraphModuleDto
-import nl.jacobras.codeobserver.dto.GraphModulesDto
+import nl.jacobras.codeobserver.dto.GradleDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
@@ -40,7 +40,7 @@ import org.w3c.dom.HTMLIFrameElement
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun Graph(viewModel: ModuleGraphViewModel) {
-    val graphModules by viewModel.graphModules.collectAsState(GraphModulesDto())
+    val graphModules by viewModel.graphModules.collectAsState(GradleDto())
     val startModule by viewModel.startModule.collectAsState("")
     val sortOrder by viewModel.sortOrder.collectAsState()
     val groupingThreshold by viewModel.groupingThreshold.collectAsState()
