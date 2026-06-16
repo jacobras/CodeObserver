@@ -19,15 +19,10 @@ import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
 import com.gabrieldrn.carbon.button.ButtonType
-import com.gabrieldrn.carbon.dropdown.Dropdown
-import com.gabrieldrn.carbon.dropdown.base.DropdownInteractiveState
-import com.gabrieldrn.carbon.dropdown.base.DropdownOption
-import com.gabrieldrn.carbon.textinput.TextInput
 import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.dto.MigrationDto
 import nl.jacobras.codeobserver.dto.MigrationId
 import nl.jacobras.codeobserver.util.ui.dialog.DeleteDialog
-import nl.jacobras.codeobserver.util.ui.layout.FormWithDataTable
 import nl.jacobras.codeobserver.util.ui.table.DataTable
 
 @Composable
@@ -36,163 +31,107 @@ internal fun MigrationsOverview(
     onSave: (id: MigrationId?, name: String, description: String, type: String, rule: String) -> Unit,
     onDelete: (id: MigrationId) -> Unit
 ) {
-    var editingId by remember { mutableStateOf<MigrationId?>(null) }
-    var formName by remember { mutableStateOf("") }
-    var formDescription by remember { mutableStateOf("") }
-    var formType by remember { mutableStateOf("moduleUsage") }
-    var formRule by remember { mutableStateOf("") }
+    var editingMigration by remember { mutableStateOf<MigrationDto?>(null) }
+    var showForm by remember { mutableStateOf(false) }
+    var requestDeleteId by remember { mutableStateOf<MigrationId?>(null) }
 
-    val isEditing = editingId != null
-
-    fun clearForm() {
-        editingId = null
-        formName = ""
-        formDescription = ""
-        formType = "moduleUsage"
-        formRule = ""
+    if (showForm) {
+        MigrationFormDialog(
+            migration = editingMigration,
+            onSave = { name, description, type, rule ->
+                onSave(editingMigration?.id, name, description, type, rule)
+                showForm = false
+                editingMigration = null
+            },
+            onCancel = {
+                showForm = false
+                editingMigration = null
+            }
+        )
     }
 
-    FormWithDataTable(
-        modifier = Modifier.fillMaxWidth(),
-        form = { formModifier ->
-            Column(formModifier) {
-                TextInput(
-                    label = "Name",
-                    value = formName,
-                    onValueChange = { formName = it },
-                    placeholderText = "Remove deprecated module"
-                )
-                Spacer(Modifier.height(8.dp))
-                TextInput(
-                    label = "Description",
-                    value = formDescription,
-                    onValueChange = { formDescription = it },
-                    placeholderText = "Optional description"
-                )
-                if (!isEditing) {
-                    Spacer(Modifier.height(8.dp))
-                    Dropdown(
-                        label = "Type",
-                        placeholder = "Select type",
-                        options = migrationTypes,
-                        selectedOption = formType,
-                        onOptionSelected = { formType = it },
-                        state = DropdownInteractiveState.Enabled
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    TextInput(
-                        label = "Rule",
-                        value = formRule,
-                        onValueChange = { formRule = it },
-                        placeholderText = if (formType == "moduleUsage") {
-                            "util:deprecated"
-                        } else {
-                            "com.example.lib.Foo or com.example.*"
-                        }
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        label = if (isEditing) "Update" else "Add migration",
-                        buttonType = ButtonType.Primary,
-                        buttonSize = ButtonSize.Small,
-                        isEnabled = formName.trim().isNotEmpty() && (isEditing || formRule.trim().isNotEmpty()),
-                        onClick = {
-                            onSave(editingId, formName.trim(), formDescription.trim(), formType, formRule.trim())
-                            clearForm()
-                        }
-                    )
-                    Button(
-                        label = "Clear",
-                        buttonType = ButtonType.Tertiary,
-                        buttonSize = ButtonSize.Small,
-                        isEnabled = formName.isNotEmpty() || formDescription.isNotEmpty() ||
-                            formRule.isNotEmpty() || isEditing,
-                        onClick = { clearForm() }
-                    )
-                }
+    requestDeleteId?.let {
+        DeleteDialog(
+            message = "Are you sure you want to delete this migration?",
+            onCancel = { requestDeleteId = null },
+            onDelete = {
+                onDelete(it)
+                requestDeleteId = null
             }
-        },
-        dataTable = { tableModifier ->
-            if (migrations.isEmpty()) {
-                BasicText(
-                    text = "No migrations yet. Add one above.",
-                    style = Carbon.typography.body02
-                )
-            } else {
-                var requestDeleteId by remember { mutableStateOf<MigrationId?>(null) }
-                requestDeleteId?.let {
-                    DeleteDialog(
-                        message = "Are you sure you want to delete this migration?",
-                        onCancel = { requestDeleteId = null },
-                        onDelete = {
-                            onDelete(it)
-                            requestDeleteId = null
-                        }
-                    )
-                }
+        )
+    }
 
-                val isAdmin = isCurrentUserAdmin()
-                DataTable(
-                    modifier = tableModifier,
-                    columnHeadings = listOf("Name", "Type", "Rule", "Actions"),
-                    rowCount = migrations.size,
-                    cellContent = { rowIndex, columnIndex, modifier ->
-                        val migration = migrations[rowIndex]
-                        when (columnIndex) {
-                            0 -> SelectionContainer(modifier) {
-                                BasicText(
-                                    text = migration.name,
-                                    style = Carbon.typography.bodyCompact01
-                                )
-                            }
-                            1 -> SelectionContainer(modifier) {
-                                BasicText(
-                                    text = migration.type,
-                                    style = Carbon.typography.bodyCompact01
-                                )
-                            }
-                            2 -> SelectionContainer(modifier) {
-                                BasicText(
-                                    text = migration.rule,
-                                    style = Carbon.typography.code01
-                                )
-                            }
-                            3 -> Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = modifier
-                            ) {
-                                Button(
-                                    label = "Edit",
-                                    buttonType = ButtonType.Ghost,
-                                    buttonSize = ButtonSize.Small,
-                                    onClick = {
-                                        editingId = migration.id
-                                        formName = migration.name
-                                        formDescription = migration.description
-                                        formType = migration.type
-                                        formRule = migration.rule
-                                    }
-                                )
-                                if (isAdmin) {
-                                    Button(
-                                        label = "Delete",
-                                        buttonType = ButtonType.GhostDanger,
-                                        buttonSize = ButtonSize.Small,
-                                        onClick = { requestDeleteId = migration.id }
-                                    )
+    Column(Modifier.fillMaxWidth()) {
+        Button(
+            label = "Add migration",
+            buttonType = ButtonType.Primary,
+            buttonSize = ButtonSize.Small,
+            onClick = {
+                editingMigration = null
+                showForm = true
+            }
+        )
+        Spacer(Modifier.height(16.dp))
+
+        if (migrations.isEmpty()) {
+            BasicText(
+                text = "No migrations yet. Add one to get started.",
+                style = Carbon.typography.body02
+            )
+        } else {
+            val isAdmin = isCurrentUserAdmin()
+            DataTable(
+                columnHeadings = listOf("Name", "Type", "Rule", "Actions"),
+                rowCount = migrations.size,
+                cellContent = { rowIndex, columnIndex, modifier ->
+                    val migration = migrations[rowIndex]
+                    when (columnIndex) {
+                        0 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = migration.name,
+                                style = Carbon.typography.bodyCompact01
+                            )
+                        }
+
+                        1 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = migration.type,
+                                style = Carbon.typography.bodyCompact01
+                            )
+                        }
+
+                        2 -> SelectionContainer(modifier) {
+                            BasicText(
+                                text = migration.rule,
+                                style = Carbon.typography.code01
+                            )
+                        }
+
+                        3 -> Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = modifier
+                        ) {
+                            Button(
+                                label = "Edit",
+                                buttonType = ButtonType.Ghost,
+                                buttonSize = ButtonSize.Small,
+                                onClick = {
+                                    editingMigration = migration
+                                    showForm = true
                                 }
+                            )
+                            if (isAdmin) {
+                                Button(
+                                    label = "Delete",
+                                    buttonType = ButtonType.GhostDanger,
+                                    buttonSize = ButtonSize.Small,
+                                    onClick = { requestDeleteId = migration.id }
+                                )
                             }
                         }
                     }
-                )
-            }
+                }
+            )
         }
-    )
+    }
 }
-
-private val migrationTypes = linkedMapOf(
-    "moduleUsage" to DropdownOption("moduleUsage"),
-    "importUsage" to DropdownOption("importUsage")
-)
