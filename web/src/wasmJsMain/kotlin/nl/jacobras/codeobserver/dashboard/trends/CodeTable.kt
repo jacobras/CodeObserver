@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
@@ -24,7 +25,8 @@ import nl.jacobras.humanreadable.HumanReadable
 @Composable
 internal fun CodeTable(
     metrics: List<CodeMetricsDto>,
-    onDelete: (CodeMetricsDto) -> Unit
+    onDelete: (CodeMetricsDto) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val sortedMetrics = metrics.sortedByDescending { it.gitDate }
     var requestDeleteRecord by remember { mutableStateOf<CodeMetricsDto?>(null) }
@@ -42,6 +44,7 @@ internal fun CodeTable(
 
     val isAdmin = isCurrentUserAdmin()
     DataTable(
+        modifier = modifier,
         columnHeadings = if (isAdmin) {
             listOf("Git date", "Git hash", "Lines of code", "Actions")
         } else {

@@ -1,17 +1,22 @@
 package nl.jacobras.codeobserver.dashboard.trends
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.chart.TimeView
+import nl.jacobras.codeobserver.util.ui.chart.TimeViewSelector
+import nl.jacobras.codeobserver.util.ui.commandinfo.CommandInfoBox
+import nl.jacobras.codeobserver.util.ui.layout.SingleChartWithDataTable
 import nl.jacobras.codeobserver.util.ui.progress.EmptyState
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import org.koin.compose.viewmodel.koinViewModel
@@ -58,16 +63,37 @@ internal fun CodeTrends(
     }
 
     Column {
-        CodeCharts(
-            metrics = metrics,
-            timeView = timeView,
-            onSelectTimeView = onSelectTimeView,
-            projectId = projectId
-        )
-        Spacer(Modifier.height(32.dp))
-        CodeTable(
-            metrics = metrics,
-            onDelete = { viewModel.delete(it) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TimeViewSelector(
+                selected = timeView,
+                onSelect = { onSelectTimeView(it) }
+            )
+            val currentProjectId = projectId
+            if (currentProjectId != null) {
+                Spacer(Modifier.weight(1f))
+                CommandInfoBox(
+                    command = "measure",
+                    projectId = currentProjectId
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        SingleChartWithDataTable(
+            modifier = Modifier.fillMaxWidth(),
+            chart = { chartModifier ->
+                CodeCharts(
+                    metrics = metrics,
+                    timeView = timeView,
+                    modifier = chartModifier
+                )
+            },
+            dataTable = { tableModifier ->
+                CodeTable(
+                    metrics = metrics,
+                    onDelete = { viewModel.delete(it) },
+                    modifier = tableModifier
+                )
+            }
         )
     }
 }
