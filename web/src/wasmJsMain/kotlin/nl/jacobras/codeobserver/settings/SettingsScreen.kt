@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -17,8 +18,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
@@ -27,6 +30,7 @@ import com.gabrieldrn.carbon.foundation.color.CarbonLayer
 import com.gabrieldrn.carbon.foundation.color.layerBackground
 import com.gabrieldrn.carbon.textinput.PasswordInput
 import com.gabrieldrn.carbon.textinput.TextInput
+import com.gabrieldrn.carbon.textinput.TextInputState
 import nl.jacobras.codeobserver.auth.isCurrentUserAdmin
 import nl.jacobras.codeobserver.dto.ProjectDto
 import nl.jacobras.codeobserver.dto.ProjectId
@@ -45,15 +49,30 @@ internal fun SettingsScreen() {
     val state by viewModel.state.collectAsState(UiState())
     val isAdmin = isCurrentUserAdmin()
 
-    var editProjectId by remember { mutableStateOf<ProjectId?>(null) }
-    var editName by remember { mutableStateOf("") }
+    var editingProject by remember { mutableStateOf<ProjectDto?>(null) }
+    var showForm by remember { mutableStateOf(false) }
 
-    fun clearForm() {
-        editProjectId = null
-        editName = ""
+    if (showForm) {
+        ProjectFormDialog(
+            project = editingProject,
+            saving = state.saving,
+            onSubmit = { projectId, name ->
+                viewModel.saveProject(
+                    projectId = projectId,
+                    name = name,
+                    onSuccess = {
+                        showForm = false
+                        editingProject = null
+                    }
+                )
+            },
+            onCancel = {
+                showForm = false
+                editingProject = null
+            }
+        )
     }
 
-    val isEditing = projects.any { it.id == editProjectId }
     CarbonLayer {
         Column(
             modifier = Modifier
@@ -85,61 +104,25 @@ internal fun SettingsScreen() {
             Spacer(Modifier.height(16.dp))
 
             if (isAdmin) {
-                TextInput(
-                    label = "Project ID",
-                    value = editProjectId?.value ?: "",
-                    onValueChange = { newValue ->
-                        editProjectId = if (newValue.isNotBlank()) {
-                            ProjectId(newValue)
-                        } else {
-                            null
-                        }
-                    },
-                    placeholderText = "my-app"
+                Button(
+                    label = "Add project",
+                    buttonType = ButtonType.Primary,
+                    buttonSize = ButtonSize.Small,
+                    onClick = {
+                        editingProject = null
+                        showForm = true
+                    }
                 )
-                Spacer(Modifier.height(8.dp))
-                TextInput(
-                    label = "Display name",
-                    value = editName,
-                    onValueChange = { editName = it },
-                    placeholderText = "My App"
-                )
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val saving = state.saving
-
-                    SmallProgressButton(
-                        label = if (isEditing) "Update project" else "Add project",
-                        buttonType = ButtonType.Primary,
-                        isEnabled = editProjectId != null && editName.trim().isNotEmpty(),
-                        loading = saving is RequestState.Working,
-                        onClick = {
-                            val id = editProjectId ?: return@SmallProgressButton
-                            viewModel.saveProject(
-                                projectId = id,
-                                name = editName.trim(),
-                                onSuccess = { clearForm() }
-                            )
-                        }
-                    )
-                    Button(
-                        label = "Clear",
-                        buttonType = ButtonType.Tertiary,
-                        buttonSize = ButtonSize.Small,
-                        isEnabled = editProjectId != null || editName.isNotEmpty(),
-                        onClick = { clearForm() }
-                    )
-                }
-
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(16.dp))
             }
+            // FIXME: this list is empty?!
             ProjectsTable(
                 projects = projects,
                 canEdit = isAdmin,
                 deleting = state.deleting,
                 onEdit = { project ->
-                    editProjectId = project.id
-                    editName = project.name
+                    editingProject = project
+                    showForm = true
                 },
                 onDelete = { viewModel.deleteProject(it) }
             )
@@ -148,6 +131,73 @@ internal fun SettingsScreen() {
             ChangePasswordSection()
         }
     }
+}
+
+@Composable
+private fun ProjectFormDialog(
+    project: ProjectDto?,
+    saving: RequestState,
+    onSubmit: (projectId: ProjectId, name: String) -> Unit,
+    onCancel: () -> Unit
+) {
+    val isEditing = project != null
+    var projectIdText by remember { mutableStateOf(project?.id?.value ?: "") }
+    var name by remember { mutableStateOf(project?.name ?: "") }
+
+    val canSubmit = projectIdText.trim().isNotEmpty() && name.trim().isNotEmpty()
+
+    Dialog(
+        onDismissRequest = onCancel,
+        content = {
+            CarbonLayer {
+                Column(
+                    modifier = Modifier
+                        .layerBackground()
+                        .padding(16.dp)
+                        .width(480.dp)
+                ) {
+                    BasicText(
+                        text = if (isEditing) "Edit project" else "Add project",
+                        style = Carbon.typography.heading03.copy(color = Carbon.theme.textPrimary)
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    TextInput(
+                        label = "Project ID",
+                        value = projectIdText,
+                        onValueChange = { projectIdText = it },
+                        placeholderText = "my-app",
+                        state = if (isEditing) TextInputState.Disabled else TextInputState.Enabled
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    TextInput(
+                        label = "Display name",
+                        value = name,
+                        onValueChange = { name = it },
+                        placeholderText = "My App"
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.align(Alignment.End),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            label = "Cancel",
+                            buttonType = ButtonType.Secondary,
+                            buttonSize = ButtonSize.Small,
+                            onClick = onCancel
+                        )
+                        SmallProgressButton(
+                            label = if (isEditing) "Update project" else "Add project",
+                            buttonType = ButtonType.Primary,
+                            isEnabled = canSubmit,
+                            loading = saving is RequestState.Working,
+                            onClick = { onSubmit(ProjectId(projectIdText.trim()), name.trim()) }
+                        )
+                    }
+                }
+            }
+        }
+    )
 }
 
 @Composable
@@ -208,7 +258,7 @@ private fun ProjectsTable(
 ) {
     if (projects.isEmpty()) {
         BasicText(
-            text = if (canEdit) "No projects yet. Add one above." else "No projects yet.",
+            text = if (canEdit) "No projects yet. Add one to get started." else "No projects yet.",
             style = Carbon.typography.body02
         )
         return
@@ -227,6 +277,7 @@ private fun ProjectsTable(
     }
 
     DataTable(
+        modifier = Modifier.height(400.dp),
         columnHeadings = if (canEdit) {
             listOf("Project ID", "Name", "Actions")
         } else {

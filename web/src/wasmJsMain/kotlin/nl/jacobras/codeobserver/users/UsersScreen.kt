@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
@@ -15,8 +16,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.button.Button
 import com.gabrieldrn.carbon.button.ButtonSize
@@ -46,20 +49,44 @@ internal fun UsersScreen() {
     val apiKey by viewModel.apiKey.collectAsState(null)
     val state by viewModel.state.collectAsState(UiState())
 
-    var editUsername by remember { mutableStateOf<String?>(null) }
-    var formUsername by remember { mutableStateOf("") }
-    var formPassword by remember { mutableStateOf("") }
-    var formRole by remember { mutableStateOf(UserRole.Developer) }
-    var passwordHidden by remember { mutableStateOf(true) }
+    var editingUser by remember { mutableStateOf<UserDto?>(null) }
+    var showForm by remember { mutableStateOf(false) }
 
-    fun clearForm() {
-        editUsername = null
-        formUsername = ""
-        formPassword = ""
-        formRole = UserRole.Developer
+    if (showForm) {
+        UserFormDialog(
+            user = editingUser,
+            saving = state.saving,
+            onSubmit = { username, password, role ->
+                val editing = editingUser
+                if (editing != null) {
+                    viewModel.updateUser(
+                        username = editing.username,
+                        role = role,
+                        password = password.ifEmpty { null },
+                        onSuccess = {
+                            showForm = false
+                            editingUser = null
+                        }
+                    )
+                } else {
+                    viewModel.createUser(
+                        username = username,
+                        password = password,
+                        role = role,
+                        onSuccess = {
+                            showForm = false
+                            editingUser = null
+                        }
+                    )
+                }
+            },
+            onCancel = {
+                showForm = false
+                editingUser = null
+            }
+        )
     }
 
-    val isEditing = editUsername != null
     CarbonLayer {
         Column(
             modifier = Modifier
@@ -89,81 +116,23 @@ internal fun UsersScreen() {
             )
             Spacer(Modifier.height(16.dp))
 
-            TextInput(
-                label = "Username",
-                value = formUsername,
-                onValueChange = { formUsername = it },
-                placeholderText = "username",
-                state = if (isEditing) TextInputState.Disabled else TextInputState.Enabled
-            )
-            Spacer(Modifier.height(8.dp))
-            PasswordInput(
-                label = if (isEditing) "New password (leave empty to keep current)" else "Password",
-                value = formPassword,
-                passwordHidden = passwordHidden,
-                onValueChange = { formPassword = it },
-                onPasswordHiddenChange = { passwordHidden = it }
-            )
-            Spacer(Modifier.height(8.dp))
-            Dropdown(
-                label = "Role",
-                placeholder = "Select role",
-                options = UserRole.entries.associateWith { DropdownOption(it.name.lowercase()) },
-                selectedOption = formRole,
-                onOptionSelected = { formRole = it },
-                state = DropdownInteractiveState.Enabled
-            )
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val saving = state.saving
-                val canSubmit = if (isEditing) {
-                    true
-                } else {
-                    formUsername.isNotBlank() && formPassword.isNotEmpty()
+            Button(
+                label = "Add user",
+                buttonType = ButtonType.Primary,
+                buttonSize = ButtonSize.Small,
+                onClick = {
+                    editingUser = null
+                    showForm = true
                 }
+            )
+            Spacer(Modifier.height(16.dp))
 
-                SmallProgressButton(
-                    label = if (isEditing) "Update user" else "Add user",
-                    buttonType = ButtonType.Primary,
-                    isEnabled = canSubmit,
-                    loading = saving is RequestState.Working,
-                    onClick = {
-                        val editing = editUsername
-                        if (editing != null) {
-                            viewModel.updateUser(
-                                username = editing,
-                                role = formRole,
-                                password = formPassword.ifEmpty { null },
-                                onSuccess = { clearForm() }
-                            )
-                        } else {
-                            viewModel.createUser(
-                                username = formUsername.trim(),
-                                password = formPassword,
-                                role = formRole,
-                                onSuccess = { clearForm() }
-                            )
-                        }
-                    }
-                )
-                Button(
-                    label = "Clear",
-                    buttonType = ButtonType.Tertiary,
-                    buttonSize = ButtonSize.Small,
-                    isEnabled = isEditing || formUsername.isNotEmpty() || formPassword.isNotEmpty(),
-                    onClick = { clearForm() }
-                )
-            }
-
-            Spacer(Modifier.height(20.dp))
             UsersTable(
                 users = users,
                 deleting = state.deleting,
                 onEdit = { user ->
-                    editUsername = user.username
-                    formUsername = user.username
-                    formPassword = ""
-                    formRole = user.role
+                    editingUser = user
+                    showForm = true
                 },
                 onDelete = { viewModel.deleteUser(it) }
             )
@@ -172,6 +141,89 @@ internal fun UsersScreen() {
             ApiKeySection(apiKey = apiKey)
         }
     }
+}
+
+@Composable
+private fun UserFormDialog(
+    user: UserDto?,
+    saving: RequestState,
+    onSubmit: (username: String, password: String, role: UserRole) -> Unit,
+    onCancel: () -> Unit
+) {
+    val isEditing = user != null
+    var formUsername by remember { mutableStateOf(user?.username ?: "") }
+    var formPassword by remember { mutableStateOf("") }
+    var formRole by remember { mutableStateOf(user?.role ?: UserRole.Developer) }
+    var passwordHidden by remember { mutableStateOf(true) }
+
+    val canSubmit = if (isEditing) {
+        true
+    } else {
+        formUsername.isNotBlank() && formPassword.isNotEmpty()
+    }
+
+    Dialog(
+        onDismissRequest = onCancel,
+        content = {
+            CarbonLayer {
+                Column(
+                    modifier = Modifier
+                        .layerBackground()
+                        .padding(16.dp)
+                        .width(480.dp)
+                ) {
+                    BasicText(
+                        text = if (isEditing) "Edit user" else "Add user",
+                        style = Carbon.typography.heading03.copy(color = Carbon.theme.textPrimary)
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    TextInput(
+                        label = "Username",
+                        value = formUsername,
+                        onValueChange = { formUsername = it },
+                        placeholderText = "username",
+                        state = if (isEditing) TextInputState.Disabled else TextInputState.Enabled
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    PasswordInput(
+                        label = if (isEditing) "New password (leave empty to keep current)" else "Password",
+                        value = formPassword,
+                        passwordHidden = passwordHidden,
+                        onValueChange = { formPassword = it },
+                        onPasswordHiddenChange = { passwordHidden = it }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Dropdown(
+                        label = "Role",
+                        placeholder = "Select role",
+                        options = UserRole.entries.associateWith { DropdownOption(it.name.lowercase()) },
+                        selectedOption = formRole,
+                        onOptionSelected = { formRole = it },
+                        state = DropdownInteractiveState.Enabled
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.align(Alignment.End),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            label = "Cancel",
+                            buttonType = ButtonType.Secondary,
+                            buttonSize = ButtonSize.Small,
+                            onClick = onCancel
+                        )
+                        SmallProgressButton(
+                            label = if (isEditing) "Update user" else "Add user",
+                            buttonType = ButtonType.Primary,
+                            isEnabled = canSubmit,
+                            loading = saving is RequestState.Working,
+                            onClick = { onSubmit(formUsername.trim(), formPassword, formRole) }
+                        )
+                    }
+                }
+            }
+        }
+    )
 }
 
 @Composable
