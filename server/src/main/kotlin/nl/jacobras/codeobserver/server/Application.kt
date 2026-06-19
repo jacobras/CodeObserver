@@ -113,6 +113,7 @@ fun Application.module(
             UsersTable,
         )
         migrateModuleMetricsToGradleMetrics()
+        migrateModuleGraphToPerCommit()
         if (UsersTable.selectAll().empty()) {
             UsersTable.insert {
                 it[username] = "admin"

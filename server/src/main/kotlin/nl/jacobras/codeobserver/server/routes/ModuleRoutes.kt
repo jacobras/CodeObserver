@@ -5,6 +5,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlinx.serialization.json.Json
+import nl.jacobras.codeobserver.dto.GitHash
 import nl.jacobras.codeobserver.dto.GradleDto
 import nl.jacobras.codeobserver.dto.GradleMetricPointDto
 import nl.jacobras.codeobserver.dto.GraphConfigDto
@@ -17,6 +18,7 @@ import nl.jacobras.codeobserver.server.entity.ModuleGraphTable
 import nl.jacobras.codeobserver.server.entity.ModuleTypeIdentifiersTable
 import nl.jacobras.codeobserver.server.graph.GraphUtil
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -30,10 +32,17 @@ internal fun Route.moduleRoutes() {
             return@get
         }
 
+        val gitHash = call.request.queryParameters["gitHash"]?.trim()?.takeIf { it.isNotBlank() }
         val graphRecord = transaction {
             ModuleGraphTable
                 .selectAll()
-                .where { ModuleGraphTable.projectId eq projectId }
+                .where {
+                    if (gitHash != null) {
+                        (ModuleGraphTable.projectId eq projectId) and (ModuleGraphTable.gitHash eq gitHash)
+                    } else {
+                        ModuleGraphTable.projectId eq projectId
+                    }
+                }
                 .orderBy(ModuleGraphTable.gitDate to SortOrder.DESC)
                 .limit(1)
                 .singleOrNull()
@@ -93,27 +102,32 @@ internal fun Route.moduleRoutes() {
             return@get
         }
 
+        val gitHash = call.request.queryParameters["gitHash"]?.trim()?.takeIf { it.isNotBlank() }
         val graphRecord = transaction {
             ModuleGraphTable
                 .selectAll()
-                .where { ModuleGraphTable.projectId eq projectId }
+                .where {
+                    if (gitHash != null) {
+                        (ModuleGraphTable.projectId eq projectId) and (ModuleGraphTable.gitHash eq gitHash)
+                    } else {
+                        ModuleGraphTable.projectId eq projectId
+                    }
+                }
                 .orderBy(ModuleGraphTable.gitDate to SortOrder.DESC)
                 .limit(1)
                 .singleOrNull()
         }
-        if (graphRecord == null) {
-            call.respond(GradleDto())
-            return@get
-        }
 
-        val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
-
+        // Always return the full commit time-series so the history slider keeps its timeline even
+        // when the selected commit has no graph snapshot yet (e.g. commits recorded before snapshot
+        // history was retained).
         val metrics = transaction {
             GradleMetricsTable.selectAll()
                 .where { GradleMetricsTable.projectId eq projectId }
                 .orderBy(GradleMetricsTable.gitDate to SortOrder.ASC)
                 .map {
                     GradleMetricPointDto(
+                        gitHash = GitHash(it[GradleMetricsTable.gitHash]),
                         gitDate = Instant.fromEpochSeconds(it[GradleMetricsTable.gitDate]),
                         moduleCount = it[GradleMetricsTable.moduleCount],
                         moduleTreeHeight = it[GradleMetricsTable.moduleTreeHeight]
@@ -121,6 +135,12 @@ internal fun Route.moduleRoutes() {
                 }
         }
 
+        if (graphRecord == null) {
+            call.respond(GradleDto(metrics = metrics))
+            return@get
+        }
+
+        val graphMap = Json.decodeFromString<Map<String, List<String>>>(graphRecord[ModuleGraphTable.graph])
         val modules = when (sortOrder) {
             ModuleSortOrder.BetweennessCentrality -> {
                 val betweennessCentrality = GraphUtil.calculateBetweennessCentralityScore(graphMap)

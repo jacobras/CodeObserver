@@ -27,20 +27,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.WebElementView
 import com.gabrieldrn.carbon.Carbon
 import com.gabrieldrn.carbon.contentswitcher.ContentSwitcher
+import com.gabrieldrn.carbon.slider.Slider
 import kotlinx.browser.document
-import nl.jacobras.codeobserver.dto.GraphModuleDto
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import nl.jacobras.codeobserver.dto.GitHash
 import nl.jacobras.codeobserver.dto.GradleDto
+import nl.jacobras.codeobserver.dto.GradleMetricPointDto
+import nl.jacobras.codeobserver.dto.GraphModuleDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
 import nl.jacobras.codeobserver.util.data.RequestState
 import nl.jacobras.codeobserver.util.ui.UiState
 import nl.jacobras.codeobserver.util.ui.carbon.IntSelector
 import nl.jacobras.codeobserver.util.ui.progress.ProgressIndicator
 import org.w3c.dom.HTMLIFrameElement
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun Graph(viewModel: ModuleGraphViewModel) {
     val graphModules by viewModel.graphModules.collectAsState(GradleDto())
+    val selectedCommit by viewModel.selectedCommit.collectAsState()
     val startModule by viewModel.startModule.collectAsState("")
     val sortOrder by viewModel.sortOrder.collectAsState()
     val groupingThreshold by viewModel.groupingThreshold.collectAsState()
@@ -67,6 +74,12 @@ internal fun Graph(viewModel: ModuleGraphViewModel) {
 
         RequestState.Idle -> Unit
     }
+
+    HistorySlider(
+        metrics = graphModules.metrics,
+        selectedCommit = selectedCommit,
+        onSelectCommit = { viewModel.setSelectedCommit(it) }
+    )
 
     if (graphModules.longestPath.isNotEmpty()) {
         BasicText(
@@ -103,6 +116,12 @@ internal fun Graph(viewModel: ModuleGraphViewModel) {
                 style = Carbon.typography.body02,
                 modifier = Modifier.fillMaxSize()
             )
+        } else if (graphModules.modules.isEmpty()) {
+            BasicText(
+                text = "No module graph snapshot for this commit",
+                style = Carbon.typography.body02,
+                modifier = Modifier.fillMaxSize()
+            )
         } else {
             val graphSrc = mermaidContainerBuilder.buildMermaidWebPage(mermaidGraph = graph)
             WebElementView(
@@ -119,6 +138,49 @@ internal fun Graph(viewModel: ModuleGraphViewModel) {
         }
     }
 }
+
+/**
+ * Slider for scrubbing through historical commits. Each tick is one commit from the metrics
+ * time-series; dragging changes which commit's module graph + scores are shown. Hidden when there is
+ * only a single commit (nothing to scrub through).
+ */
+@Composable
+private fun HistorySlider(
+    metrics: List<GradleMetricPointDto>,
+    selectedCommit: GitHash?,
+    onSelectCommit: (GitHash?) -> Unit
+) {
+    if (metrics.size < 2) return
+
+    val selectedIndex = remember(metrics, selectedCommit) {
+        if (selectedCommit == null) {
+            metrics.lastIndex
+        } else {
+            metrics.indexOfFirst { it.gitHash == selectedCommit }.takeIf { it >= 0 } ?: metrics.lastIndex
+        }
+    }
+
+    Slider(
+        value = selectedIndex.toFloat(),
+        onValueChange = { value ->
+            val index = value.roundToInt().coerceIn(0, metrics.lastIndex)
+            // The newest commit maps to "latest" (null), so the view tracks new pushes.
+            onSelectCommit(if (index == metrics.lastIndex) null else metrics[index].gitHash)
+        },
+        sliderRange = 0f..metrics.lastIndex.toFloat(),
+        steps = (metrics.size - 2).coerceAtLeast(0),
+        label = "History: ${metrics[selectedIndex].label()}",
+        startLabel = metrics.first().shortDate(),
+        endLabel = metrics.last().shortDate(),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+    )
+}
+
+private fun GradleMetricPointDto.shortDate(): String =
+    gitDate.toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+
+private fun GradleMetricPointDto.label(): String =
+    "${shortDate()} (${gitHash.value.take(SHORT_HASH_LENGTH)})"
 
 @Suppress("MagicNumber")
 @Composable
@@ -238,3 +300,5 @@ private fun ModuleRow(
         }
     }
 }
+
+private const val SHORT_HASH_LENGTH = 7

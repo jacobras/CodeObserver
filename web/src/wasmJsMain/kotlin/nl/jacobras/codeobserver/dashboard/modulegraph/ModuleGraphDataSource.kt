@@ -10,6 +10,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
+import nl.jacobras.codeobserver.dto.GitHash
 import nl.jacobras.codeobserver.dto.GradleDto
 import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
 import nl.jacobras.codeobserver.dto.ModuleSortOrder
@@ -19,11 +20,13 @@ import nl.jacobras.codeobserver.util.data.NetworkError
 internal interface ModuleGraphDataSource {
     suspend fun fetchGraphModules(
         projectId: ProjectId,
-        sortOrder: ModuleSortOrder
+        sortOrder: ModuleSortOrder,
+        gitHash: GitHash? = null
     ): Result<GradleDto, NetworkError>
 
     suspend fun fetchGraphInfo(
-        projectId: ProjectId
+        projectId: ProjectId,
+        gitHash: GitHash? = null
     ): Result<GraphVisualInfoDto, NetworkError>
 }
 
@@ -32,7 +35,8 @@ internal class ModuleGraphDataSourceImpl(
 ) : ModuleGraphDataSource {
     override suspend fun fetchGraphModules(
         projectId: ProjectId,
-        sortOrder: ModuleSortOrder
+        sortOrder: ModuleSortOrder,
+        gitHash: GitHash?
     ): Result<GradleDto, NetworkError> {
         Logger.i("Fetching modules for project ${projectId.value}")
         return runSuspendCatching {
@@ -40,6 +44,7 @@ internal class ModuleGraphDataSourceImpl(
                 url {
                     parameters.append("projectId", projectId.value)
                     parameters.append("sort", sortOrder.id)
+                    gitHash?.let { parameters.append("gitHash", it.value) }
                 }
             }.body<GradleDto>()
         }.mapError {
@@ -49,13 +54,15 @@ internal class ModuleGraphDataSourceImpl(
     }
 
     override suspend fun fetchGraphInfo(
-        projectId: ProjectId
+        projectId: ProjectId,
+        gitHash: GitHash?
     ): Result<GraphVisualInfoDto, NetworkError> {
         Logger.i("Fetching graph visual info for project ${projectId.value}")
         return runSuspendCatching {
             client.get("/graphVisualInfo") {
                 url {
                     parameters.append("projectId", projectId.value)
+                    gitHash?.let { parameters.append("gitHash", it.value) }
                 }
             }.body<GraphVisualInfoDto>()
         }.recoverIf(

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphConfig
 import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphVisualizer
+import nl.jacobras.codeobserver.dto.GitHash
 import nl.jacobras.codeobserver.dto.GraphConfigDto
 import nl.jacobras.codeobserver.dto.GradleDto
 import nl.jacobras.codeobserver.dto.GraphVisualInfoDto
@@ -46,24 +47,38 @@ internal class ModuleGraphViewModel(
         field = MutableStateFlow(DEFAULT_GROUPING_THRESHOLD)
     val layerDepth: StateFlow<Int>
         field = MutableStateFlow(DEFAULT_LAYER_DEPTH)
-    val graphInfo = projectId.mapLatest { projectId ->
-        if (projectId == null) {
-            return@mapLatest GraphVisualInfoDto()
+
+    /** Commit to show, or `null` for the latest. Driven by the history slider. */
+    val selectedCommit: StateFlow<GitHash?>
+        field = MutableStateFlow<GitHash?>(null)
+
+    // In-memory caches so dragging back to an already-loaded commit is instant (no network call).
+    private val modulesCache = mutableMapOf<Triple<ProjectId, GitHash?, ModuleSortOrder>, GradleDto>()
+    private val graphInfoCache = mutableMapOf<Pair<ProjectId, GitHash?>, GraphVisualInfoDto>()
+
+    val graphInfo = combine(projectId, selectedCommit) { id, commit -> id to commit }
+        .mapLatest { (projectId, commit) ->
+            if (projectId == null) {
+                return@mapLatest GraphVisualInfoDto()
+            }
+            graphInfoCache[projectId to commit]?.let { return@mapLatest it }
+            loadGraphInfo(projectId, commit)
+                .fold(
+                    success = { info ->
+                        graphInfoCache[projectId to commit] = info
+                        info
+                    },
+                    failure = { error ->
+                        Logger.e { "Failed to fetch graph info: $error" }
+                        Notifier.show(
+                            title = "Error loading module graph info",
+                            message = "Due to $error",
+                            status = NotificationStatus.Error
+                        )
+                        GraphVisualInfoDto()
+                    }
+                )
         }
-        loadGraphInfo(projectId)
-            .fold(
-                success = { it },
-                failure = { error ->
-                    Logger.e { "Failed to fetch graph info: $error" }
-                    Notifier.show(
-                        title = "Error loading module graph info",
-                        message = "Due to $error",
-                        status = NotificationStatus.Error
-                    )
-                    GraphVisualInfoDto()
-                }
-            )
-    }
     val mermaidGraph = combine(
         graphInfo,
         startModule,
@@ -86,9 +101,13 @@ internal class ModuleGraphViewModel(
     }
 
     init {
+        // Reset to the latest commit whenever the selected project changes.
         viewModelScope.launch {
-            combine(projectId, sortOrder) { id, sort -> id to sort }
-                .collectLatest { (id, _) ->
+            projectId.collectLatest { selectedCommit.value = null }
+        }
+        viewModelScope.launch {
+            combine(projectId, sortOrder, selectedCommit) { id, sort, commit -> Triple(id, sort, commit) }
+                .collectLatest { (id, _, _) ->
                     if (id != null) {
                         loadData()
                     }
@@ -98,6 +117,10 @@ internal class ModuleGraphViewModel(
 
     fun setStartModule(module: String) {
         startModule.value = module
+    }
+
+    fun setSelectedCommit(gitHash: GitHash?) {
+        selectedCommit.value = gitHash
     }
 
     fun setSortOrder(order: ModuleSortOrder) {
@@ -114,16 +137,29 @@ internal class ModuleGraphViewModel(
 
     private suspend fun loadData() {
         val projectId = projectId.value ?: return
-        modulesRepository.fetchGraphModules(projectId, sortOrder.value)
-            .onOk { graphModules.value = it }
+        val commit = selectedCommit.value
+        val sort = sortOrder.value
+        val cacheKey = Triple(projectId, commit, sort)
+        modulesCache[cacheKey]?.let {
+            graphModules.value = it
+            return
+        }
+        modulesRepository.fetchGraphModules(projectId, sort, commit)
+            .onOk {
+                modulesCache[cacheKey] = it
+                graphModules.value = it
+            }
     }
 
     fun refresh() = viewModelScope.launch {
         loadData()
     }
 
-    suspend fun loadGraphInfo(projectId: ProjectId): Result<GraphVisualInfoDto, NetworkError> {
-        return modulesRepository.fetchGraphInfo(projectId = projectId)
+    suspend fun loadGraphInfo(
+        projectId: ProjectId,
+        gitHash: GitHash?
+    ): Result<GraphVisualInfoDto, NetworkError> {
+        return modulesRepository.fetchGraphInfo(projectId = projectId, gitHash = gitHash)
     }
 }
 

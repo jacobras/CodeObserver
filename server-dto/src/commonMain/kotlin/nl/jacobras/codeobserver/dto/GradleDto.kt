@@ -12,6 +12,7 @@ data class GradleDto(
 
 @Serializable
 data class GradleMetricPointDto(
+    val gitHash: GitHash,
     val gitDate: Instant,
     val moduleCount: Int,
     val moduleTreeHeight: Int

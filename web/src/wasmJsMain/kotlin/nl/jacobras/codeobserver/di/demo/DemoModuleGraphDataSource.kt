@@ -4,6 +4,7 @@ import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import nl.jacobras.codeobserver.dashboard.modulegraph.ModuleGraphDataSource
 import nl.jacobras.codeobserver.dashboard.modulegraph.util.GraphConfig
+import nl.jacobras.codeobserver.dto.GitHash
 import nl.jacobras.codeobserver.dto.GradleDto
 import nl.jacobras.codeobserver.dto.GradleMetricPointDto
 import nl.jacobras.codeobserver.dto.GraphConfigDto
@@ -32,18 +33,19 @@ private val DEMO_GRAPH_MODULES = GradleDto(
         GraphModuleDto(name = "feature:settings", score = 5)
     ),
     metrics = listOf(
-        GradleMetricPointDto(gitDate = now.minus(300.days), moduleCount = 18, moduleTreeHeight = 5),
-        GradleMetricPointDto(gitDate = now.minus(90.days), moduleCount = 20, moduleTreeHeight = 5),
-        GradleMetricPointDto(gitDate = now.minus(14.days), moduleCount = 24, moduleTreeHeight = 6),
-        GradleMetricPointDto(gitDate = now.minus(7.days), moduleCount = 21, moduleTreeHeight = 6),
-        GradleMetricPointDto(gitDate = now.minus(3.hours), moduleCount = 25, moduleTreeHeight = 4)
+        GradleMetricPointDto(gitHash = GitHash("demo0001"), gitDate = now.minus(300.days), moduleCount = 18, moduleTreeHeight = 5),
+        GradleMetricPointDto(gitHash = GitHash("demo0002"), gitDate = now.minus(90.days), moduleCount = 20, moduleTreeHeight = 5),
+        GradleMetricPointDto(gitHash = GitHash("demo0003"), gitDate = now.minus(14.days), moduleCount = 24, moduleTreeHeight = 6),
+        GradleMetricPointDto(gitHash = GitHash("demo0004"), gitDate = now.minus(7.days), moduleCount = 21, moduleTreeHeight = 6),
+        GradleMetricPointDto(gitHash = GitHash("demo0005"), gitDate = now.minus(3.hours), moduleCount = 25, moduleTreeHeight = 4)
     )
 )
 
 internal class DemoModuleGraphDataSource : ModuleGraphDataSource {
     override suspend fun fetchGraphModules(
         projectId: ProjectId,
-        sortOrder: ModuleSortOrder
+        sortOrder: ModuleSortOrder,
+        gitHash: GitHash?
     ): Result<GradleDto, NetworkError> {
         return when (sortOrder) {
             ModuleSortOrder.Alphabetical -> Ok(
@@ -62,7 +64,8 @@ internal class DemoModuleGraphDataSource : ModuleGraphDataSource {
     }
 
     override suspend fun fetchGraphInfo(
-        projectId: ProjectId
+        projectId: ProjectId,
+        gitHash: GitHash?
     ): Result<GraphVisualInfoDto, NetworkError> {
         return Ok(
             GraphVisualInfoDto(
